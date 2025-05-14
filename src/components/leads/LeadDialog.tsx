@@ -66,7 +66,7 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
       });
     }
     setErrors({});
-  }, [lead]);
+  }, [lead, open]); // Added open to the dependency array to ensure reset on dialog open/close
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -110,6 +110,7 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
       try {
         onSave(formData);
         toast.success(`${lead ? "Updated" : "Created"} lead successfully`);
+        onClose(); // Close the dialog after successful save
       } catch (error) {
         toast.error("An error occurred. Please try again.");
         console.error("Error saving lead:", error);
@@ -136,6 +137,11 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
     "Social Media",
     "Other"
   ];
+
+  // Early return if not open, to prevent rendering issues
+  if (!open) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

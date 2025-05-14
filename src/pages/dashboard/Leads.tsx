@@ -40,9 +40,7 @@ const Leads = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  
-  // Mock data - in a real app, this would come from an API
-  const leads: Lead[] = [
+  const [leads, setLeads] = useState<Lead[]>([
     {
       id: "1",
       name: "John Doe",
@@ -98,8 +96,8 @@ const Leads = () => {
       assignedTo: "Michael Brown",
       date: "2023-04-15",
     },
-  ];
-
+  ]);
+  
   // Filter leads based on search term
   const filteredLeads = leads.filter((lead) =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,10 +116,18 @@ const Leads = () => {
   };
 
   const handleSave = (lead: Lead) => {
-    // In a real app, you would make an API call to save the lead
-    console.log("Saving lead:", lead);
+    // Update leads array
+    setLeads(prevLeads => {
+      if (lead.id && prevLeads.some(l => l.id === lead.id)) {
+        // Edit existing lead
+        return prevLeads.map(l => (l.id === lead.id ? lead : l));
+      } else {
+        // Add new lead
+        return [...prevLeads, lead];
+      }
+    });
+    
     setShowDialog(false);
-    // Then refresh the data
   };
 
   // Function to render the status badge with appropriate styling
@@ -246,14 +252,12 @@ const Leads = () => {
         </CardContent>
       </Card>
 
-      {showDialog && (
-        <LeadDialog
-          lead={selectedLead}
-          open={showDialog}
-          onClose={() => setShowDialog(false)}
-          onSave={handleSave}
-        />
-      )}
+      <LeadDialog
+        lead={selectedLead}
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        onSave={handleSave}
+      />
     </MainLayout>
   );
 };
