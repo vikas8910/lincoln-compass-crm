@@ -19,7 +19,8 @@ import {
   FiCalendar,
   FiSettings,
   FiBarChart2,
-  FiFolder
+  FiFolder,
+  FiGitBranch
 } from "react-icons/fi";
 
 const MainSidebar = () => {
@@ -40,6 +41,11 @@ const MainSidebar = () => {
       title: "Leads",
       icon: FiUsers,
       href: "/leads",
+    },
+    {
+      title: "Lead Pipeline",
+      icon: FiGitBranch,
+      href: "/lead-pipeline",
     },
     {
       title: "Companies",
