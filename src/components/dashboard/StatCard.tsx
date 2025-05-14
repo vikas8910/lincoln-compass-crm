@@ -7,21 +7,18 @@ import { cn } from "@/lib/utils";
 interface StatCardProps {
   title: string;
   value: string | number;
-  description?: string;
+  change?: string;
+  isIncreasing?: boolean;
   icon?: LucideIcon;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
   className?: string;
 }
 
 const StatCard = ({
   title,
   value,
-  description,
+  change,
+  isIncreasing,
   icon: Icon,
-  trend,
   className,
 }: StatCardProps) => {
   return (
@@ -30,21 +27,14 @@ const StatCard = ({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        {Icon && (
-          <Icon className="h-4 w-4 text-muted-foreground" />
-        )}
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {trend && (
-          <p className={`text-xs ${trend.isPositive ? "text-green-500" : "text-red-500"}`}>
-            {trend.isPositive ? "+" : "-"}{trend.value}%
+        {change && (
+          <p className={`text-xs ${isIncreasing ? "text-green-500" : "text-red-500"}`}>
+            {change}
             <span className="text-muted-foreground"> from last month</span>
-          </p>
-        )}
-        {description && (
-          <p className="text-xs text-muted-foreground mt-1">
-            {description}
           </p>
         )}
       </CardContent>

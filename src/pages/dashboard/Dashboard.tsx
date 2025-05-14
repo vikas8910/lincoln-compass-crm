@@ -17,28 +17,28 @@ const Dashboard = () => {
       value: "3,210",
       change: "+12%",
       isIncreasing: true,
-      icon: <Users className="h-6 w-6" />,
+      icon: Users,
     },
     {
       title: "New Leads",
       value: "120",
       change: "+4%",
       isIncreasing: true,
-      icon: <UserPlus className="h-6 w-6" />,
+      icon: UserPlus,
     },
     {
       title: "Conversion Rate",
       value: "24%",
       change: "-2%",
       isIncreasing: false,
-      icon: <Briefcase className="h-6 w-6" />,
+      icon: Briefcase,
     },
     {
       title: "Avg Conversion Time",
       value: "7 days",
       change: "+1 day",
       isIncreasing: false,
-      icon: <Calendar className="h-6 w-6" />,
+      icon: Calendar,
     },
   ];
 
