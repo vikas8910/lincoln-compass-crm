@@ -61,7 +61,7 @@ const Dashboard = () => {
     { name: "Cold Call", value: 5 },
   ];
 
-  // Mock data for RecentLeads
+  // Mock data for RecentLeads - with properly typed status values
   const recentLeadsData = [
     {
       id: "1",
@@ -69,7 +69,7 @@ const Dashboard = () => {
       email: "john@example.com",
       phone: "123-456-7890",
       company: "Acme Inc",
-      status: "New",
+      status: "New" as const,  // Use const assertion to ensure TypeScript recognizes this as a literal type
       date: "2023-05-01",
     },
     {
@@ -78,7 +78,7 @@ const Dashboard = () => {
       email: "jane@example.com",
       phone: "123-456-7891",
       company: "Globex Corp",
-      status: "Contacted",
+      status: "Contacted" as const,
       date: "2023-04-28",
     },
     {
@@ -87,7 +87,7 @@ const Dashboard = () => {
       email: "michael@example.com",
       phone: "123-456-7892",
       company: "Initech",
-      status: "Qualified",
+      status: "Qualified" as const,
       date: "2023-04-25",
     },
     {
@@ -96,7 +96,7 @@ const Dashboard = () => {
       email: "emily@example.com",
       phone: "123-456-7893",
       company: "Massive Dynamic",
-      status: "Negotiation",
+      status: "Negotiation" as const,
       date: "2023-04-20",
     },
     {
@@ -105,7 +105,7 @@ const Dashboard = () => {
       email: "robert@example.com",
       phone: "123-456-7894",
       company: "Soylent Corp",
-      status: "Won",
+      status: "Won" as const,
       date: "2023-04-15",
     },
   ];
@@ -157,14 +157,7 @@ const Dashboard = () => {
             </Card>
           </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Leads</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RecentLeads leads={recentLeadsData} />
-            </CardContent>
-          </Card>
+          <RecentLeads leads={recentLeadsData} />
         </TabsContent>
 
         <TabsContent value="salesOfficers">
