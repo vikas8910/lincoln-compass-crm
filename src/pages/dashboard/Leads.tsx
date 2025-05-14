@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,8 @@ export interface Lead {
   phone: string;
   company: string;
   status: "New" | "Contacted" | "Qualified" | "Negotiation" | "Won" | "Lost";
-  source?: string;
-  assignedTo?: string;
+  source: string;  // Changed from optional to required with default value
+  assignedTo: string; // Changed from optional to required with default value
   date: string;
 }
 
@@ -110,11 +111,19 @@ const Leads = () => {
   };
 
   const handleEdit = (lead: Lead) => {
-    setSelectedLead(lead);
+    console.log("Editing lead:", lead); // Debug log
+    // Ensure source and assignedTo are never undefined or empty
+    const editLead = {
+      ...lead,
+      source: lead.source || "None",
+      assignedTo: lead.assignedTo || "Unassigned"
+    };
+    setSelectedLead(editLead);
     setShowDialog(true);
   };
 
   const handleSave = (lead: Lead) => {
+    console.log("Saving lead:", lead); // Debug log
     // Update leads array
     setLeads(prevLeads => {
       if (lead.id && prevLeads.some(l => l.id === lead.id)) {
@@ -224,8 +233,8 @@ const Leads = () => {
                       </div>
                     </TableCell>
                     <TableCell>{renderStatusBadge(lead.status)}</TableCell>
-                    <TableCell>{lead.source || "None"}</TableCell>
-                    <TableCell>{lead.assignedTo || "Unassigned"}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.source}</TableCell>
+                    <TableCell>{lead.assignedTo === "Unassigned" ? "Unassigned" : lead.assignedTo}</TableCell>
                     <TableCell>{new Date(lead.date).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <Button

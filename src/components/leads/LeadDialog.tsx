@@ -41,8 +41,8 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
     phone: "",
     company: "",
     status: "New",
-    source: "",
-    assignedTo: "",
+    source: "None",  // Set default value to "None" instead of empty string
+    assignedTo: "Unassigned",  // Set default value to "Unassigned" instead of empty string
     date: new Date().toISOString().split("T")[0],
   });
 
@@ -50,9 +50,14 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
 
   useEffect(() => {
     if (lead) {
-      setFormData(lead);
+      // Ensure source and assignedTo have non-empty values
+      setFormData({
+        ...lead,
+        source: lead.source || "None",
+        assignedTo: lead.assignedTo || "Unassigned"
+      });
     } else {
-      // Reset form for a new lead
+      // Reset form for a new lead with proper defaults
       setFormData({
         id: Date.now().toString(), // Generate a temporary ID
         name: "",
@@ -60,8 +65,8 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
         phone: "",
         company: "",
         status: "New",
-        source: "",
-        assignedTo: "",
+        source: "None",
+        assignedTo: "Unassigned",
         date: new Date().toISOString().split("T")[0],
       });
     }
@@ -142,6 +147,10 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
   if (!open) {
     return null;
   }
+
+  // Debug the values
+  console.log("Source value:", formData.source);
+  console.log("AssignedTo value:", formData.assignedTo);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -230,7 +239,7 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="source">Source</Label>
               <Select
-                value={formData.source || "None"}
+                value={formData.source}
                 onValueChange={(value) => setFormData({ ...formData, source: value })}
               >
                 <SelectTrigger id="source">
@@ -248,7 +257,7 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="assignedTo">Assigned To</Label>
               <Select
-                value={formData.assignedTo || "Unassigned"}
+                value={formData.assignedTo}
                 onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
               >
                 <SelectTrigger id="assignedTo">
