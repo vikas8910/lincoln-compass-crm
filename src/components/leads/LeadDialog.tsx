@@ -1,25 +1,45 @@
 
-import React, { useState, useEffect } from "react";
-import { 
-  Dialog, 
+import React, { useEffect, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Dialog,
   DialogContent,
-  DialogDescription, 
   DialogFooter,
-  DialogHeader, 
-  DialogTitle
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import { Lead } from "@/pages/dashboard/Leads";
+
+const formSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(1, "Phone number is required"),
+  company: z.string().min(1, "Company is required"),
+  status: z.enum(["New", "Contacted", "Qualified", "Negotiation", "Won", "Lost", "In Contact", "Follow up", "Set Meeting", "Enrolled", "Junk/Lost"]),
+  source: z.string().min(1, "Source is required"),
+  assignedTo: z.string().min(1, "Assigned to is required"),
+  date: z.string(),
+});
 
 interface LeadDialogProps {
   lead: Lead | null;
@@ -28,258 +48,242 @@ interface LeadDialogProps {
   onSave: (lead: Lead) => void;
 }
 
-const LeadDialog: React.FC<LeadDialogProps> = ({
-  lead,
-  open,
-  onClose,
-  onSave,
-}) => {
-  const [formData, setFormData] = useState<Lead>({
-    id: "",
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    status: "New",
-    source: "None",  // Set default value to "None" instead of empty string
-    assignedTo: "Unassigned",  // Set default value to "Unassigned" instead of empty string
-    date: new Date().toISOString().split("T")[0],
+const LeadDialog = ({ lead, open, onClose, onSave }: LeadDialogProps) => {
+  const [isNew, setIsNew] = useState(true);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      id: "",
+      name: "",
+      email: "",
+      phone: "",
+      company: "",
+      status: "New",
+      source: "None", // Changed from "" to "None"
+      assignedTo: "Unassigned", // Changed from "" to "Unassigned"
+      date: new Date().toISOString().split("T")[0],
+    },
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   useEffect(() => {
+    console.log("LeadDialog useEffect - lead:", lead);
+    
+    if (!open) return;
+    
     if (lead) {
-      // Ensure source and assignedTo have non-empty values
-      setFormData({
-        ...lead,
-        source: lead.source || "None",
-        assignedTo: lead.assignedTo || "Unassigned"
+      console.log("Setting form values from lead:", lead);
+      setIsNew(false);
+      
+      // Ensure source and assignedTo are not empty strings
+      const source = lead.source || "None";
+      const assignedTo = lead.assignedTo || "Unassigned";
+      
+      form.reset({
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        company: lead.company,
+        status: lead.status,
+        source,
+        assignedTo,
+        date: lead.date,
       });
     } else {
-      // Reset form for a new lead with proper defaults
-      setFormData({
-        id: Date.now().toString(), // Generate a temporary ID
+      console.log("Resetting form for new lead");
+      setIsNew(true);
+      form.reset({
+        id: "",
         name: "",
         email: "",
         phone: "",
         company: "",
         status: "New",
-        source: "None",
-        assignedTo: "Unassigned",
+        source: "None", // Changed from "" to "None"
+        assignedTo: "Unassigned", // Changed from "" to "Unassigned"
         date: new Date().toISOString().split("T")[0],
       });
     }
-    setErrors({});
-  }, [lead, open]); // Added open to the dependency array to ensure reset on dialog open/close
+  }, [lead, open, form]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log("Form submission data:", data);
     
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    // Generate ID for new leads
+    if (isNew) {
+      data.id = Math.random().toString(36).substring(2, 11);
     }
     
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-    
-    if (!formData.company.trim()) {
-      newErrors.company = "Company is required";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    onSave(data as Lead);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
-      try {
-        onSave(formData);
-        toast.success(`${lead ? "Updated" : "Created"} lead successfully`);
-        onClose(); // Close the dialog after successful save
-      } catch (error) {
-        toast.error("An error occurred. Please try again.");
-        console.error("Error saving lead:", error);
-      }
-    }
-  };
-
-  // Sales officers for assignment dropdown
-  const salesOfficers = [
-    "John Smith",
-    "Jane Smith",
-    "Robert Johnson",
-    "Emily Williams",
-    "Michael Brown"
-  ];
-
-  // Lead sources
-  const leadSources = [
-    "Website",
-    "Referral",
-    "Cold Call",
-    "Trade Show",
-    "Email Campaign",
-    "Social Media",
-    "Other"
-  ];
-
-  // Early return if not open, to prevent rendering issues
-  if (!open) {
-    return null;
-  }
-
-  // Debug the values
-  console.log("Source value:", formData.source);
-  console.log("AssignedTo value:", formData.assignedTo);
+  // If dialog is not open, don't render anything
+  if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{lead ? "Edit" : "Add"} Lead</DialogTitle>
-          <DialogDescription>
-            {lead 
-              ? "Update the lead's information below." 
-              : "Fill out the form below to add a new lead."}
-          </DialogDescription>
+          <DialogTitle>{isNew ? "Add New Lead" : "Edit Lead"}</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={errors.name ? "border-red-500" : ""}
-              />
-              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={errors.email ? "border-red-500" : ""}
-              />
-              {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                className={errors.company ? "border-red-500" : ""}
-              />
-              {errors.company && <p className="text-sm text-red-500">{errors.company}</p>}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ 
-                  ...formData, 
-                  status: value as Lead["status"]
-                })}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="New">New</SelectItem>
-                  <SelectItem value="Contacted">Contacted</SelectItem>
-                  <SelectItem value="Qualified">Qualified</SelectItem>
-                  <SelectItem value="Negotiation">Negotiation</SelectItem>
-                  <SelectItem value="Won">Won</SelectItem>
-                  <SelectItem value="Lost">Lost</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="source">Source</Label>
-              <Select
-                value={formData.source}
-                onValueChange={(value) => setFormData({ ...formData, source: value })}
-              >
-                <SelectTrigger id="source">
-                  <SelectValue placeholder="Select source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="None">None</SelectItem>
-                  {leadSources.map((source) => (
-                    <SelectItem key={source} value={source}>{source}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="assignedTo">Assigned To</Label>
-              <Select
-                value={formData.assignedTo}
-                onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
-              >
-                <SelectTrigger id="assignedTo">
-                  <SelectValue placeholder="Select sales officer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Unassigned">Unassigned</SelectItem>
-                  {salesOfficers.map((officer) => (
-                    <SelectItem key={officer} value={officer}>{officer}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">{lead ? "Update" : "Create"}</Button>
-          </DialogFooter>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="john@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123-456-7890" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="company"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Acme Inc" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="New">New</SelectItem>
+                      <SelectItem value="Contacted">Contacted</SelectItem>
+                      <SelectItem value="In Contact">In Contact</SelectItem>
+                      <SelectItem value="Follow up">Follow up</SelectItem>
+                      <SelectItem value="Set Meeting">Set Meeting</SelectItem>
+                      <SelectItem value="Qualified">Qualified</SelectItem>
+                      <SelectItem value="Negotiation">Negotiation</SelectItem>
+                      <SelectItem value="Won">Won</SelectItem>
+                      <SelectItem value="Lost">Lost</SelectItem>
+                      <SelectItem value="Enrolled">Enrolled</SelectItem>
+                      <SelectItem value="Junk/Lost">Junk/Lost</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Source</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="None">None</SelectItem>
+                      <SelectItem value="Website">Website</SelectItem>
+                      <SelectItem value="Referral">Referral</SelectItem>
+                      <SelectItem value="Trade Show">Trade Show</SelectItem>
+                      <SelectItem value="Cold Call">Cold Call</SelectItem>
+                      <SelectItem value="Email Campaign">Email Campaign</SelectItem>
+                      <SelectItem value="Organic Search">Organic Search</SelectItem>
+                      <SelectItem value="Social Media">Social Media</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="assignedTo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assigned To</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select sales officer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Unassigned">Unassigned</SelectItem>
+                      <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                      <SelectItem value="John Smith">John Smith</SelectItem>
+                      <SelectItem value="Robert Johnson">Robert Johnson</SelectItem>
+                      <SelectItem value="Emily Williams">Emily Williams</SelectItem>
+                      <SelectItem value="Michael Brown">Michael Brown</SelectItem>
+                      <SelectItem value="Subramanian Iyer">Subramanian Iyer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">Save</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

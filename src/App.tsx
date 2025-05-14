@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/dashboard/Dashboard";
 import SalesOfficers from "./pages/dashboard/SalesOfficers";
 import Leads from "./pages/dashboard/Leads";
+import LeadDetails from "./pages/dashboard/LeadDetails";
 import LeadPipeline from "./pages/dashboard/LeadPipeline";
 
 const queryClient = new QueryClient();
@@ -38,7 +39,7 @@ const App = () => {
             <Route path="/sales-officers" element={<ProtectedRoute element={<SalesOfficers />} />} />
             <Route path="/sales-officers/:officerId" element={<ProtectedRoute element={<div>Sales Officer Details Page - To be implemented</div>} />} />
             <Route path="/leads" element={<ProtectedRoute element={<Leads />} />} />
-            <Route path="/leads/:leadId" element={<ProtectedRoute element={<div>Lead Details Page - To be implemented</div>} />} />
+            <Route path="/leads/:leadId" element={<ProtectedRoute element={<LeadDetails />} />} />
             <Route path="/lead-pipeline" element={<ProtectedRoute element={<LeadPipeline />} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
