@@ -25,6 +25,7 @@ const sourceData = [
   { name: "Event", value: 12 },
 ];
 
+// Updated recentLeads to use the proper union type for status
 const recentLeads = [
   {
     id: "1",
@@ -32,7 +33,7 @@ const recentLeads = [
     email: "john@example.com",
     phone: "123-456-7890",
     company: "Acme Inc",
-    status: "New",
+    status: "New" as const,
     date: "2023-05-01",
   },
   {
@@ -41,7 +42,7 @@ const recentLeads = [
     email: "jane@example.com",
     phone: "123-456-7891",
     company: "Globex Corp",
-    status: "Contacted",
+    status: "Contacted" as const,
     date: "2023-04-28",
   },
   {
@@ -50,7 +51,7 @@ const recentLeads = [
     email: "michael@example.com",
     phone: "123-456-7892",
     company: "Initech",
-    status: "Qualified",
+    status: "Qualified" as const,
     date: "2023-04-25",
   },
   {
@@ -59,7 +60,7 @@ const recentLeads = [
     email: "emily@example.com",
     phone: "123-456-7893",
     company: "Massive Dynamic",
-    status: "Negotiation",
+    status: "Negotiation" as const,
     date: "2023-04-20",
   },
   {
@@ -68,7 +69,7 @@ const recentLeads = [
     email: "robert@example.com",
     phone: "123-456-7894",
     company: "Soylent Corp",
-    status: "Won",
+    status: "Won" as const,
     date: "2023-04-15",
   },
 ];
