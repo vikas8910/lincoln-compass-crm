@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -23,21 +23,23 @@ import {
 } from "lucide-react";
 
 const MainSidebar = () => {
+  const location = useLocation();
+  
   const menuItems = [
     {
       title: "Dashboard",
       icon: LayoutDashboard,
-      href: "/",
+      href: "/dashboard",
+    },
+    {
+      title: "Sales Officers",
+      icon: UserCircle,
+      href: "/sales-officers",
     },
     {
       title: "Leads",
       icon: Users,
       href: "/leads",
-    },
-    {
-      title: "Contacts",
-      icon: UserCircle,
-      href: "/contacts",
     },
     {
       title: "Companies",
@@ -73,16 +75,24 @@ const MainSidebar = () => {
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.href}>
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.href;
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
+                      <Link to={item.href}>
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
