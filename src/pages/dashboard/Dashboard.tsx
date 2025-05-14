@@ -42,6 +42,74 @@ const Dashboard = () => {
     },
   ];
 
+  // Mock data for LeadsByStatus chart
+  const leadsByStatusData = [
+    { name: "New", value: 45, color: "#4F46E5" },
+    { name: "Contacted", value: 30, color: "#8B5CF6" },
+    { name: "Qualified", value: 15, color: "#F59E0B" },
+    { name: "Negotiation", value: 8, color: "#F97316" },
+    { name: "Won", value: 5, color: "#10B981" },
+    { name: "Lost", value: 2, color: "#EF4444" },
+  ];
+
+  // Mock data for LeadsBySource chart
+  const leadsBySourceData = [
+    { name: "Website", value: 45 },
+    { name: "Referral", value: 25 },
+    { name: "Social Media", value: 15 },
+    { name: "Email Campaign", value: 10 },
+    { name: "Cold Call", value: 5 },
+  ];
+
+  // Mock data for RecentLeads
+  const recentLeadsData = [
+    {
+      id: "1",
+      name: "John Doe",
+      email: "john@example.com",
+      phone: "123-456-7890",
+      company: "Acme Inc",
+      status: "New",
+      date: "2023-05-01",
+    },
+    {
+      id: "2",
+      name: "Jane Smith",
+      email: "jane@example.com",
+      phone: "123-456-7891",
+      company: "Globex Corp",
+      status: "Contacted",
+      date: "2023-04-28",
+    },
+    {
+      id: "3",
+      name: "Michael Johnson",
+      email: "michael@example.com",
+      phone: "123-456-7892",
+      company: "Initech",
+      status: "Qualified",
+      date: "2023-04-25",
+    },
+    {
+      id: "4",
+      name: "Emily Williams",
+      email: "emily@example.com",
+      phone: "123-456-7893",
+      company: "Massive Dynamic",
+      status: "Negotiation",
+      date: "2023-04-20",
+    },
+    {
+      id: "5",
+      name: "Robert Brown",
+      email: "robert@example.com",
+      phone: "123-456-7894",
+      company: "Soylent Corp",
+      status: "Won",
+      date: "2023-04-15",
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -75,7 +143,7 @@ const Dashboard = () => {
                 <CardTitle className="text-lg">Leads by Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <LeadsByStatus />
+                <LeadsByStatus data={leadsByStatusData} />
               </CardContent>
             </Card>
             
@@ -84,7 +152,7 @@ const Dashboard = () => {
                 <CardTitle className="text-lg">Leads by Source</CardTitle>
               </CardHeader>
               <CardContent>
-                <LeadsBySource />
+                <LeadsBySource data={leadsBySourceData} />
               </CardContent>
             </Card>
           </div>
@@ -94,7 +162,7 @@ const Dashboard = () => {
               <CardTitle className="text-lg">Recent Leads</CardTitle>
             </CardHeader>
             <CardContent>
-              <RecentLeads />
+              <RecentLeads leads={recentLeadsData} />
             </CardContent>
           </Card>
         </TabsContent>
