@@ -27,10 +27,35 @@ import { toast } from "sonner";
 import { FiMail, FiPhone, FiMessageSquare, FiCalendar, FiVideo, FiUser, FiPlus, FiEdit, FiMoreVertical, FiChevronRight, FiArrowLeft, FiSearch } from "react-icons/fi";
 import { Lead } from "./Leads";
 
+// Extend the Lead interface to include properties needed for the lead details page
+interface ExtendedLead extends Lead {
+  firstName?: string;
+  lastName?: string;
+  leadType?: string;
+  course?: string;
+  accounts?: string;
+  work?: string;
+  nationality?: string;
+  countryCode?: string;
+  tags?: string[];
+}
+
+// Define the activity type specifically for our needs
+interface Activity {
+  id: string;
+  type: "email" | "note" | "task" | "meeting";
+  content?: string;
+  title?: string;
+  createdBy?: string;
+  createdAt: string;
+  dueDate?: string;
+  status?: string;
+}
+
 const LeadDetails = () => {
   const { leadId } = useParams();
   const navigate = useNavigate();
-  const [lead, setLead] = useState<Lead | null>(null);
+  const [lead, setLead] = useState<ExtendedLead | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEmptyFields, setShowEmptyFields] = useState(false);
   const [activeTab, setActiveTab] = useState("timeline");
@@ -40,13 +65,13 @@ const LeadDetails = () => {
   useEffect(() => {
     // Simulate API call
     setTimeout(() => {
-      const mockLead: Lead = {
+      const mockLead: ExtendedLead = {
         id: leadId || "1",
         name: "Sumaiya Shaikh",
         email: "drsumaiya@primehealth.ae",
         phone: "+971502950783",
         company: "Prime Health",
-        status: "In Contact", // Changed from "Contacted" to match screenshot
+        status: "Contacted", // Changed to match Lead type allowed values
         source: "Organic Search",
         assignedTo: "Subramanian Iyer",
         date: "2022-11-30",
@@ -143,7 +168,7 @@ const LeadDetails = () => {
   };
 
   // Function to render stage in pipeline
-  const stages = ["New", "In Contact", "Follow up", "Set Meeting", "Negotiation", "Enrolled", "Junk/Lost"];
+  const stages = ["New", "Contacted", "In Contact", "Follow up", "Set Meeting", "Negotiation", "Enrolled", "Junk/Lost"];
 
   return (
     <MainLayout>
@@ -425,8 +450,8 @@ const LeadDetails = () => {
                   <TabsContent value="timeline" className="p-6">
                     <LeadActivityTimeline 
                       activities={[
-                        ...mockNotes.map(note => ({ ...note, type: 'note' })),
-                        ...mockTasks.map(task => ({ ...task, type: 'task' })),
+                        ...mockNotes.map(note => ({ ...note, type: 'note' as const })),
+                        ...mockTasks.map(task => ({ ...task, type: 'task' as const })),
                       ]} 
                     />
                   </TabsContent>
