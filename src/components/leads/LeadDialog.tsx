@@ -230,13 +230,14 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="source">Source</Label>
               <Select
-                value={formData.source || ""}
+                value={formData.source || "None"}
                 onValueChange={(value) => setFormData({ ...formData, source: value })}
               >
                 <SelectTrigger id="source">
                   <SelectValue placeholder="Select source" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="None">None</SelectItem>
                   {leadSources.map((source) => (
                     <SelectItem key={source} value={source}>{source}</SelectItem>
                   ))}
@@ -247,14 +248,14 @@ const LeadDialog: React.FC<LeadDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="assignedTo">Assigned To</Label>
               <Select
-                value={formData.assignedTo || ""}
+                value={formData.assignedTo || "Unassigned"}
                 onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
               >
                 <SelectTrigger id="assignedTo">
                   <SelectValue placeholder="Select sales officer" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="Unassigned">Unassigned</SelectItem>
                   {salesOfficers.map((officer) => (
                     <SelectItem key={officer} value={officer}>{officer}</SelectItem>
                   ))}

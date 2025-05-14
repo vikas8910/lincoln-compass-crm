@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -225,7 +224,7 @@ const Leads = () => {
                       </div>
                     </TableCell>
                     <TableCell>{renderStatusBadge(lead.status)}</TableCell>
-                    <TableCell>{lead.source || "Unknown"}</TableCell>
+                    <TableCell>{lead.source || "None"}</TableCell>
                     <TableCell>{lead.assignedTo || "Unassigned"}</TableCell>
                     <TableCell>{new Date(lead.date).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">

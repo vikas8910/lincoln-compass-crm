@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -112,6 +111,11 @@ const SalesOfficerDialog: React.FC<SalesOfficerDialogProps> = ({
       }
     }
   };
+
+  // Early return if not open, to prevent rendering issues
+  if (!open) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
