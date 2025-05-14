@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Filter, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import LeadDialog from "@/components/leads/LeadDialog";
@@ -22,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { FiSearch, FiPlus, FiFilter, FiChevronDown } from "react-icons/fi";
 
 // Define the lead type
 export interface Lead {
@@ -148,7 +148,7 @@ const Leads = () => {
         <h1 className="text-3xl font-bold">Leads Management</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search leads..."
               value={searchTerm}
@@ -160,9 +160,9 @@ const Leads = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <FiFilter className="h-4 w-4 mr-2" />
                   Filter
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  <FiChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -178,7 +178,7 @@ const Leads = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={handleAddNew}>
-              <Plus className="h-4 w-4 mr-2" />
+              <FiPlus className="h-4 w-4 mr-2" />
               Add Lead
             </Button>
           </div>

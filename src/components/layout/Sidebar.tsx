@@ -12,15 +12,15 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard,
-  Users,
-  UserCircle,
-  BriefcaseIcon,
-  Calendar,
-  Settings,
-  BarChartIcon,
-  FolderIcon,
-} from "lucide-react";
+  FiLayout,
+  FiUsers,
+  FiUser,
+  FiBriefcase,
+  FiCalendar,
+  FiSettings,
+  FiBarChart2,
+  FiFolder
+} from "react-icons/fi";
 
 const MainSidebar = () => {
   const location = useLocation();
@@ -28,42 +28,42 @@ const MainSidebar = () => {
   const menuItems = [
     {
       title: "Dashboard",
-      icon: LayoutDashboard,
+      icon: FiLayout,
       href: "/dashboard",
     },
     {
       title: "Sales Officers",
-      icon: UserCircle,
+      icon: FiUser,
       href: "/sales-officers",
     },
     {
       title: "Leads",
-      icon: Users,
+      icon: FiUsers,
       href: "/leads",
     },
     {
       title: "Companies",
-      icon: BriefcaseIcon,
+      icon: FiBriefcase,
       href: "/companies",
     },
     {
       title: "Calendar",
-      icon: Calendar,
+      icon: FiCalendar,
       href: "/calendar",
     },
     {
       title: "Documents",
-      icon: FolderIcon,
+      icon: FiFolder,
       href: "/documents",
     },
     {
       title: "Reports",
-      icon: BarChartIcon,
+      icon: FiBarChart2,
       href: "/reports",
     },
     {
       title: "Settings",
-      icon: Settings,
+      icon: FiSettings,
       href: "/settings",
     },
   ];

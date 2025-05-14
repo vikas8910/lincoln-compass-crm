@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, Search, Settings, User, Menu } from "lucide-react";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { FiBell, FiSearch, FiSettings, FiUser, FiMenu } from "react-icons/fi";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const Header = () => {
       </div>
       
       <form onSubmit={handleSearch} className="hidden sm:flex items-center max-w-md w-full relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input 
           type="search" 
           placeholder="Search leads, contacts, companies..."
@@ -54,7 +54,7 @@ const Header = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
+              <FiBell className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -65,13 +65,13 @@ const Header = () => {
         </DropdownMenu>
         
         <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
+          <FiSettings className="h-5 w-5" />
         </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="h-5 w-5" />
+              <FiUser className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

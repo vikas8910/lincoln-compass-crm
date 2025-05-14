@@ -12,11 +12,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserPlus, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import SalesOfficerDialog from "@/components/sales/SalesOfficerDialog";
+import { FiSearch, FiUserPlus, FiFilter } from "react-icons/fi";
 
 // Define the sales officer type
 export interface SalesOfficer {
@@ -130,7 +130,7 @@ const SalesOfficers = () => {
         <h1 className="text-3xl font-bold">Sales Officers</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search sales officers..."
               value={searchTerm}
@@ -140,10 +140,10 @@ const SalesOfficers = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
+              <FiFilter className="h-4 w-4" />
             </Button>
             <Button onClick={handleAddNew}>
-              <UserPlus className="h-4 w-4 mr-2" />
+              <FiUserPlus className="h-4 w-4 mr-2" />
               Add New
             </Button>
           </div>

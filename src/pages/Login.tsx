@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { FiEye, FiEyeOff, FiLock, FiUser } from "react-icons/fi";
 
 type UserType = "admin" | "sales";
 
@@ -123,7 +123,7 @@ const Login = () => {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <FiUser className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -150,7 +150,7 @@ const Login = () => {
                   </Button>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <FiLock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -169,9 +169,9 @@ const Login = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <FiEyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <FiEye className="h-4 w-4 text-muted-foreground" />
                     )}
                     <span className="sr-only">
                       {showPassword ? "Hide password" : "Show password"}

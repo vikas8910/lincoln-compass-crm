@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail } from "lucide-react";
+import { FiPhone, FiMail } from "react-icons/fi";
 
 interface Lead {
   id: string;
@@ -70,10 +70,10 @@ const RecentLeads = ({ leads }: RecentLeadsProps) => {
                 <TableCell>
                   <div className="flex space-x-2">
                     <Button variant="ghost" size="icon" title="Send Email">
-                      <Mail className="h-4 w-4" />
+                      <FiMail className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" title="Call Lead">
-                      <Phone className="h-4 w-4" />
+                      <FiPhone className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>

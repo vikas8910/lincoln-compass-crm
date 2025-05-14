@@ -5,7 +5,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import LeadsByStatus from "@/components/dashboard/LeadsByStatus";
 import LeadsBySource from "@/components/dashboard/LeadsBySource";
 import RecentLeads from "@/components/dashboard/RecentLeads";
-import { TrendingUp, User, Users, Briefcase } from "lucide-react";
+import { FiTrendingUp, FiUser, FiUsers, FiBriefcase } from "react-icons/fi";
 
 // Mock data
 const statusData = [
@@ -85,26 +85,30 @@ const Index = () => {
           <StatCard
             title="Total Leads"
             value="2,542"
-            icon={Users}
-            trend={{ value: 12, isPositive: true }}
+            icon={FiUsers}
+            change="+12%"
+            isIncreasing={true}
           />
           <StatCard
             title="New Leads"
             value="486"
-            icon={User}
-            trend={{ value: 8, isPositive: true }}
+            icon={FiUser}
+            change="+8%"
+            isIncreasing={true}
           />
           <StatCard
             title="Conversion Rate"
             value="24.3%"
-            icon={TrendingUp}
-            trend={{ value: 3, isPositive: true }}
+            icon={FiTrendingUp}
+            change="+3%"
+            isIncreasing={true}
           />
           <StatCard
             title="Active Companies"
             value="126"
-            icon={Briefcase}
-            trend={{ value: 5, isPositive: true }}
+            icon={FiBriefcase}
+            change="+5%"
+            isIncreasing={true}
           />
         </div>
 

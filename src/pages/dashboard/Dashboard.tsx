@@ -7,7 +7,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import LeadsByStatus from "@/components/dashboard/LeadsByStatus";
 import LeadsBySource from "@/components/dashboard/LeadsBySource";
 import RecentLeads from "@/components/dashboard/RecentLeads";
-import { Users, UserPlus, Briefcase, Calendar } from "lucide-react";
+import { FiUsers, FiUserPlus, FiBriefcase, FiCalendar } from "react-icons/fi";
 
 const Dashboard = () => {
   // Mock data - in a real app, this would come from an API
@@ -17,28 +17,28 @@ const Dashboard = () => {
       value: "3,210",
       change: "+12%",
       isIncreasing: true,
-      icon: Users,
+      icon: FiUsers,
     },
     {
       title: "New Leads",
       value: "120",
       change: "+4%",
       isIncreasing: true,
-      icon: UserPlus,
+      icon: FiUserPlus,
     },
     {
       title: "Conversion Rate",
       value: "24%",
       change: "-2%",
       isIncreasing: false,
-      icon: Briefcase,
+      icon: FiBriefcase,
     },
     {
       title: "Avg Conversion Time",
       value: "7 days",
       change: "+1 day",
       isIncreasing: false,
-      icon: Calendar,
+      icon: FiCalendar,
     },
   ];
 

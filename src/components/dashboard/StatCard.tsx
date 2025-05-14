@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { IconType } from "react-icons";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps {
@@ -9,7 +9,7 @@ interface StatCardProps {
   value: string | number;
   change?: string;
   isIncreasing?: boolean;
-  icon?: LucideIcon;
+  icon?: IconType;
   className?: string;
 }
 
