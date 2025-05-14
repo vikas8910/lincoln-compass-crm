@@ -101,7 +101,7 @@ const LeadDetails = () => {
   ];
   
   const mockTasks = [
-    { id: "1", title: "Follow up call", dueDate: "2023-05-10", assignedTo: "Subramanian Iyer", status: "completed" },
+    { id: "1", title: "Follow up call", dueDate: "2023-05-10", assignedTo: "Subramanian Iyer", status: "completed", createdAt: "2023-05-01T10:00:00" },
   ];
   
   const mockMeetings = [];
