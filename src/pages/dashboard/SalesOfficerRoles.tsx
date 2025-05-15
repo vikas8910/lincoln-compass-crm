@@ -25,12 +25,13 @@ import { toast } from "sonner";
 import { FiSearch } from "react-icons/fi";
 
 // Define interfaces
-interface SalesOfficer {
+interface User {
   id: string;
   name: string;
   email: string;
   role: string;
   avatar?: string;
+  department?: string;
 }
 
 interface Role {
@@ -39,54 +40,62 @@ interface Role {
 }
 
 const SalesOfficerRoles = () => {
-  const [salesOfficers, setSalesOfficers] = useState<SalesOfficer[]>([
+  const [users, setUsers] = useState<User[]>([
     {
       id: "1",
       name: "John Smith",
       email: "john.smith@example.com",
       role: "Admin",
+      department: "Sales",
     },
     {
       id: "2",
       name: "Jane Doe",
       email: "jane.doe@example.com",
       role: "Manager",
+      department: "Sales",
     },
     {
       id: "3",
       name: "Robert Johnson",
       email: "robert.johnson@example.com",
       role: "Sales Representative",
+      department: "Sales",
     },
     {
       id: "4",
       name: "Emily Williams",
       email: "emily.williams@example.com",
       role: "Sales Representative",
+      department: "Sales",
     },
     {
       id: "5",
       name: "Michael Brown",
       email: "michael.brown@example.com",
       role: "Manager",
+      department: "Marketing",
     },
     {
       id: "6",
       name: "Sarah Johnson",
       email: "sarah.johnson@example.com",
       role: "Admin",
+      department: "IT",
     },
     {
       id: "7",
       name: "David Rodriguez",
       email: "david.rodriguez@example.com",
       role: "Sales Representative",
+      department: "Sales",
     },
     {
       id: "8",
       name: "Jessica Lee",
       email: "jessica.lee@example.com",
-      role: "Sales Representative",
+      role: "Marketing Specialist",
+      department: "Marketing",
     },
   ]);
 
@@ -94,38 +103,40 @@ const SalesOfficerRoles = () => {
     { id: "1", name: "Admin" },
     { id: "2", name: "Manager" },
     { id: "3", name: "Sales Representative" },
-    { id: "4", name: "Viewer" },
+    { id: "4", name: "Marketing Specialist" },
+    { id: "5", name: "Viewer" },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  // Filter sales officers based on search term
-  const filteredOfficers = salesOfficers.filter(officer => 
-    officer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    officer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    officer.role.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter users based on search term
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.department && user.department.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Paginate the filtered results
-  const paginatedOfficers = filteredOfficers.slice(
+  const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
   // Calculate total pages
-  const totalPages = Math.ceil(filteredOfficers.length / pageSize);
+  const totalPages = Math.ceil(filteredUsers.length / pageSize);
 
   // Handle role change
-  const handleRoleChange = (officerId: string, newRole: string) => {
-    setSalesOfficers(prev => 
-      prev.map(officer => 
-        officer.id === officerId ? { ...officer, role: newRole } : officer
+  const handleRoleChange = (userId: string, newRole: string) => {
+    setUsers(prev => 
+      prev.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
       )
     );
     
-    toast.success(`Role updated successfully for ${salesOfficers.find(o => o.id === officerId)?.name}`);
+    toast.success(`Role updated successfully for ${users.find(u => u.id === userId)?.name}`);
   };
 
   // Reset to first page when search changes
@@ -136,11 +147,11 @@ const SalesOfficerRoles = () => {
   return (
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">Sales Officer Roles</h1>
+        <h1 className="text-3xl font-bold">User Roles Allocation</h1>
         <div className="relative max-w-md">
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search sales officers..."
+            placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 w-full"
@@ -150,46 +161,50 @@ const SalesOfficerRoles = () => {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Manage Sales Officer Roles</CardTitle>
+          <CardTitle>Manage User Roles</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Sales Officer</TableHead>
+                  <TableHead className="w-[300px]">User</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Current Role</TableHead>
                   <TableHead className="text-right">Assign Role</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedOfficers.length > 0 ? (
-                  paginatedOfficers.map((officer) => (
-                    <TableRow key={officer.id}>
+                {paginatedUsers.length > 0 ? (
+                  paginatedUsers.map((user) => (
+                    <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            {officer.avatar ? (
-                              <img src={officer.avatar} alt={officer.name} />
+                            {user.avatar ? (
+                              <img src={user.avatar} alt={user.name} />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                                {officer.name.charAt(0).toUpperCase()}
+                                {user.name.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </Avatar>
                           <div>
-                            <div className="font-medium">{officer.name}</div>
-                            <div className="text-sm text-muted-foreground">{officer.email}</div>
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-sm text-muted-foreground">{user.email}</div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{officer.role}</span>
+                        {user.department || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">{user.role}</span>
                       </TableCell>
                       <TableCell className="text-right">
                         <Select
-                          defaultValue={officer.role}
-                          onValueChange={(value) => handleRoleChange(officer.id, value)}
+                          defaultValue={user.role}
+                          onValueChange={(value) => handleRoleChange(user.id, value)}
                         >
                           <SelectTrigger className="w-[200px] ml-auto">
                             <SelectValue placeholder="Select Role" />
@@ -207,8 +222,8 @@ const SalesOfficerRoles = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                      No sales officers found matching your search.
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      No users found matching your search.
                     </TableCell>
                   </TableRow>
                 )}
@@ -216,14 +231,14 @@ const SalesOfficerRoles = () => {
             </Table>
           </div>
 
-          {filteredOfficers.length > 0 && (
+          {filteredUsers.length > 0 && (
             <TablePagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
               pageSize={pageSize}
               onPageSizeChange={setPageSize}
-              totalItems={filteredOfficers.length}
+              totalItems={filteredUsers.length}
             />
           )}
         </CardContent>

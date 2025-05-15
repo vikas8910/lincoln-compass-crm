@@ -45,7 +45,7 @@ const MainSidebar = () => {
       href: "/lead-assignment",
     },
     {
-      title: "Sales Officer Roles",
+      title: "User Roles Allocation",
       icon: UserCog,
       href: "/sales-officer-roles",
     },
