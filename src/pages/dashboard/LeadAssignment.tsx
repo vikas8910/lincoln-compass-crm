@@ -334,9 +334,9 @@ const LeadAssignment = () => {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={lead.assigned || ""} 
+                          value={lead.assigned || "unassigned"} 
                           onValueChange={(value) => {
-                            if (value) {
+                            if (value !== "unassigned") {
                               assignLead(lead.id, value);
                             }
                           }}
@@ -347,7 +347,7 @@ const LeadAssignment = () => {
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Unassigned</SelectItem>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
                             {salesOfficers.map((officer) => (
                               <SelectItem key={officer.id} value={officer.id}>
                                 {officer.name} ({officer.leadCount})
@@ -362,8 +362,12 @@ const LeadAssignment = () => {
                           size="sm" 
                           onClick={() => {
                             if (lead.assigned) {
-                              // Unassign
-                              assignLead(lead.id, "");
+                              // Unassign - set to unassigned
+                              const updatedLeads = leads.map(l => 
+                                l.id === lead.id ? { ...l, assigned: undefined } : l
+                              );
+                              setLeads(updatedLeads);
+                              toast.success(`Unassigned ${lead.name}`);
                             } else {
                               toast.error("Please select a sales officer first");
                             }
