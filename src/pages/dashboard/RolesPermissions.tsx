@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -125,6 +124,11 @@ const RolesPermissions = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isEditingPermission, setIsEditingPermission] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
+  
+  // New state for handling category input
+  const [isNewCategorySelected, setIsNewCategorySelected] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  
   const [newPermission, setNewPermission] = useState<Omit<Permission, "id">>({
     name: "",
     category: "",
@@ -208,6 +212,10 @@ const RolesPermissions = () => {
 
   // Handle permission operations
   const handleOpenPermissionDialog = (permission?: Permission) => {
+    // Reset state related to new category
+    setIsNewCategorySelected(false);
+    setNewCategoryName("");
+    
     if (permission) {
       setSelectedPermission(permission);
       setNewPermission({
@@ -259,6 +267,24 @@ const RolesPermissions = () => {
     setIsPermissionDeleteDialogOpen(false);
   };
 
+  // Handle category selection change
+  const handleCategoryChange = (value: string) => {
+    if (value === "New Category") {
+      setIsNewCategorySelected(true);
+      setNewCategoryName("");
+    } else {
+      setIsNewCategorySelected(false);
+      setNewPermission({...newPermission, category: value});
+    }
+  };
+
+  // Handle new category name input
+  const handleNewCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewCategoryName(value);
+    setNewPermission({...newPermission, category: value});
+  };
+
   const handleSavePermission = () => {
     if (!newPermission.name.trim()) {
       toast({
@@ -269,7 +295,10 @@ const RolesPermissions = () => {
       return;
     }
 
-    if (!newPermission.category.trim()) {
+    // Use either the selected category or the new category name
+    const finalCategory = isNewCategorySelected ? newCategoryName : newPermission.category;
+    
+    if (!finalCategory.trim()) {
       toast({
         title: "Error",
         description: "Category is required",
@@ -278,11 +307,16 @@ const RolesPermissions = () => {
       return;
     }
 
+    const permissionToSave = {
+      ...newPermission,
+      category: finalCategory
+    };
+
     if (isEditingPermission && selectedPermission) {
       // Update existing permission
       const updatedPermissions = permissions.map(p => 
         p.id === selectedPermission.id 
-          ? { ...p, ...newPermission } 
+          ? { ...p, ...permissionToSave } 
           : p
       );
       setPermissions(updatedPermissions);
@@ -293,13 +327,16 @@ const RolesPermissions = () => {
     } else {
       // Create new permission
       const newId = String(permissions.length + 1);
-      setPermissions([...permissions, { ...newPermission, id: newId }]);
+      setPermissions([...permissions, { ...permissionToSave, id: newId }]);
       toast({
         title: "Success",
         description: "Permission created successfully"
       });
     }
     
+    // Reset state
+    setIsNewCategorySelected(false);
+    setNewCategoryName("");
     setIsPermissionDialogOpen(false);
   };
 
@@ -638,8 +675,8 @@ const RolesPermissions = () => {
             <div className="grid gap-2">
               <Label htmlFor="permission-category">Category</Label>
               <Select
-                value={newPermission.category}
-                onValueChange={(value) => setNewPermission({...newPermission, category: value})}
+                value={isNewCategorySelected ? "New Category" : newPermission.category}
+                onValueChange={handleCategoryChange}
               >
                 <SelectTrigger id="permission-category">
                   <SelectValue placeholder="Select category" />
@@ -652,12 +689,12 @@ const RolesPermissions = () => {
                 </SelectContent>
               </Select>
               
-              {newPermission.category === "New Category" && (
+              {isNewCategorySelected && (
                 <div className="mt-2">
                   <Input
                     placeholder="Enter new category name"
-                    value=""
-                    onChange={(e) => setNewPermission({...newPermission, category: e.target.value})}
+                    value={newCategoryName}
+                    onChange={handleNewCategoryNameChange}
                   />
                 </div>
               )}
