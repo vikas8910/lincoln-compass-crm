@@ -52,28 +52,28 @@ const SalesOfficerRoles = () => {
       id: "2",
       name: "Jane Doe",
       email: "jane.doe@example.com",
-      role: "Manager",
+      role: "Sales Officer",
       department: "Sales",
     },
     {
       id: "3",
       name: "Robert Johnson",
       email: "robert.johnson@example.com",
-      role: "Sales Representative",
+      role: "Sales Officer",
       department: "Sales",
     },
     {
       id: "4",
       name: "Emily Williams",
       email: "emily.williams@example.com",
-      role: "Sales Representative",
+      role: "Sales Officer",
       department: "Sales",
     },
     {
       id: "5",
       name: "Michael Brown",
       email: "michael.brown@example.com",
-      role: "Manager",
+      role: "Marketing Officer",
       department: "Marketing",
     },
     {
@@ -87,24 +87,23 @@ const SalesOfficerRoles = () => {
       id: "7",
       name: "David Rodriguez",
       email: "david.rodriguez@example.com",
-      role: "Sales Representative",
+      role: "Sales Officer",
       department: "Sales",
     },
     {
       id: "8",
       name: "Jessica Lee",
       email: "jessica.lee@example.com",
-      role: "Marketing Specialist",
+      role: "Marketing Officer",
       department: "Marketing",
     },
   ]);
 
+  // Updated roles array to include only the three specified roles
   const [roles, setRoles] = useState<Role[]>([
     { id: "1", name: "Admin" },
-    { id: "2", name: "Manager" },
-    { id: "3", name: "Sales Representative" },
-    { id: "4", name: "Marketing Specialist" },
-    { id: "5", name: "Viewer" },
+    { id: "2", name: "Sales Officer" },
+    { id: "3", name: "Marketing Officer" },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
