@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -125,7 +125,7 @@ const RolesPermissions = () => {
   const [isEditingPermission, setIsEditingPermission] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
   
-  // New state for handling category input
+  // State for handling category input - separate from newPermission to avoid issues
   const [isNewCategorySelected, setIsNewCategorySelected] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   
@@ -212,10 +212,6 @@ const RolesPermissions = () => {
 
   // Handle permission operations
   const handleOpenPermissionDialog = (permission?: Permission) => {
-    // Reset state related to new category
-    setIsNewCategorySelected(false);
-    setNewCategoryName("");
-    
     if (permission) {
       setSelectedPermission(permission);
       setNewPermission({
@@ -233,6 +229,9 @@ const RolesPermissions = () => {
       });
       setIsEditingPermission(false);
     }
+    // Reset new category state
+    setIsNewCategorySelected(false);
+    setNewCategoryName("");
     setIsPermissionDialogOpen(true);
   };
 
@@ -271,7 +270,7 @@ const RolesPermissions = () => {
   const handleCategoryChange = (value: string) => {
     if (value === "New Category") {
       setIsNewCategorySelected(true);
-      setNewCategoryName("");
+      // We don't clear newCategoryName here to preserve user input
     } else {
       setIsNewCategorySelected(false);
       setNewPermission({...newPermission, category: value});
@@ -282,6 +281,7 @@ const RolesPermissions = () => {
   const handleNewCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewCategoryName(value);
+    // We also update the permission category directly to ensure it's always in sync
     setNewPermission({...newPermission, category: value});
   };
 
@@ -295,10 +295,13 @@ const RolesPermissions = () => {
       return;
     }
 
-    // Use either the selected category or the new category name
-    const finalCategory = isNewCategorySelected ? newCategoryName : newPermission.category;
+    // Use the new category name if a new category is selected
+    let finalCategory = newPermission.category;
+    if (isNewCategorySelected) {
+      finalCategory = newCategoryName.trim();
+    }
     
-    if (!finalCategory.trim()) {
+    if (!finalCategory) {
       toast({
         title: "Error",
         description: "Category is required",
@@ -334,7 +337,7 @@ const RolesPermissions = () => {
       });
     }
     
-    // Reset state
+    // Reset state after saving
     setIsNewCategorySelected(false);
     setNewCategoryName("");
     setIsPermissionDialogOpen(false);
@@ -387,215 +390,206 @@ const RolesPermissions = () => {
     (permission.description && permission.description.toLowerCase().includes(searchPermissions.toLowerCase()))
   );
 
-  return (
-    <MainLayout>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Roles & Permissions</h1>
+  const renderRolesTab = () => (
+    <TabsContent value="roles" className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="relative max-w-sm">
+          <FiSearch className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search roles..."
+            className="pl-9"
+            value={searchRoles}
+            onChange={(e) => setSearchRoles(e.target.value)}
+          />
+        </div>
+        <Button onClick={() => handleOpenRoleDialog()}>
+          <FiPlus className="mr-2 h-4 w-4" /> Add Role
+        </Button>
       </div>
-
-      <Tabs defaultValue="roles" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="roles">Roles Management</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
-          <TabsTrigger value="assignment">Assign Permissions</TabsTrigger>
-        </TabsList>
-
-        {/* Roles Tab */}
-        <TabsContent value="roles" className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative max-w-sm">
-              <FiSearch className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search roles..."
-                className="pl-9"
-                value={searchRoles}
-                onChange={(e) => setSearchRoles(e.target.value)}
-              />
-            </div>
-            <Button onClick={() => handleOpenRoleDialog()}>
-              <FiPlus className="mr-2 h-4 w-4" /> Add Role
-            </Button>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Role Management</CardTitle>
-              <CardDescription>
-                Create and manage user roles in the system.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Role Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Permissions</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRoles.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
-                        No roles found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredRoles.map((role) => (
-                      <TableRow key={role.id}>
-                        <TableCell className="font-medium">{role.name}</TableCell>
-                        <TableCell>{role.description}</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleViewPermissions(role)}
-                            className="p-0 h-auto"
-                          >
-                            <Badge variant="outline" className="cursor-pointer hover:bg-secondary/50">
-                              {role.permissions.length}
-                            </Badge>
-                          </Button>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleOpenRoleDialog(role)}
-                          >
-                            <FiEdit2 className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeleteRole(role)}
-                          >
-                            <FiTrash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Permissions Tab */}
-        <TabsContent value="permissions" className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative max-w-sm">
-              <FiSearch className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search permissions..."
-                className="pl-9"
-                value={searchPermissions}
-                onChange={(e) => setSearchPermissions(e.target.value)}
-              />
-            </div>
-            <Button onClick={() => handleOpenPermissionDialog()}>
-              <FiPlus className="mr-2 h-4 w-4" /> Add Permission
-            </Button>
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Permission Management</CardTitle>
-              <CardDescription>
-                View and manage system permissions grouped by category.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Permission</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPermissions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
-                        No permissions found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredPermissions.map((permission) => (
-                      <TableRow key={permission.id}>
-                        <TableCell className="font-medium">{permission.name}</TableCell>
-                        <TableCell>{permission.category}</TableCell>
-                        <TableCell>{permission.description}</TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleOpenPermissionDialog(permission)}
-                          >
-                            <FiEdit2 className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeletePermission(permission)}
-                          >
-                            <FiTrash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Assign Permissions Tab */}
-        <TabsContent value="assignment" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assign Permissions to Roles</CardTitle>
-              <CardDescription>
-                Select a role to manage its permissions.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6">
-                {roles.map((role) => (
-                  <div key={role.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <div>
-                        <h3 className="text-lg font-medium">{role.name}</h3>
-                        <p className="text-sm text-muted-foreground">{role.description}</p>
-                      </div>
-                      <Button onClick={() => handleOpenAssignPermissionsDialog(role)}>
-                        Manage Permissions
-                      </Button>
-                    </div>
-                    <div className="text-sm">
-                      <span className="font-medium">Permissions:</span> {role.permissions.length > 0 
-                        ? permissions
-                            .filter(p => role.permissions.includes(p.id))
-                            .map(p => p.name)
-                            .slice(0, 3)
-                            .join(", ")
-                        : "None"
-                      }
-                      {role.permissions.length > 3 && `, +${role.permissions.length - 3} more`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
       
+      <Card>
+        <CardHeader>
+          <CardTitle>Role Management</CardTitle>
+          <CardDescription>
+            Create and manage user roles in the system.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Role Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Permissions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRoles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    No roles found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRoles.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell>{role.description}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleViewPermissions(role)}
+                        className="p-0 h-auto"
+                      >
+                        <Badge variant="outline" className="cursor-pointer hover:bg-secondary/50">
+                          {role.permissions.length}
+                        </Badge>
+                      </Button>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleOpenRoleDialog(role)}
+                      >
+                        <FiEdit2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteRole(role)}
+                      >
+                        <FiTrash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
+
+  const renderPermissionsTab = () => (
+    <TabsContent value="permissions" className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="relative max-w-sm">
+          <FiSearch className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search permissions..."
+            className="pl-9"
+            value={searchPermissions}
+            onChange={(e) => setSearchPermissions(e.target.value)}
+          />
+        </div>
+        <Button onClick={() => handleOpenPermissionDialog()}>
+          <FiPlus className="mr-2 h-4 w-4" /> Add Permission
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Permission Management</CardTitle>
+          <CardDescription>
+            View and manage system permissions grouped by category.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Permission</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPermissions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    No permissions found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPermissions.map((permission) => (
+                  <TableRow key={permission.id}>
+                    <TableCell className="font-medium">{permission.name}</TableCell>
+                    <TableCell>{permission.category}</TableCell>
+                    <TableCell>{permission.description}</TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleOpenPermissionDialog(permission)}
+                      >
+                        <FiEdit2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeletePermission(permission)}
+                      >
+                        <FiTrash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
+
+  const renderAssignmentTab = () => (
+    <TabsContent value="assignment" className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Assign Permissions to Roles</CardTitle>
+          <CardDescription>
+            Select a role to manage its permissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6">
+            {roles.map((role) => (
+              <div key={role.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg font-medium">{role.name}</h3>
+                    <p className="text-sm text-muted-foreground">{role.description}</p>
+                  </div>
+                  <Button onClick={() => handleOpenAssignPermissionsDialog(role)}>
+                    Manage Permissions
+                  </Button>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Permissions:</span> {role.permissions.length > 0 
+                    ? permissions
+                        .filter(p => role.permissions.includes(p.id))
+                        .map(p => p.name)
+                        .slice(0, 3)
+                        .join(", ")
+                    : "None"
+                  }
+                  {role.permissions.length > 3 && `, +${role.permissions.length - 3} more`}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
+
+  const renderRoleDialogs = () => (
+    <>
       {/* Create/Edit Role Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -652,8 +646,12 @@ const RolesPermissions = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
 
-      {/* Create/Edit Permission Dialog */}
+  // Create/Edit Permission Dialog
+  const renderPermissionDialog = () => {
+    return (
       <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -695,6 +693,7 @@ const RolesPermissions = () => {
                     placeholder="Enter new category name"
                     value={newCategoryName}
                     onChange={handleNewCategoryNameChange}
+                    autoFocus
                   />
                 </div>
               )}
@@ -717,7 +716,11 @@ const RolesPermissions = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    );
+  };
 
+  const renderPermissionDialogs = () => (
+    <>
       {/* Delete Permission Confirmation */}
       <AlertDialog open={isPermissionDeleteDialogOpen} onOpenChange={setIsPermissionDeleteDialogOpen}>
         <AlertDialogContent>
@@ -873,6 +876,35 @@ const RolesPermissions = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+
+  return (
+    <MainLayout>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Roles & Permissions</h1>
+      </div>
+
+      <Tabs defaultValue="roles" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="roles">Roles Management</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions</TabsTrigger>
+          <TabsTrigger value="assignment">Assign Permissions</TabsTrigger>
+        </TabsList>
+
+        {renderRolesTab()}
+
+        {renderPermissionsTab()}
+
+        {renderAssignmentTab()}
+      </Tabs>
+      
+      {renderRoleDialogs()}
+
+      {/* Create/Edit Permission Dialog - Using the extracted function */}
+      {renderPermissionDialog()}
+
+      {renderPermissionDialogs()}
     </MainLayout>
   );
 };
