@@ -7,7 +7,9 @@ import StatCard from "@/components/dashboard/StatCard";
 import LeadsByStatus from "@/components/dashboard/LeadsByStatus";
 import LeadsBySource from "@/components/dashboard/LeadsBySource";
 import RecentLeads from "@/components/dashboard/RecentLeads";
-import { FiUsers, FiUserPlus, FiBriefcase, FiCalendar } from "react-icons/fi";
+import { LayoutDashboard, Users, UserRound, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   // Mock data - in a real app, this would come from an API
@@ -17,28 +19,28 @@ const Dashboard = () => {
       value: "3,210",
       change: "+12%",
       isIncreasing: true,
-      icon: FiUsers,
+      icon: Users,
     },
     {
       title: "New Leads",
       value: "120",
       change: "+4%",
       isIncreasing: true,
-      icon: FiUserPlus,
+      icon: UserRound,
     },
     {
       title: "Conversion Rate",
       value: "24%",
       change: "-2%",
       isIncreasing: false,
-      icon: FiBriefcase,
+      icon: LayoutDashboard,
     },
     {
       title: "Avg Conversion Time",
       value: "7 days",
       change: "+1 day",
       isIncreasing: false,
-      icon: FiCalendar,
+      icon: LayoutDashboard,
     },
   ];
 
@@ -69,7 +71,7 @@ const Dashboard = () => {
       email: "john@example.com",
       phone: "123-456-7890",
       company: "Acme Inc",
-      status: "New" as const,  // Use const assertion to ensure TypeScript recognizes this as a literal type
+      status: "New" as const,
       date: "2023-05-01",
     },
     {
@@ -130,10 +132,11 @@ const Dashboard = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full md:w-auto grid-cols-3 h-auto md:h-10">
+        <TabsList className="grid w-full md:w-auto grid-cols-4 h-auto md:h-10">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="salesOfficers">Sales Officers</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -166,9 +169,14 @@ const Dashboard = () => {
               <CardTitle>Sales Officers Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Sales officers management functionality will be implemented in Phase 2.
+              <p className="text-muted-foreground mb-4">
+                Manage your sales officers, view their performance, and assign leads.
               </p>
+              <Button asChild>
+                <Link to="/sales-officers">
+                  View All Sales Officers
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -179,9 +187,44 @@ const Dashboard = () => {
               <CardTitle>Leads Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Advanced leads management functionality will be implemented in Phase 2.
+              <p className="text-muted-foreground mb-4">
+                View and manage all leads, track their progress through the pipeline, and assign them to sales officers.
               </p>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild>
+                  <Link to="/leads">
+                    View All Leads
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/lead-pipeline">
+                    Lead Pipeline
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/lead-assignment">
+                    Lead Assignment
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="roles">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Role Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Manage user roles and permissions to control access to various features of the system.
+              </p>
+              <Button asChild>
+                <Link to="/roles-permissions">
+                  Manage Roles & Permissions
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

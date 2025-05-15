@@ -12,16 +12,11 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import {
-  FiLayout,
-  FiUsers,
-  FiUser,
-  FiBriefcase,
-  FiCalendar,
-  FiSettings,
-  FiBarChart2,
-  FiFolder,
-  FiGitBranch
-} from "react-icons/fi";
+  LayoutDashboard,
+  Users,
+  UserRound,
+  Settings,
+} from "lucide-react";
 
 const MainSidebar = () => {
   const location = useLocation();
@@ -29,48 +24,18 @@ const MainSidebar = () => {
   const menuItems = [
     {
       title: "Dashboard",
-      icon: FiLayout,
+      icon: LayoutDashboard,
       href: "/dashboard",
     },
     {
       title: "Sales Officers",
-      icon: FiUser,
+      icon: UserRound,
       href: "/sales-officers",
     },
     {
       title: "Leads",
-      icon: FiUsers,
+      icon: Users,
       href: "/leads",
-    },
-    {
-      title: "Lead Pipeline",
-      icon: FiGitBranch,
-      href: "/lead-pipeline",
-    },
-    {
-      title: "Companies",
-      icon: FiBriefcase,
-      href: "/companies",
-    },
-    {
-      title: "Calendar",
-      icon: FiCalendar,
-      href: "/calendar",
-    },
-    {
-      title: "Documents",
-      icon: FiFolder,
-      href: "/documents",
-    },
-    {
-      title: "Reports",
-      icon: FiBarChart2,
-      href: "/reports",
-    },
-    {
-      title: "Settings",
-      icon: FiSettings,
-      href: "/settings",
     },
   ];
 
@@ -82,7 +47,8 @@ const MainSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive = location.pathname === item.href || 
+                  (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
                 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -91,7 +57,7 @@ const MainSidebar = () => {
                       isActive={isActive}
                       tooltip={item.title}
                     >
-                      <Link to={item.href}>
+                      <Link to={item.href} className="flex items-center gap-2">
                         <item.icon className="h-5 w-5" />
                         <span>{item.title}</span>
                       </Link>

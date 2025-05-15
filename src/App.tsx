@@ -12,6 +12,8 @@ import SalesOfficers from "./pages/dashboard/SalesOfficers";
 import Leads from "./pages/dashboard/Leads";
 import LeadDetails from "./pages/dashboard/LeadDetails";
 import LeadPipeline from "./pages/dashboard/LeadPipeline";
+import RolesPermissions from "./pages/dashboard/RolesPermissions";
+import LeadAssignment from "./pages/dashboard/LeadAssignment";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => {
             <Route path="/leads" element={<ProtectedRoute element={<Leads />} />} />
             <Route path="/leads/:leadId" element={<ProtectedRoute element={<LeadDetails />} />} />
             <Route path="/lead-pipeline" element={<ProtectedRoute element={<LeadPipeline />} />} />
+            <Route path="/roles-permissions" element={<ProtectedRoute element={<RolesPermissions />} />} />
+            <Route path="/lead-assignment" element={<ProtectedRoute element={<LeadAssignment />} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
