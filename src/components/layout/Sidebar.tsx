@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
-  Users,
   UserRound,
-  Shield,
+  Users,
+  ClipboardList,
 } from "lucide-react";
 
 const MainSidebar = () => {
@@ -38,9 +38,9 @@ const MainSidebar = () => {
       href: "/leads",
     },
     {
-      title: "Roles & Permissions",
-      icon: Shield,
-      href: "/roles-permissions",
+      title: "Lead Assignment",
+      icon: ClipboardList,
+      href: "/lead-assignment",
     },
   ];
 

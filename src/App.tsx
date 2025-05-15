@@ -10,7 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/dashboard/Dashboard";
 import SalesOfficers from "./pages/dashboard/SalesOfficers";
 import Leads from "./pages/dashboard/Leads";
-import LeadDetails from "./pages/dashboard/LeadDetails";
+import LeadDetailsEnhanced from "./pages/dashboard/LeadDetailsEnhanced";
 import LeadPipeline from "./pages/dashboard/LeadPipeline";
 import RolesPermissions from "./pages/dashboard/RolesPermissions";
 import LeadAssignment from "./pages/dashboard/LeadAssignment";
@@ -41,7 +41,7 @@ const App = () => {
             <Route path="/sales-officers" element={<ProtectedRoute element={<SalesOfficers />} />} />
             <Route path="/sales-officers/:officerId" element={<ProtectedRoute element={<div>Sales Officer Details Page - To be implemented</div>} />} />
             <Route path="/leads" element={<ProtectedRoute element={<Leads />} />} />
-            <Route path="/leads/:leadId" element={<ProtectedRoute element={<LeadDetails />} />} />
+            <Route path="/leads/:leadId" element={<ProtectedRoute element={<LeadDetailsEnhanced />} />} />
             <Route path="/lead-pipeline" element={<ProtectedRoute element={<LeadPipeline />} />} />
             <Route path="/roles-permissions" element={<ProtectedRoute element={<RolesPermissions />} />} />
             <Route path="/lead-assignment" element={<ProtectedRoute element={<LeadAssignment />} />} />
