@@ -99,6 +99,7 @@ const RolesPermissions = () => {
   const [isRoleDeleteDialogOpen, setIsRoleDeleteDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [isAssignPermissionsDialogOpen, setIsAssignPermissionsDialogOpen] = useState(false);
+  const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [newPermission, setNewPermission] = useState<Omit<Permission, "id">>({
@@ -124,6 +125,12 @@ const RolesPermissions = () => {
       });
     }
     setIsRoleDialogOpen(true);
+  };
+
+  // Handle viewing permissions for a role
+  const handleViewPermissions = (role: Role) => {
+    setSelectedRole({ ...role });
+    setIsViewPermissionsDialogOpen(true);
   };
 
   const handleSaveRole = () => {
@@ -294,7 +301,16 @@ const RolesPermissions = () => {
                         <TableCell className="font-medium">{role.name}</TableCell>
                         <TableCell>{role.description}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{role.permissions.length}</Badge>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewPermissions(role)}
+                            className="p-0 h-auto"
+                          >
+                            <Badge variant="outline" className="cursor-pointer hover:bg-secondary/50">
+                              {role.permissions.length}
+                            </Badge>
+                          </Button>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button 
@@ -567,6 +583,85 @@ const RolesPermissions = () => {
             </Button>
             <Button onClick={handleSaveAssignedPermissions}>
               Save Permissions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Permissions Dialog */}
+      <Dialog 
+        open={isViewPermissionsDialogOpen} 
+        onOpenChange={setIsViewPermissionsDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Permissions for {selectedRole?.name}</DialogTitle>
+            <DialogDescription>
+              View all permissions assigned to this role
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-6">
+            {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => {
+              // Check if this category has any permissions for the selected role
+              const categoryHasPermissions = categoryPermissions.some(
+                permission => selectedRole?.permissions.includes(permission.id)
+              );
+              
+              // Only show categories with permissions
+              if (!categoryHasPermissions) return null;
+              
+              return (
+                <div key={category} className="space-y-2">
+                  <h3 className="text-lg font-medium">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
+                    {categoryPermissions.map((permission) => {
+                      // Only show permissions that are assigned to the role
+                      if (!selectedRole?.permissions.includes(permission.id)) return null;
+                      
+                      return (
+                        <div key={permission.id} className="flex items-start space-x-2">
+                          <Checkbox 
+                            id={`view-permission-${permission.id}`}
+                            checked={true}
+                            disabled={true}
+                          />
+                          <div className="grid gap-0.5">
+                            <Label 
+                              htmlFor={`view-permission-${permission.id}`}
+                              className="text-sm font-medium"
+                            >
+                              {permission.name}
+                            </Label>
+                            {permission.description && (
+                              <p className="text-xs text-muted-foreground">{permission.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {selectedRole && selectedRole.permissions.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground">
+                No permissions assigned to this role.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setIsViewPermissionsDialogOpen(false)}>Close</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsViewPermissionsDialogOpen(false);
+                setTimeout(() => handleOpenAssignPermissionsDialog(selectedRole!), 100);
+              }}
+            >
+              Manage Permissions
             </Button>
           </DialogFooter>
         </DialogContent>
