@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { FiSearch, FiRefreshCw, FiUserPlus } from "react-icons/fi";
+import TablePagination from "@/components/table/TablePagination";
 
 // Define types
 interface Lead {
@@ -51,6 +51,13 @@ const LeadAssignment = () => {
     { id: "3", name: "Mike Johnson", company: "Initech", email: "mike@initech.com", status: "Qualified" },
     { id: "4", name: "Emily Brown", company: "Massive Dynamic", email: "emily@massive.com", status: "New" },
     { id: "5", name: "Robert Davis", company: "Soylent Corp", email: "robert@soylent.com", status: "New" },
+    { id: "6", name: "Sarah Wilson", company: "Wayne Enterprises", email: "sarah@wayne.com", status: "Contacted" },
+    { id: "7", name: "Michael Thompson", company: "Stark Industries", email: "michael@stark.com", status: "Qualified" },
+    { id: "8", name: "Jessica Lee", company: "Umbrella Corp", email: "jessica@umbrella.com", status: "New" },
+    { id: "9", name: "David Miller", company: "Cyberdyne Systems", email: "david@cyberdyne.com", status: "Contacted" },
+    { id: "10", name: "Lisa Garcia", company: "Oscorp Industries", email: "lisa@oscorp.com", status: "New" },
+    { id: "11", name: "Thomas Anderson", company: "Metacortex", email: "thomas@metacortex.com", status: "Qualified" },
+    { id: "12", name: "Jennifer White", company: "Weyland-Yutani", email: "jennifer@weyland.com", status: "New" },
   ]);
 
   const [salesOfficers, setSalesOfficers] = useState<SalesOfficer[]>([
@@ -61,6 +68,7 @@ const LeadAssignment = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "assigned" | "unassigned">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [batchOfficerId, setBatchOfficerId] = useState<string>("");
   const [assignmentHistory, setAssignmentHistory] = useState<{
@@ -71,20 +79,40 @@ const LeadAssignment = () => {
     timestamp: string;
   }[]>([]);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // Get unique statuses for filter
+  const uniqueStatuses = Array.from(new Set(leads.map(lead => lead.status)));
+
   // Filter leads based on filter and search term
   const filteredLeads = leads.filter(lead => {
     // Filter by assigned status
     if (filter === "assigned" && !lead.assigned) return false;
     if (filter === "unassigned" && lead.assigned) return false;
     
+    // Filter by lead status
+    if (statusFilter !== "all" && lead.status !== statusFilter) return false;
+    
     // Search term filter
     if (searchTerm && !lead.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !lead.company.toLowerCase().includes(searchTerm.toLowerCase())) {
+        !lead.company.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !lead.email.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     
     return true;
   });
+
+  // Paginate the filtered results
+  const paginatedLeads = filteredLeads.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredLeads.length / pageSize);
 
   // Assign a lead to a sales officer
   const assignLead = (leadId: string, officerId: string) => {
@@ -263,6 +291,11 @@ const LeadAssignment = () => {
     return officer?.name || "Unknown";
   };
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filter, statusFilter]);
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -287,7 +320,7 @@ const LeadAssignment = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Select value={filter} onValueChange={(value) => setFilter(value as "all" | "assigned" | "unassigned")}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by status" />
@@ -296,6 +329,18 @@ const LeadAssignment = () => {
                   <SelectItem value="all">All Leads</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by lead status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {uniqueStatuses.map(status => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -356,14 +401,14 @@ const LeadAssignment = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLeads.length === 0 ? (
+              {paginatedLeads.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
                     No leads found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredLeads.map((lead) => {
+                paginatedLeads.map((lead) => {
                   const isAssigned = !!lead.assigned;
                   
                   return (
@@ -431,6 +476,18 @@ const LeadAssignment = () => {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {filteredLeads.length > 0 && (
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
+              totalItems={filteredLeads.length}
+            />
+          )}
         </CardContent>
       </Card>
 
