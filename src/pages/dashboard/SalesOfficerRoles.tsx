@@ -38,7 +38,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: string | null;
   avatar?: string;
   department?: string;
   mobile?: string;
@@ -141,7 +141,7 @@ const SalesOfficerRoles = () => {
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.department && user.department.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -177,7 +177,7 @@ const SalesOfficerRoles = () => {
     const userToAdd: User = {
       id: newId,
       ...newUser,
-      role: "Sales Officer", // Default role
+      role: null, // Set role to null by default
     };
     
     setUsers(prev => [...prev, userToAdd]);
@@ -268,11 +268,11 @@ const SalesOfficerRoles = () => {
                         {user.department || "N/A"}
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{user.role}</span>
+                        <span className="font-medium">{user.role || "None"}</span>
                       </TableCell>
                       <TableCell className="text-right">
                         <Select
-                          defaultValue={user.role}
+                          defaultValue={user.role || undefined}
                           onValueChange={(value) => handleRoleChange(user.id, value)}
                         >
                           <SelectTrigger className="w-[200px] ml-auto">
