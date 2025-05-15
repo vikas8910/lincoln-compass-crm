@@ -22,7 +22,16 @@ import {
 import TablePagination from "@/components/table/TablePagination";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiUserPlus } from "react-icons/fi";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 // Define interfaces
 interface User {
@@ -32,6 +41,7 @@ interface User {
   role: string;
   avatar?: string;
   department?: string;
+  mobile?: string;
 }
 
 interface Role {
@@ -47,6 +57,7 @@ const SalesOfficerRoles = () => {
       email: "john.smith@example.com",
       role: "Admin",
       department: "Sales",
+      mobile: "123-456-7890",
     },
     {
       id: "2",
@@ -54,6 +65,7 @@ const SalesOfficerRoles = () => {
       email: "jane.doe@example.com",
       role: "Sales Officer",
       department: "Sales",
+      mobile: "123-456-7891",
     },
     {
       id: "3",
@@ -61,6 +73,7 @@ const SalesOfficerRoles = () => {
       email: "robert.johnson@example.com",
       role: "Sales Officer",
       department: "Sales",
+      mobile: "123-456-7892",
     },
     {
       id: "4",
@@ -68,6 +81,7 @@ const SalesOfficerRoles = () => {
       email: "emily.williams@example.com",
       role: "Sales Officer",
       department: "Sales",
+      mobile: "123-456-7893",
     },
     {
       id: "5",
@@ -75,6 +89,7 @@ const SalesOfficerRoles = () => {
       email: "michael.brown@example.com",
       role: "Marketing Officer",
       department: "Marketing",
+      mobile: "123-456-7894",
     },
     {
       id: "6",
@@ -82,6 +97,7 @@ const SalesOfficerRoles = () => {
       email: "sarah.johnson@example.com",
       role: "Admin",
       department: "IT",
+      mobile: "123-456-7895",
     },
     {
       id: "7",
@@ -89,6 +105,7 @@ const SalesOfficerRoles = () => {
       email: "david.rodriguez@example.com",
       role: "Sales Officer",
       department: "Sales",
+      mobile: "123-456-7896",
     },
     {
       id: "8",
@@ -96,6 +113,7 @@ const SalesOfficerRoles = () => {
       email: "jessica.lee@example.com",
       role: "Marketing Officer",
       department: "Marketing",
+      mobile: "123-456-7897",
     },
   ]);
 
@@ -109,6 +127,15 @@ const SalesOfficerRoles = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  
+  // New user dialog states
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [newUser, setNewUser] = useState<Omit<User, "id" | "role">>({
+    name: "",
+    email: "",
+    department: "Sales",
+    mobile: "",
+  });
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -137,6 +164,36 @@ const SalesOfficerRoles = () => {
     
     toast.success(`Role updated successfully for ${users.find(u => u.id === userId)?.name}`);
   };
+  
+  // Handle adding a new user
+  const handleAddUser = () => {
+    if (!newUser.name || !newUser.email) {
+      toast.error("Name and email are required");
+      return;
+    }
+    
+    const newId = String(users.length + 1);
+    
+    const userToAdd: User = {
+      id: newId,
+      ...newUser,
+      role: "Sales Officer", // Default role
+    };
+    
+    setUsers(prev => [...prev, userToAdd]);
+    
+    // Reset form and close dialog
+    setNewUser({
+      name: "",
+      email: "",
+      department: "Sales",
+      mobile: "",
+    });
+    
+    setIsAddUserDialogOpen(false);
+    
+    toast.success(`User ${newUser.name} added successfully`);
+  };
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -147,14 +204,20 @@ const SalesOfficerRoles = () => {
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">User Roles Allocation</h1>
-        <div className="relative max-w-md">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 w-full"
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative max-w-md">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
+          <Button onClick={() => setIsAddUserDialogOpen(true)}>
+            <FiUserPlus className="mr-2 h-4 w-4" />
+            Add New User
+          </Button>
         </div>
       </div>
 
@@ -190,7 +253,14 @@ const SalesOfficerRoles = () => {
                           </Avatar>
                           <div>
                             <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">{user.email}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {user.email}
+                              {user.mobile && (
+                                <div className="text-xs text-muted-foreground">
+                                  {user.mobile}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
@@ -242,6 +312,92 @@ const SalesOfficerRoles = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Add New User Dialog */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Enter the details of the new user. You can assign their role later from the user table.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={newUser.name}
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                className="col-span-3"
+                placeholder="John Smith"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                className="col-span-3"
+                placeholder="john.smith@example.com"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="mobile" className="text-right">
+                Mobile
+              </Label>
+              <Input
+                id="mobile"
+                value={newUser.mobile}
+                onChange={(e) => setNewUser({ ...newUser, mobile: e.target.value })}
+                className="col-span-3"
+                placeholder="123-456-7890"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="department" className="text-right">
+                Department
+              </Label>
+              <Select 
+                value={newUser.department} 
+                onValueChange={(value) => setNewUser({ ...newUser, department: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddUser}>
+              Add User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
