@@ -102,7 +102,7 @@ const LeadLifecycleStage: React.FC<LeadLifecycleStageProps> = ({
 
   return (
     <div className="w-full">
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .lead-lifecycle-stage div:after {
           content: '';
           position: absolute;
@@ -123,7 +123,7 @@ const LeadLifecycleStage: React.FC<LeadLifecycleStageProps> = ({
           border-left: 10px solid white;
           z-index: 1;
         }
-      `}</style>
+      `}} />
       {renderMobileView()}
       {renderDesktopView()}
     </div>

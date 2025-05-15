@@ -13,6 +13,7 @@ import Leads from "./pages/dashboard/Leads";
 import LeadDetailsEnhanced from "./pages/dashboard/LeadDetailsEnhanced";
 import LeadPipeline from "./pages/dashboard/LeadPipeline";
 import RolesPermissions from "./pages/dashboard/RolesPermissions";
+import RolesUsers from "./pages/dashboard/RolesUsers";
 import LeadAssignment from "./pages/dashboard/LeadAssignment";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => {
             <Route path="/leads/:leadId" element={<ProtectedRoute element={<LeadDetailsEnhanced />} />} />
             <Route path="/lead-pipeline" element={<ProtectedRoute element={<LeadPipeline />} />} />
             <Route path="/roles-permissions" element={<ProtectedRoute element={<RolesPermissions />} />} />
+            <Route path="/roles-users" element={<ProtectedRoute element={<RolesUsers />} />} />
             <Route path="/lead-assignment" element={<ProtectedRoute element={<LeadAssignment />} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

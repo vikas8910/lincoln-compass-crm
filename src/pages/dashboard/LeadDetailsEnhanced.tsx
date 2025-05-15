@@ -25,7 +25,6 @@ import LeadNotes from "@/components/leads/LeadNotes";
 import LeadTasks from "@/components/leads/LeadTasks";
 import LeadMeetings from "@/components/leads/LeadMeetings";
 import LeadDialog from "@/components/leads/LeadDialog";
-import { Style } from "@/components/ui/styled-jsx";
 import { Lead, LeadStatus } from "@/types/lead";
 
 // Define all possible lead stages
@@ -60,16 +59,22 @@ const mockLead: Lead = {
   }
 };
 
-// Define props for the components that use leadId
-interface ExtendedCompProps {
-  leadId?: string;
+// Add these properties to the component props
+interface ExtendedTimelineProps {
+  leadId: string;
 }
 
-// Extending component props
-type ExtendedTimelineProps = React.ComponentProps<typeof LeadActivityTimeline> & ExtendedCompProps;
-type ExtendedTasksProps = React.ComponentProps<typeof LeadTasks> & ExtendedCompProps;
-type ExtendedMeetingsProps = React.ComponentProps<typeof LeadMeetings> & ExtendedCompProps;
-type ExtendedNotesProps = React.ComponentProps<typeof LeadNotes> & ExtendedCompProps;
+interface ExtendedNotesProps {
+  leadId: string;
+}
+
+interface ExtendedTasksProps {
+  leadId: string;
+}
+
+interface ExtendedMeetingsProps {
+  leadId: string;
+}
 
 const LeadDetailsEnhanced = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -87,9 +92,8 @@ const LeadDetailsEnhanced = () => {
     toast.success(`Lead status updated to ${newStage}`);
   };
   
-  // Update this function to handle the Lead type correctly
   const handleSaveLead = (updatedLead: Lead) => {
-    setLead({ ...lead, ...updatedLead });
+    setLead(updatedLead);
     setShowEditDialog(false);
     toast.success("Lead information updated successfully");
   };
@@ -104,27 +108,29 @@ const LeadDetailsEnhanced = () => {
   
   return (
     <MainLayout>
-      <Style jsx>{`
-        .lead-lifecycle-stage .arrow-right:after {
-          content: '';
-          position: absolute;
-          right: -15px;
-          top: 0;
-          border-top: 18px solid transparent;
-          border-bottom: 18px solid transparent;
-          border-left: 15px solid inherit;
-          z-index: 1;
-        }
-        .lead-lifecycle-stage .arrow-left:before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          border-top: 18px solid transparent;
-          border-bottom: 18px solid transparent;
-          border-left: 15px solid white;
-        }
-      `}</Style>
+      <div dangerouslySetInnerHTML={{ __html: `
+        <style>
+          .lead-lifecycle-stage .arrow-right:after {
+            content: '';
+            position: absolute;
+            right: -15px;
+            top: 0;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-left: 15px solid inherit;
+            z-index: 1;
+          }
+          .lead-lifecycle-stage .arrow-left:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-left: 15px solid white;
+          }
+        </style>
+      `}} />
       
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -289,16 +295,16 @@ const LeadDetailsEnhanced = () => {
                   <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 </TabsList>
                 <TabsContent value="timeline" className="mt-0">
-                  <LeadActivityTimeline {...({ leadId: lead.id } as ExtendedTimelineProps)} />
+                  <LeadActivityTimeline leadId={lead.id} />
                 </TabsContent>
                 <TabsContent value="notes" className="mt-0">
-                  <LeadNotes {...({ leadId: lead.id } as ExtendedNotesProps)} />
+                  <LeadNotes leadId={lead.id} />
                 </TabsContent>
                 <TabsContent value="tasks" className="mt-0">
-                  <LeadTasks {...({ leadId: lead.id } as ExtendedTasksProps)} />
+                  <LeadTasks leadId={lead.id} />
                 </TabsContent>
                 <TabsContent value="meetings" className="mt-0">
-                  <LeadMeetings {...({ leadId: lead.id } as ExtendedMeetingsProps)} />
+                  <LeadMeetings leadId={lead.id} />
                 </TabsContent>
                 <TabsContent value="analytics" className="mt-0">
                   <div className="flex items-center justify-center h-60 bg-muted/30 rounded-md">

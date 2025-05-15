@@ -45,10 +45,10 @@ const MainSidebar = () => {
   ];
 
   return (
-    <Sidebar>
+    <Sidebar className="bg-[#1A1F2C] text-white">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-gray-400">Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -61,6 +61,7 @@ const MainSidebar = () => {
                       asChild 
                       isActive={isActive}
                       tooltip={item.title}
+                      className={isActive ? "bg-blue-700 text-white" : "text-gray-300 hover:text-white hover:bg-blue-800/50"}
                     >
                       <Link to={item.href} className="flex items-center gap-2">
                         <item.icon className="h-5 w-5" />
