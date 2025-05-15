@@ -13,17 +13,34 @@ interface Note {
   createdAt: string;
 }
 
-interface LeadNotesProps {
-  notes: Note[];
-  onAddNote: (note: string) => void;
+export interface LeadNotesProps {
+  leadId?: string;
+  notes?: Note[];
+  onAddNote?: (note: string) => void;
 }
 
-const LeadNotes = ({ notes, onAddNote }: LeadNotesProps) => {
+// Mock notes for demonstration
+const mockNotes: Note[] = [
+  {
+    id: "1",
+    content: "Client interested in premium package. Follow up next week.",
+    createdBy: "Subramanian Iyer",
+    createdAt: "2023-05-10T10:30:00",
+  },
+  {
+    id: "2",
+    content: "Discussed pricing options. Client will get back after team meeting.",
+    createdBy: "John Doe",
+    createdAt: "2023-05-08T14:45:00",
+  },
+];
+
+const LeadNotes = ({ leadId, notes = mockNotes, onAddNote }: LeadNotesProps) => {
   const [newNote, setNewNote] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newNote.trim()) {
+    if (newNote.trim() && onAddNote) {
       onAddNote(newNote);
       setNewNote("");
     }

@@ -102,11 +102,13 @@ const LeadLifecycleStage: React.FC<LeadLifecycleStageProps> = ({
               {stage}
             </span>
             
-            <style jsx>{`
-              .lifecycle-stage::after {
-                border-left-color: ${stageColor.includes('bg-gray') ? '#e5e7eb' : stageColor.split(' ')[0].replace('bg-', '')}; 
-              }
-            `}</style>
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                .lifecycle-stage::after {
+                  border-left-color: ${stageColor.includes('bg-gray') ? '#e5e7eb' : stageColor.split(' ')[0].replace('bg-', '')}; 
+                }
+              `
+            }} />
           </div>
         );
       })}

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -25,6 +26,7 @@ import LeadTasks from "@/components/leads/LeadTasks";
 import LeadMeetings from "@/components/leads/LeadMeetings";
 import LeadDialog from "@/components/leads/LeadDialog";
 import { Style } from "@/components/ui/styled-jsx";
+import { Lead, LeadStatus } from "@/types/lead";
 
 // Define all possible lead stages
 const leadStages = [
@@ -40,13 +42,13 @@ const leadStages = [
 ];
 
 // Mock data for the lead
-const mockLead = {
+const mockLead: Lead = {
   id: "1",
   name: "Sumaiya Shaikh",
   email: "drsumaiya@primehealth.ae",
   phone: "+971502950783",
   company: "Prime Health",
-  status: "In Contact",
+  status: "In Contact" as LeadStatus,
   source: "Website",
   assignedTo: "Subramanian Iyer",
   date: "2022-11-30",
@@ -58,9 +60,14 @@ const mockLead = {
   }
 };
 
+// Extending component props for the components that need leadId
+type ExtendedTimelineProps = React.ComponentProps<typeof LeadActivityTimeline> & { leadId?: string };
+type ExtendedTasksProps = React.ComponentProps<typeof LeadTasks> & { leadId?: string };
+type ExtendedMeetingsProps = React.ComponentProps<typeof LeadMeetings> & { leadId?: string };
+
 const LeadDetailsEnhanced = () => {
   const { leadId } = useParams<{ leadId: string }>();
-  const [lead, setLead] = useState(mockLead);
+  const [lead, setLead] = useState<Lead>(mockLead);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   
@@ -70,11 +77,11 @@ const LeadDetailsEnhanced = () => {
   // }, [leadId]);
   
   const handleStageChange = (newStage: string) => {
-    setLead(prev => ({ ...prev, status: newStage }));
+    setLead(prev => ({ ...prev, status: newStage as LeadStatus }));
     toast.success(`Lead status updated to ${newStage}`);
   };
   
-  const handleSaveLead = (updatedLead: any) => {
+  const handleSaveLead = (updatedLead: Partial<Lead>) => {
     setLead({ ...lead, ...updatedLead });
     setShowEditDialog(false);
     toast.success("Lead information updated successfully");
@@ -275,16 +282,16 @@ const LeadDetailsEnhanced = () => {
                   <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 </TabsList>
                 <TabsContent value="timeline" className="mt-0">
-                  <LeadActivityTimeline leadId={lead.id} />
+                  <LeadActivityTimeline {...({ leadId: lead.id } as ExtendedTimelineProps)} />
                 </TabsContent>
                 <TabsContent value="notes" className="mt-0">
                   <LeadNotes leadId={lead.id} />
                 </TabsContent>
                 <TabsContent value="tasks" className="mt-0">
-                  <LeadTasks leadId={lead.id} />
+                  <LeadTasks {...({ leadId: lead.id } as ExtendedTasksProps)} />
                 </TabsContent>
                 <TabsContent value="meetings" className="mt-0">
-                  <LeadMeetings leadId={lead.id} />
+                  <LeadMeetings {...({ leadId: lead.id } as ExtendedMeetingsProps)} />
                 </TabsContent>
                 <TabsContent value="analytics" className="mt-0">
                   <div className="flex items-center justify-center h-60 bg-muted/30 rounded-md">
