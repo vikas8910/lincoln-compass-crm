@@ -26,11 +26,9 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastAction altText="Close" asChild className="absolute right-2 top-1/2 -translate-y-1/2 p-0">
-              <ToastClose>
-                <X className="h-4 w-4" />
-              </ToastClose>
-            </ToastAction>
+            <ToastClose className="absolute right-2 top-2 opacity-100">
+              <X className="h-4 w-4" />
+            </ToastClose>
           </Toast>
         )
       })}
