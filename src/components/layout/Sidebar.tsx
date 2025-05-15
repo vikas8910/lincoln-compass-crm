@@ -16,6 +16,7 @@ import {
   UserRound,
   Users,
   ClipboardList,
+  Shield,
 } from "lucide-react";
 
 const MainSidebar = () => {
@@ -41,6 +42,11 @@ const MainSidebar = () => {
       title: "Lead Assignment",
       icon: ClipboardList,
       href: "/lead-assignment",
+    },
+    {
+      title: "Roles & Permissions",
+      icon: Shield,
+      href: "/roles-permissions",
     },
   ];
 
