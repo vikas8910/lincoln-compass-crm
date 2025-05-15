@@ -125,15 +125,13 @@ const LeadAssignment = () => {
           timestamp: new Date().toISOString(),
         }
       ]);
-      
-      toast.success(`Assigned ${lead.name} to ${officer.name}`);
     }
     
     setLeads(updatedLeads);
     setSalesOfficers(updatedOfficers);
   };
 
-  // Handle batch assignment
+  // Handle batch assignment - FIXED: now properly assigns all selected leads
   const handleBatchAssign = () => {
     if (!batchOfficerId) {
       toast.error("Please select a sales officer for batch assignment");
@@ -145,16 +143,66 @@ const LeadAssignment = () => {
       return;
     }
     
-    // Assign each selected lead
+    // Create copies for updating
+    let updatedLeads = [...leads];
+    let updatedOfficers = [...salesOfficers];
+    let newHistory = [...assignmentHistory];
+    
+    // Find the target officer
+    const officer = salesOfficers.find(o => o.id === batchOfficerId);
+    if (!officer) {
+      toast.error("Selected sales officer not found");
+      return;
+    }
+    
+    // Track new leads being assigned to this officer
+    const newAssignedLeads: string[] = [];
+    
+    // Update all selected leads
     selectedLeads.forEach(leadId => {
-      assignLead(leadId, batchOfficerId);
+      // Update leads
+      updatedLeads = updatedLeads.map(lead => 
+        lead.id === leadId ? { ...lead, assigned: batchOfficerId } : lead
+      );
+      
+      // Add to new assigned leads
+      newAssignedLeads.push(leadId);
+      
+      // Add to history
+      const lead = leads.find(l => l.id === leadId);
+      if (lead) {
+        newHistory.push({
+          leadId,
+          leadName: lead.name,
+          officerId: batchOfficerId,
+          officerName: officer.name,
+          timestamp: new Date().toISOString(),
+        });
+      }
     });
+    
+    // Update the officer's assigned leads and count
+    updatedOfficers = updatedOfficers.map(o => {
+      if (o.id === batchOfficerId) {
+        return {
+          ...o,
+          leadCount: o.leadCount + newAssignedLeads.length,
+          assignedLeads: [...o.assignedLeads, ...newAssignedLeads]
+        };
+      }
+      return o;
+    });
+    
+    // Update state
+    setLeads(updatedLeads);
+    setSalesOfficers(updatedOfficers);
+    setAssignmentHistory(newHistory);
     
     // Clear selections after assignment
     setSelectedLeads([]);
     setBatchOfficerId("");
     
-    toast.success(`Assigned ${selectedLeads.length} leads to ${salesOfficers.find(o => o.id === batchOfficerId)?.name}`);
+    toast.success(`Assigned ${selectedLeads.length} leads to ${officer.name}`);
   };
 
   // Reset all assignments
@@ -218,7 +266,7 @@ const LeadAssignment = () => {
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Lead Assignment</h1>
+        <h1 className="text-3xl font-bold">Sales Mapping</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={resetAssignments}>
             <FiRefreshCw className="mr-2 h-4 w-4" /> Reset Assignments
