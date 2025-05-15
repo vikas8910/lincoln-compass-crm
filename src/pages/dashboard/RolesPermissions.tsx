@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -311,7 +310,7 @@ const RolesPermissions = () => {
                           <Badge variant="outline">{role.permissions.length}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={role.isActive ? "success" : "secondary"}>
+                          <Badge variant={role.isActive ? "secondary" : "outline"}>
                             {role.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
