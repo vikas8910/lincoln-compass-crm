@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -6,7 +7,9 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
+  ToastAction,
 } from "@/components/ui/toast"
+import { X } from "lucide-react"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -23,7 +26,11 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastClose />
+            <ToastAction altText="Close" asChild>
+              <ToastClose>
+                <X className="h-4 w-4" />
+              </ToastClose>
+            </ToastAction>
           </Toast>
         )
       })}
