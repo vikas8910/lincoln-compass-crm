@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,29 +11,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Lead } from "./Leads";
+import { Lead, LeadStatus } from "@/types/lead";
 import { FiPlus, FiChevronRight, FiChevronDown } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import LeadDialog from "@/components/leads/LeadDialog";
 
 // Define pipeline stages
-const pipelineStages: Lead["status"][] = [
+const pipelineStages: LeadStatus[] = [
   "New",
-  "Contacted",
-  "Qualified",
+  "In Contact",
+  "Follow up", 
+  "Set Meeting",
   "Negotiation",
-  "Won",
-  "Lost"
+  "Enrolled",
+  "Junk/Lost",
+  "On Campus",
+  "Customer"
 ];
 
 // Define stage colors
-const stageColors: Record<Lead["status"], string> = {
+const stageColors: Record<LeadStatus, string> = {
   "New": "bg-blue-100 border-blue-300 text-blue-800",
-  "Contacted": "bg-purple-100 border-purple-300 text-purple-800",
-  "Qualified": "bg-amber-100 border-amber-300 text-amber-800",
-  "Negotiation": "bg-orange-100 border-orange-300 text-orange-800",
-  "Won": "bg-green-100 border-green-300 text-green-800",
-  "Lost": "bg-red-100 border-red-300 text-red-800",
+  "In Contact": "bg-purple-100 border-purple-300 text-purple-800",
+  "Follow up": "bg-amber-100 border-amber-300 text-amber-800",
+  "Set Meeting": "bg-orange-100 border-orange-300 text-orange-800",
+  "Negotiation": "bg-pink-100 border-pink-300 text-pink-800",
+  "Enrolled": "bg-green-100 border-green-300 text-green-800",
+  "Junk/Lost": "bg-red-100 border-red-300 text-red-800",
+  "On Campus": "bg-teal-100 border-teal-300 text-teal-800",
+  "Customer": "bg-emerald-100 border-emerald-300 text-emerald-800"
 };
 
 const LeadPipeline = () => {
@@ -50,6 +55,8 @@ const LeadPipeline = () => {
       source: "Website",
       assignedTo: "Jane Smith",
       date: "2023-05-01",
+      tags: [],
+      createdAt: "2023-05-01T00:00:00"
     },
     {
       id: "2",
@@ -57,10 +64,12 @@ const LeadPipeline = () => {
       email: "jane@example.com",
       phone: "123-456-7891",
       company: "Globex Corp",
-      status: "Contacted",
+      status: "In Contact",
       source: "Referral",
       assignedTo: "John Smith",
       date: "2023-04-28",
+      tags: [],
+      createdAt: "2023-04-28T00:00:00"
     },
     {
       id: "3",
@@ -68,10 +77,12 @@ const LeadPipeline = () => {
       email: "michael@example.com",
       phone: "123-456-7892",
       company: "Initech",
-      status: "Qualified",
+      status: "Follow up",
       source: "Trade Show",
       assignedTo: "Robert Johnson",
       date: "2023-04-25",
+      tags: [],
+      createdAt: "2023-04-25T00:00:00"
     },
     {
       id: "4",
@@ -79,10 +90,12 @@ const LeadPipeline = () => {
       email: "emily@example.com",
       phone: "123-456-7893",
       company: "Massive Dynamic",
-      status: "Negotiation",
+      status: "Set Meeting",
       source: "Cold Call",
       assignedTo: "Emily Williams",
       date: "2023-04-20",
+      tags: [],
+      createdAt: "2023-04-20T00:00:00"
     },
     {
       id: "5",
@@ -90,22 +103,27 @@ const LeadPipeline = () => {
       email: "robert@example.com",
       phone: "123-456-7894",
       company: "Soylent Corp",
-      status: "Won",
+      status: "Enrolled",
       source: "Email Campaign",
       assignedTo: "Michael Brown",
       date: "2023-04-15",
+      tags: [],
+      createdAt: "2023-04-15T00:00:00"
     },
   ]);
   
   const [showDialog, setShowDialog] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [stageVisibility, setStageVisibility] = useState<Record<Lead["status"], boolean>>({
+  const [stageVisibility, setStageVisibility] = useState<Record<LeadStatus, boolean>>({
     "New": true,
-    "Contacted": true,
-    "Qualified": true,
+    "In Contact": true,
+    "Follow up": true,
+    "Set Meeting": true,
     "Negotiation": true,
-    "Won": true,
-    "Lost": true,
+    "Enrolled": true,
+    "Junk/Lost": true,
+    "On Campus": true,
+    "Customer": true,
   });
   
   const handleAddNew = () => {
@@ -134,7 +152,7 @@ const LeadPipeline = () => {
     setShowDialog(false);
   };
   
-  const handleUpdateLeadStatus = (leadId: string, newStatus: Lead["status"]) => {
+  const handleUpdateLeadStatus = (leadId: string, newStatus: LeadStatus) => {
     setLeads(prevLeads =>
       prevLeads.map(lead => 
         lead.id === leadId ? { ...lead, status: newStatus } : lead
@@ -144,7 +162,7 @@ const LeadPipeline = () => {
     toast.success(`Lead moved to ${newStatus} stage`);
   };
   
-  const toggleStageVisibility = (stage: Lead["status"]) => {
+  const toggleStageVisibility = (stage: LeadStatus) => {
     setStageVisibility(prev => ({
       ...prev,
       [stage]: !prev[stage]
@@ -155,14 +173,14 @@ const LeadPipeline = () => {
   const leadsByStage = pipelineStages.reduce((acc, stage) => {
     acc[stage] = leads.filter(lead => lead.status === stage);
     return acc;
-  }, {} as Record<Lead["status"], Lead[]>);
+  }, {} as Record<LeadStatus, Lead[]>);
   
   // Calculate total and counts by stage
   const totalLeads = leads.length;
   const countsByStage = pipelineStages.reduce((acc, stage) => {
     acc[stage] = leads.filter(lead => lead.status === stage).length;
     return acc;
-  }, {} as Record<Lead["status"], number>);
+  }, {} as Record<LeadStatus, number>);
   
   return (
     <MainLayout>
@@ -250,7 +268,7 @@ const LeadPipeline = () => {
                           <Select 
                             value={lead.status}
                             onValueChange={(value) => {
-                              handleUpdateLeadStatus(lead.id, value as Lead["status"]);
+                              handleUpdateLeadStatus(lead.id, value as LeadStatus);
                             }}
                           >
                             <SelectTrigger className="w-[140px]">

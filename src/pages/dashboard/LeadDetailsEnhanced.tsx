@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -40,6 +39,23 @@ const leadStages: LeadStatus[] = [
   "Customer"
 ];
 
+// Add these interface definitions for the components
+interface LeadActivityTimelineProps {
+  leadId: string;
+}
+
+interface LeadNotesProps {
+  leadId: string;
+}
+
+interface LeadTasksProps {
+  leadId: string;
+}
+
+interface LeadMeetingsProps {
+  leadId: string;
+}
+
 // Mock data for the lead
 const mockLead: Lead = {
   id: "1",
@@ -59,23 +75,6 @@ const mockLead: Lead = {
   }
 };
 
-// Add these properties to the component props
-interface ExtendedTimelineProps {
-  leadId: string;
-}
-
-interface ExtendedNotesProps {
-  leadId: string;
-}
-
-interface ExtendedTasksProps {
-  leadId: string;
-}
-
-interface ExtendedMeetingsProps {
-  leadId: string;
-}
-
 const LeadDetailsEnhanced = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const [lead, setLead] = useState<Lead>(mockLead);
@@ -87,8 +86,8 @@ const LeadDetailsEnhanced = () => {
   //   // Fetch lead data
   // }, [leadId]);
   
-  const handleStageChange = (newStage: string) => {
-    setLead(prev => ({ ...prev, status: newStage as LeadStatus }));
+  const handleStageChange = (newStage: LeadStatus) => {
+    setLead(prev => ({ ...prev, status: newStage }));
     toast.success(`Lead status updated to ${newStage}`);
   };
   

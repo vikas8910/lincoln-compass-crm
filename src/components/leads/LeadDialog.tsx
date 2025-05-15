@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lead } from "@/pages/dashboard/Leads";
+import { Lead, LeadStatus } from "@/types/lead";
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -35,7 +35,7 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone number is required"),
   company: z.string().min(1, "Company is required"),
-  status: z.enum(["New", "Contacted", "Qualified", "Negotiation", "Won", "Lost", "In Contact", "Follow up", "Set Meeting", "Enrolled", "Junk/Lost"]),
+  status: z.enum(["New", "In Contact", "Follow up", "Set Meeting", "Negotiation", "Enrolled", "Junk/Lost", "On Campus", "Customer"]),
   source: z.string().min(1, "Source is required"),
   assignedTo: z.string().min(1, "Assigned to is required"),
   date: z.string(),

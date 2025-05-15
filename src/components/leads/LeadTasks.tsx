@@ -1,247 +1,265 @@
 
-import React, { useState } from "react";
-import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { FiPlusCircle, FiCalendar, FiClock, FiUser, FiCheck } from "react-icons/fi";
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar as CalendarIcon, Plus, Check, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+export interface LeadTasksProps {
+  leadId: string;
+}
 
 interface Task {
   id: string;
   title: string;
   dueDate: string;
+  priority: 'high' | 'medium' | 'low';
+  status: 'pending' | 'completed';
   assignedTo: string;
-  status: string;
-  description?: string;
 }
 
-interface LeadTasksProps {
-  tasks: Task[];
-  onAddTask: (task: any) => void;
-}
+const LeadTasks: React.FC<LeadTasksProps> = ({ leadId }) => {
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'Follow up on pricing discussion',
+      dueDate: '2023-06-05',
+      priority: 'high',
+      status: 'pending',
+      assignedTo: 'Jane Smith',
+    },
+    {
+      id: '2',
+      title: 'Send product documentation',
+      dueDate: '2023-05-30',
+      priority: 'medium',
+      status: 'completed',
+      assignedTo: 'John Doe',
+    },
+  ]);
+  const [showForm, setShowForm] = useState(false);
+  const [newTask, setNewTask] = useState<Partial<Task>>({
+    title: '',
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
+    priority: 'medium',
+    status: 'pending',
+    assignedTo: 'Jane Smith',
+  });
 
-const LeadTasks = ({ tasks, onAddTask }: LeadTasksProps) => {
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskDate, setTaskDate] = useState("");
-  const [taskTime, setTaskTime] = useState("");
-  const [taskDescription, setTaskDescription] = useState("");
-  const [taskType, setTaskType] = useState("call");
-  const [assignedTo, setAssignedTo] = useState("Subramanian Iyer");
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const handleAddTask = () => {
+    if (!newTask.title) {
+      toast.error('Task title is required');
+      return;
+    }
 
-  const resetForm = () => {
-    setTaskTitle("");
-    setTaskDate("");
-    setTaskTime("");
-    setTaskDescription("");
-    setTaskType("call");
-    setAssignedTo("Subramanian Iyer");
-    setIsCompleted(false);
+    const task: Task = {
+      id: Date.now().toString(),
+      title: newTask.title!,
+      dueDate: newTask.dueDate!,
+      priority: newTask.priority as 'high' | 'medium' | 'low',
+      status: 'pending',
+      assignedTo: newTask.assignedTo!,
+    };
+
+    setTasks([...tasks, task]);
+    setNewTask({
+      title: '',
+      dueDate: format(new Date(), 'yyyy-MM-dd'),
+      priority: 'medium',
+      status: 'pending',
+      assignedTo: 'Jane Smith',
+    });
+    setShowForm(false);
+    toast.success('Task added successfully');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (taskTitle.trim() && taskDate) {
-      onAddTask({
-        title: taskTitle,
-        dueDate: taskDate,
-        time: taskTime,
-        description: taskDescription,
-        type: taskType,
-        assignedTo: assignedTo,
-        status: isCompleted ? "completed" : "pending",
-      });
-      resetForm();
-      setIsDialogOpen(false);
+  const handleToggleStatus = (id: string) => {
+    setTasks(tasks.map(task => 
+      task.id === id 
+        ? { ...task, status: task.status === 'completed' ? 'pending' : 'completed' } 
+        : task
+    ));
+    
+    const updatedTask = tasks.find(task => task.id === id);
+    if (updatedTask) {
+      const newStatus = updatedTask.status === 'completed' ? 'pending' : 'completed';
+      toast.success(`Task marked as ${newStatus}`);
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch(priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
+      case 'medium':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
+      case 'low':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Tasks</h3>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <FiPlusCircle className="mr-2 h-4 w-4" />
-              Add task
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Task</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="flex items-center gap-2">
-                  <Checkbox 
-                    id="completed"
-                    checked={isCompleted}
-                    onCheckedChange={(checked) => setIsCompleted(checked === true)}
-                  />
-                  <Label htmlFor="completed">Mark as completed</Label>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="title" className="flex items-center">
-                    Title <span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <Input
-                    id="title"
-                    value={taskTitle}
-                    onChange={(e) => setTaskTitle(e.target.value)}
-                    placeholder="Enter title of task"
-                    required
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={taskDescription}
-                    onChange={(e) => setTaskDescription(e.target.value)}
-                    placeholder="Start typing the details about the task..."
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="taskType">Task type</Label>
-                  <Select value={taskType} onValueChange={setTaskType}>
-                    <SelectTrigger id="taskType">
-                      <SelectValue placeholder="Select a task type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="call">Call</SelectItem>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="meeting">Meeting</SelectItem>
-                      <SelectItem value="follow-up">Follow-up</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="dueDate" className="flex items-center">
-                      Due date <span className="text-red-500 ml-1">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="dueDate"
-                        type="date"
-                        value={taskDate}
-                        onChange={(e) => setTaskDate(e.target.value)}
-                        required
-                      />
-                      <FiCalendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="dueTime">Time</Label>
-                    <div className="relative">
-                      <Input
-                        id="dueTime"
-                        type="time"
-                        value={taskTime}
-                        onChange={(e) => setTaskTime(e.target.value)}
-                      />
-                      <FiClock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="owner">Owner</Label>
-                  <Select value={assignedTo} onValueChange={setAssignedTo}>
-                    <SelectTrigger id="owner" className="flex items-center">
-                      <SelectValue placeholder="Select owner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Subramanian Iyer">Subramanian Iyer</SelectItem>
-                      <SelectItem value="John Smith">John Smith</SelectItem>
-                      <SelectItem value="Jane Doe">Jane Doe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" variant="outline">
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button type="submit" disabled={!taskTitle.trim() || !taskDate}>
-                  Save
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="space-y-4">
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <Card key={task.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  <Checkbox 
-                    id={`task-${task.id}`}
-                    checked={task.status === "completed"}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-medium">{task.title}</h4>
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                    )}
-                    <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <FiCalendar className="h-3 w-3" />
-                        <span>{format(new Date(task.dueDate), "MMM d, yyyy")}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <FiUser className="h-3 w-3" />
-                        <span>{task.assignedTo}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <FiCheck className="h-3 w-3" />
-                        <span>{task.status}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No tasks yet. Create a new task to get started.
-          </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Tasks</h3>
+        {!showForm && (
+          <Button variant="outline" size="sm" onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Task
+          </Button>
         )}
       </div>
+
+      {showForm && (
+        <Card className="mb-4">
+          <CardContent className="p-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium block mb-1">Task Title</label>
+              <Input 
+                placeholder="Enter task title" 
+                value={newTask.title}
+                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-4">
+              <div className="w-full sm:w-[calc(33%-0.5rem)]">
+                <label className="text-sm font-medium block mb-1">Due Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newTask.dueDate ? format(new Date(newTask.dueDate), 'PPP') : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={newTask.dueDate ? new Date(newTask.dueDate) : undefined}
+                      onSelect={(date) => setNewTask({...newTask, dueDate: date ? format(date, 'yyyy-MM-dd') : undefined})}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="w-full sm:w-[calc(33%-0.5rem)]">
+                <label className="text-sm font-medium block mb-1">Priority</label>
+                <Select 
+                  value={newTask.priority} 
+                  onValueChange={(value) => setNewTask({...newTask, priority: value as 'high' | 'medium' | 'low'})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-full sm:w-[calc(33%-0.5rem)]">
+                <label className="text-sm font-medium block mb-1">Assigned To</label>
+                <Select 
+                  value={newTask.assignedTo} 
+                  onValueChange={(value) => setNewTask({...newTask, assignedTo: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select person" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                    <SelectItem value="John Doe">John Doe</SelectItem>
+                    <SelectItem value="Robert Johnson">Robert Johnson</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleAddTask}>
+                Save Task
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {tasks.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            No tasks created for this lead yet.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {tasks.map((task) => (
+            <Card key={task.id} className={cn(task.status === 'completed' ? 'bg-muted/50' : '')}>
+              <CardContent className="p-3 flex items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <Checkbox 
+                    id={`task-${task.id}`}
+                    checked={task.status === 'completed'}
+                    onCheckedChange={() => handleToggleStatus(task.id)}
+                    className="mt-1"
+                  />
+                  <div>
+                    <label 
+                      htmlFor={`task-${task.id}`}
+                      className={cn(
+                        "font-medium text-sm cursor-pointer",
+                        task.status === 'completed' ? 'line-through text-muted-foreground' : ''
+                      )}
+                    >
+                      {task.title}
+                    </label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                      </div>
+                      <div className="text-xs">
+                        {task.assignedTo}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                  {task.priority}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
