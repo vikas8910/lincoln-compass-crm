@@ -15,6 +15,7 @@ import LeadPipeline from "./pages/dashboard/LeadPipeline";
 import RolesPermissions from "./pages/dashboard/RolesPermissions";
 import RolesUsers from "./pages/dashboard/RolesUsers";
 import LeadAssignment from "./pages/dashboard/LeadAssignment";
+import SalesOfficerRoles from "./pages/dashboard/SalesOfficerRoles";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => {
             <Route path="/roles-permissions" element={<ProtectedRoute element={<RolesPermissions />} />} />
             <Route path="/roles-users" element={<ProtectedRoute element={<RolesUsers />} />} />
             <Route path="/lead-assignment" element={<ProtectedRoute element={<LeadAssignment />} />} />
+            <Route path="/sales-officer-roles" element={<ProtectedRoute element={<SalesOfficerRoles />} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

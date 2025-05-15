@@ -17,6 +17,7 @@ import {
   Users,
   ClipboardList,
   Shield,
+  UserCog,
 } from "lucide-react";
 
 const MainSidebar = () => {
@@ -42,6 +43,11 @@ const MainSidebar = () => {
       title: "Lead Assignment",
       icon: ClipboardList,
       href: "/lead-assignment",
+    },
+    {
+      title: "Sales Officer Roles",
+      icon: UserCog,
+      href: "/sales-officer-roles",
     },
     {
       title: "Roles & Permissions",
