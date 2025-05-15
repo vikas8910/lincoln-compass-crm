@@ -30,8 +30,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { FiPlus, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue, 
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Define types
 interface Permission {
@@ -85,6 +102,9 @@ const RolesPermissions = () => {
     { id: "12", name: "Manage Sales Officers", category: "Sales", description: "Create, edit and delete sales officers" },
   ]);
 
+  // Extract unique categories for dropdown
+  const uniqueCategories = Array.from(new Set(permissions.map(p => p.category)));
+
   // Group permissions by category
   const permissionsByCategory = permissions.reduce((acc, permission) => {
     if (!acc[permission.category]) {
@@ -98,10 +118,13 @@ const RolesPermissions = () => {
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isRoleDeleteDialogOpen, setIsRoleDeleteDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const [isPermissionDeleteDialogOpen, setIsPermissionDeleteDialogOpen] = useState(false);
   const [isAssignPermissionsDialogOpen, setIsAssignPermissionsDialogOpen] = useState(false);
   const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [isEditingPermission, setIsEditingPermission] = useState(false);
+  const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
   const [newPermission, setNewPermission] = useState<Omit<Permission, "id">>({
     name: "",
     category: "",
@@ -135,14 +158,21 @@ const RolesPermissions = () => {
 
   const handleSaveRole = () => {
     if (!editingRole || !editingRole.name.trim()) {
-      toast.error("Role name is required");
+      toast({
+        title: "Error",
+        description: "Role name is required",
+        variant: "destructive"
+      });
       return;
     }
 
     if (editingRole.id) {
       // Edit existing role
       setRoles(roles.map(role => role.id === editingRole.id ? editingRole : role));
-      toast.success("Role updated successfully");
+      toast({
+        title: "Success",
+        description: "Role updated successfully"
+      });
     } else {
       // Create new role
       const newRole = {
@@ -150,7 +180,10 @@ const RolesPermissions = () => {
         id: String(roles.length + 1)
       };
       setRoles([...roles, newRole]);
-      toast.success("Role created successfully");
+      toast({
+        title: "Success",
+        description: "Role created successfully"
+      });
     }
     
     setIsRoleDialogOpen(false);
@@ -166,34 +199,107 @@ const RolesPermissions = () => {
     if (!selectedRole) return;
     
     setRoles(roles.filter(role => role.id !== selectedRole.id));
-    toast.success("Role deleted successfully");
+    toast({
+      title: "Success",
+      description: "Role deleted successfully"
+    });
     setIsRoleDeleteDialogOpen(false);
   };
 
-  // Handle permission creation
-  const handleOpenPermissionDialog = () => {
-    setNewPermission({
-      name: "",
-      category: "",
-      description: ""
-    });
+  // Handle permission operations
+  const handleOpenPermissionDialog = (permission?: Permission) => {
+    if (permission) {
+      setSelectedPermission(permission);
+      setNewPermission({
+        name: permission.name,
+        category: permission.category,
+        description: permission.description || ""
+      });
+      setIsEditingPermission(true);
+    } else {
+      setSelectedPermission(null);
+      setNewPermission({
+        name: "",
+        category: uniqueCategories.length > 0 ? uniqueCategories[0] : "",
+        description: ""
+      });
+      setIsEditingPermission(false);
+    }
     setIsPermissionDialogOpen(true);
+  };
+
+  const handleDeletePermission = (permission: Permission) => {
+    setSelectedPermission(permission);
+    setIsPermissionDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePermission = () => {
+    if (!selectedPermission) return;
+
+    // Check if permission is used in any role
+    const isPermissionInUse = roles.some(role => 
+      role.permissions.includes(selectedPermission.id)
+    );
+
+    if (isPermissionInUse) {
+      toast({
+        title: "Cannot Delete",
+        description: "This permission is assigned to one or more roles. Please remove it from roles first.",
+        variant: "destructive"
+      });
+      setIsPermissionDeleteDialogOpen(false);
+      return;
+    }
+    
+    setPermissions(permissions.filter(p => p.id !== selectedPermission.id));
+    toast({
+      title: "Success",
+      description: "Permission deleted successfully"
+    });
+    setIsPermissionDeleteDialogOpen(false);
   };
 
   const handleSavePermission = () => {
     if (!newPermission.name.trim()) {
-      toast.error("Permission name is required");
+      toast({
+        title: "Error",
+        description: "Permission name is required",
+        variant: "destructive"
+      });
       return;
     }
 
     if (!newPermission.category.trim()) {
-      toast.error("Category is required");
+      toast({
+        title: "Error",
+        description: "Category is required",
+        variant: "destructive"
+      });
       return;
     }
 
-    const newId = String(permissions.length + 1);
-    setPermissions([...permissions, { ...newPermission, id: newId }]);
-    toast.success("Permission created successfully");
+    if (isEditingPermission && selectedPermission) {
+      // Update existing permission
+      const updatedPermissions = permissions.map(p => 
+        p.id === selectedPermission.id 
+          ? { ...p, ...newPermission } 
+          : p
+      );
+      setPermissions(updatedPermissions);
+      toast({
+        title: "Success",
+        description: "Permission updated successfully"
+      });
+    } else {
+      // Create new permission
+      const newId = String(permissions.length + 1);
+      setPermissions([...permissions, { ...newPermission, id: newId }]);
+      toast({
+        title: "Success",
+        description: "Permission created successfully"
+      });
+    }
+    
     setIsPermissionDialogOpen(false);
   };
 
@@ -224,7 +330,10 @@ const RolesPermissions = () => {
       role.id === selectedRole.id ? selectedRole : role
     ));
     
-    toast.success("Permissions assigned successfully");
+    toast({
+      title: "Success",
+      description: "Permissions assigned successfully"
+    });
     setIsAssignPermissionsDialogOpen(false);
   };
 
@@ -349,7 +458,7 @@ const RolesPermissions = () => {
                 onChange={(e) => setSearchPermissions(e.target.value)}
               />
             </div>
-            <Button onClick={handleOpenPermissionDialog}>
+            <Button onClick={() => handleOpenPermissionDialog()}>
               <FiPlus className="mr-2 h-4 w-4" /> Add Permission
             </Button>
           </div>
@@ -368,12 +477,13 @@ const RolesPermissions = () => {
                     <TableHead>Permission</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredPermissions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="h-24 text-center">
+                      <TableCell colSpan={4} className="h-24 text-center">
                         No permissions found.
                       </TableCell>
                     </TableRow>
@@ -383,6 +493,22 @@ const RolesPermissions = () => {
                         <TableCell className="font-medium">{permission.name}</TableCell>
                         <TableCell>{permission.category}</TableCell>
                         <TableCell>{permission.description}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleOpenPermissionDialog(permission)}
+                          >
+                            <FiEdit2 className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeletePermission(permission)}
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -490,13 +616,13 @@ const RolesPermissions = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Create Permission Dialog */}
+      {/* Create/Edit Permission Dialog */}
       <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Create New Permission</DialogTitle>
+            <DialogTitle>{isEditingPermission ? "Edit Permission" : "Create New Permission"}</DialogTitle>
             <DialogDescription>
-              Add a new permission to the system.
+              {isEditingPermission ? "Update permission details." : "Add a new permission to the system."}
             </DialogDescription>
           </DialogHeader>
 
@@ -511,11 +637,30 @@ const RolesPermissions = () => {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="permission-category">Category</Label>
-              <Input
-                id="permission-category"
+              <Select
                 value={newPermission.category}
-                onChange={(e) => setNewPermission({...newPermission, category: e.target.value})}
-              />
+                onValueChange={(value) => setNewPermission({...newPermission, category: value})}
+              >
+                <SelectTrigger id="permission-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueCategories.map((category) => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                  <SelectItem value="New Category">+ Add New Category</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {newPermission.category === "New Category" && (
+                <div className="mt-2">
+                  <Input
+                    placeholder="Enter new category name"
+                    value=""
+                    onChange={(e) => setNewPermission({...newPermission, category: e.target.value})}
+                  />
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="permission-description">Description</Label>
@@ -529,10 +674,35 @@ const RolesPermissions = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPermissionDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSavePermission}>Create Permission</Button>
+            <Button onClick={handleSavePermission}>
+              {isEditingPermission ? "Save Changes" : "Create Permission"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Permission Confirmation */}
+      <AlertDialog open={isPermissionDeleteDialogOpen} onOpenChange={setIsPermissionDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Permission</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this permission? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="py-3">
+            You are about to delete the permission: <span className="font-semibold">{selectedPermission?.name}</span>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsPermissionDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePermission} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Assign Permissions Dialog */}
       <Dialog 
