@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -29,19 +28,7 @@ import { FiSearch, FiPlus, FiFilter, FiChevronDown, FiTrash, FiMoreVertical } fr
 import TablePagination from "@/components/table/TablePagination";
 import TableHeaderWithSort, { SortDirection } from "@/components/table/TableHeaderWithSort";
 import { toast } from "sonner";
-
-// Define the lead type
-export interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  status: "New" | "Contacted" | "Qualified" | "Negotiation" | "Won" | "Lost";
-  source: string;  // Changed from optional to required with default value
-  assignedTo: string; // Changed from optional to required with default value
-  date: string;
-}
+import { Lead, LeadStatus } from "@/types/lead"; // Import Lead type from types/lead.ts
 
 // Define type for sorting
 type SortConfig = {
@@ -51,7 +38,7 @@ type SortConfig = {
 
 // Define type for filtering
 type FilterConfig = {
-  status: Lead["status"][];
+  status: LeadStatus[];
   source: string[];
   assignedTo: string[];
 };
@@ -91,6 +78,8 @@ const Leads = () => {
       source: "Website",
       assignedTo: "Jane Smith",
       date: "2023-05-01",
+      tags: [],
+      createdAt: "2023-05-01T00:00:00"
     },
     {
       id: "2",
@@ -98,10 +87,12 @@ const Leads = () => {
       email: "jane@example.com",
       phone: "123-456-7891",
       company: "Globex Corp",
-      status: "Contacted",
+      status: "In Contact",
       source: "Referral",
       assignedTo: "John Smith",
       date: "2023-04-28",
+      tags: [],
+      createdAt: "2023-04-28T00:00:00"
     },
     {
       id: "3",
@@ -109,10 +100,12 @@ const Leads = () => {
       email: "michael@example.com",
       phone: "123-456-7892",
       company: "Initech",
-      status: "Qualified",
+      status: "Follow up",
       source: "Trade Show",
       assignedTo: "Robert Johnson",
       date: "2023-04-25",
+      tags: [],
+      createdAt: "2023-04-25T00:00:00"
     },
     {
       id: "4",
@@ -120,10 +113,12 @@ const Leads = () => {
       email: "emily@example.com",
       phone: "123-456-7893",
       company: "Massive Dynamic",
-      status: "Negotiation",
+      status: "Set Meeting",
       source: "Cold Call",
       assignedTo: "Emily Williams",
       date: "2023-04-20",
+      tags: [],
+      createdAt: "2023-04-20T00:00:00"
     },
     {
       id: "5",
@@ -131,10 +126,12 @@ const Leads = () => {
       email: "robert@example.com",
       phone: "123-456-7894",
       company: "Soylent Corp",
-      status: "Won",
+      status: "Enrolled",
       source: "Email Campaign",
       assignedTo: "Michael Brown",
       date: "2023-04-15",
+      tags: [],
+      createdAt: "2023-04-15T00:00:00"
     },
     {
       id: "6",
@@ -146,6 +143,8 @@ const Leads = () => {
       source: "Website",
       assignedTo: "Jane Smith",
       date: "2023-05-05",
+      tags: [],
+      createdAt: "2023-05-05T00:00:00"
     },
     {
       id: "7",
@@ -153,10 +152,12 @@ const Leads = () => {
       email: "sarah@example.com",
       phone: "123-456-7896",
       company: "Future Systems",
-      status: "Contacted",
+      status: "In Contact",
       source: "Cold Call",
       assignedTo: "John Smith",
       date: "2023-05-03",
+      tags: [],
+      createdAt: "2023-05-03T00:00:00"
     },
     {
       id: "8",
@@ -164,10 +165,12 @@ const Leads = () => {
       email: "thomas@example.com",
       phone: "123-456-7897",
       company: "Global Solutions",
-      status: "Qualified",
+      status: "Follow up",
       source: "Referral",
       assignedTo: "Robert Johnson",
       date: "2023-04-29",
+      tags: [],
+      createdAt: "2023-04-29T00:00:00"
     },
     {
       id: "9",
@@ -175,10 +178,12 @@ const Leads = () => {
       email: "jennifer@example.com",
       phone: "123-456-7898",
       company: "Bright Ideas Inc",
-      status: "Negotiation",
+      status: "Set Meeting",
       source: "Website",
       assignedTo: "Emily Williams",
       date: "2023-04-22",
+      tags: [],
+      createdAt: "2023-04-22T00:00:00"
     },
     {
       id: "10",
@@ -186,10 +191,12 @@ const Leads = () => {
       email: "kevin@example.com",
       phone: "123-456-7899",
       company: "Peak Performance",
-      status: "Lost",
+      status: "Junk/Lost",
       source: "Trade Show",
       assignedTo: "Michael Brown",
       date: "2023-04-18",
+      tags: [],
+      createdAt: "2023-04-18T00:00:00"
     },
     {
       id: "11",
@@ -197,10 +204,12 @@ const Leads = () => {
       email: "amanda@example.com",
       phone: "123-456-7900",
       company: "Smart Solutions",
-      status: "Won",
+      status: "Customer",
       source: "Email Campaign",
       assignedTo: "Jane Smith",
       date: "2023-04-12",
+      tags: [],
+      createdAt: "2023-04-12T00:00:00"
     },
     {
       id: "12",
@@ -212,6 +221,8 @@ const Leads = () => {
       source: "Cold Call",
       assignedTo: "John Smith",
       date: "2023-05-07",
+      tags: [],
+      createdAt: "2023-05-07T00:00:00"
     },
   ]);
   
@@ -284,7 +295,7 @@ const Leads = () => {
   };
 
   // Handle status filter change
-  const handleStatusFilterChange = (status: Lead["status"]) => {
+  const handleStatusFilterChange = (status: LeadStatus) => {
     setFilterConfig(prev => {
       const currentStatuses = [...prev.status];
       const statusIndex = currentStatuses.indexOf(status);
@@ -436,18 +447,21 @@ const Leads = () => {
   }, [pageSize]);
 
   // Function to render the status badge with appropriate styling
-  const renderStatusBadge = (status: Lead["status"]) => {
-    const variants: Record<Lead["status"], string> = {
+  const renderStatusBadge = (status: LeadStatus) => {
+    const variants: Record<string, string> = {
       "New": "bg-blue-100 text-blue-800 hover:bg-blue-200",
-      "Contacted": "bg-purple-100 text-purple-800 hover:bg-purple-200",
-      "Qualified": "bg-amber-100 text-amber-800 hover:bg-amber-200",
-      "Negotiation": "bg-orange-100 text-orange-800 hover:bg-orange-200",
-      "Won": "bg-green-100 text-green-800 hover:bg-green-200",
-      "Lost": "bg-red-100 text-red-800 hover:bg-red-200"
+      "In Contact": "bg-purple-100 text-purple-800 hover:bg-purple-200",
+      "Follow up": "bg-amber-100 text-amber-800 hover:bg-amber-200",
+      "Set Meeting": "bg-orange-100 text-orange-800 hover:bg-orange-200",
+      "Negotiation": "bg-pink-100 text-pink-800 hover:bg-pink-200",
+      "Enrolled": "bg-green-100 text-green-800 hover:bg-green-200",
+      "Junk/Lost": "bg-red-100 text-red-800 hover:bg-red-200",
+      "On Campus": "bg-teal-100 text-teal-800 hover:bg-teal-200",
+      "Customer": "bg-emerald-100 text-emerald-800 hover:bg-emerald-200",
     };
     
     return (
-      <Badge variant="outline" className={variants[status]}>
+      <Badge variant="outline" className={variants[status] || "bg-gray-100 text-gray-800"}>
         {status}
       </Badge>
     );
@@ -458,7 +472,7 @@ const Leads = () => {
     <div className="p-2">
       <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
       <DropdownMenuSeparator />
-      {(["New", "Contacted", "Qualified", "Negotiation", "Won", "Lost"] as Lead["status"][]).map(status => (
+      {(["New", "In Contact", "Follow up", "Set Meeting", "Negotiation", "Enrolled", "Junk/Lost", "On Campus", "Customer"] as LeadStatus[]).map(status => (
         <DropdownMenuCheckboxItem
           key={status}
           checked={filterConfig.status.includes(status)}

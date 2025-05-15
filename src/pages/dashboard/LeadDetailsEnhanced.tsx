@@ -29,7 +29,7 @@ import { Style } from "@/components/ui/styled-jsx";
 import { Lead, LeadStatus } from "@/types/lead";
 
 // Define all possible lead stages
-const leadStages = [
+const leadStages: LeadStatus[] = [
   "New", 
   "In Contact", 
   "Follow up", 
@@ -48,7 +48,7 @@ const mockLead: Lead = {
   email: "drsumaiya@primehealth.ae",
   phone: "+971502950783",
   company: "Prime Health",
-  status: "In Contact" as LeadStatus,
+  status: "In Contact",
   source: "Website",
   assignedTo: "Subramanian Iyer",
   date: "2022-11-30",
@@ -60,10 +60,16 @@ const mockLead: Lead = {
   }
 };
 
-// Extending component props for the components that need leadId
-type ExtendedTimelineProps = React.ComponentProps<typeof LeadActivityTimeline> & { leadId?: string };
-type ExtendedTasksProps = React.ComponentProps<typeof LeadTasks> & { leadId?: string };
-type ExtendedMeetingsProps = React.ComponentProps<typeof LeadMeetings> & { leadId?: string };
+// Define props for the components that use leadId
+interface ExtendedCompProps {
+  leadId?: string;
+}
+
+// Extending component props
+type ExtendedTimelineProps = React.ComponentProps<typeof LeadActivityTimeline> & ExtendedCompProps;
+type ExtendedTasksProps = React.ComponentProps<typeof LeadTasks> & ExtendedCompProps;
+type ExtendedMeetingsProps = React.ComponentProps<typeof LeadMeetings> & ExtendedCompProps;
+type ExtendedNotesProps = React.ComponentProps<typeof LeadNotes> & ExtendedCompProps;
 
 const LeadDetailsEnhanced = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -81,7 +87,8 @@ const LeadDetailsEnhanced = () => {
     toast.success(`Lead status updated to ${newStage}`);
   };
   
-  const handleSaveLead = (updatedLead: Partial<Lead>) => {
+  // Update this function to handle the Lead type correctly
+  const handleSaveLead = (updatedLead: Lead) => {
     setLead({ ...lead, ...updatedLead });
     setShowEditDialog(false);
     toast.success("Lead information updated successfully");
@@ -97,7 +104,7 @@ const LeadDetailsEnhanced = () => {
   
   return (
     <MainLayout>
-      <Style>{`
+      <Style jsx>{`
         .lead-lifecycle-stage .arrow-right:after {
           content: '';
           position: absolute;
@@ -285,7 +292,7 @@ const LeadDetailsEnhanced = () => {
                   <LeadActivityTimeline {...({ leadId: lead.id } as ExtendedTimelineProps)} />
                 </TabsContent>
                 <TabsContent value="notes" className="mt-0">
-                  <LeadNotes leadId={lead.id} />
+                  <LeadNotes {...({ leadId: lead.id } as ExtendedNotesProps)} />
                 </TabsContent>
                 <TabsContent value="tasks" className="mt-0">
                   <LeadTasks {...({ leadId: lead.id } as ExtendedTasksProps)} />
