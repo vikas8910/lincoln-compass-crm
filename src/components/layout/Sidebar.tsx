@@ -15,7 +15,7 @@ import {
   LayoutDashboard,
   Users,
   UserRound,
-  Settings,
+  Shield,
 } from "lucide-react";
 
 const MainSidebar = () => {
@@ -36,6 +36,11 @@ const MainSidebar = () => {
       title: "Leads",
       icon: Users,
       href: "/leads",
+    },
+    {
+      title: "Roles & Permissions",
+      icon: Shield,
+      href: "/roles-permissions",
     },
   ];
 
