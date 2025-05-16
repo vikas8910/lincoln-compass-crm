@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -42,6 +41,7 @@ interface User {
   avatar?: string;
   department?: string;
   mobile?: string;
+  password?: string;
 }
 
 interface Role {
@@ -123,7 +123,7 @@ const SalesOfficerRoles = () => {
     { id: "2", name: "Sales Officer" },
     { id: "3", name: "Marketing Officer" },
   ]);
-
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -135,9 +135,13 @@ const SalesOfficerRoles = () => {
     email: "",
     department: "Sales",
     mobile: "",
+    password: "",
   });
+  
+  // Added for password confirmation
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-  // Filter users based on search term
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,8 +171,13 @@ const SalesOfficerRoles = () => {
   
   // Handle adding a new user
   const handleAddUser = () => {
-    if (!newUser.name || !newUser.email) {
-      toast.error("Name and email are required");
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      toast.error("Name, email, and password are required");
+      return;
+    }
+    
+    if (newUser.password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
       return;
     }
     
@@ -188,7 +197,10 @@ const SalesOfficerRoles = () => {
       email: "",
       department: "Sales",
       mobile: "",
+      password: "",
     });
+    setConfirmPassword("");
+    setPasswordError("");
     
     setIsAddUserDialogOpen(false);
     
@@ -203,7 +215,7 @@ const SalesOfficerRoles = () => {
   return (
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">User Roles Allocation</h1>
+        <h1 className="text-3xl font-bold">User & Role Management</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -313,7 +325,7 @@ const SalesOfficerRoles = () => {
         </CardContent>
       </Card>
       
-      {/* Add New User Dialog */}
+      {/* Add New User Dialog - Updated to match login form style */}
       <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -324,22 +336,21 @@ const SalesOfficerRoles = () => {
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="name">
                 Name
               </Label>
               <Input
                 id="name"
                 value={newUser.name}
                 onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                className="col-span-3"
                 placeholder="John Smith"
                 required
               />
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="email">
                 Email
               </Label>
               <Input
@@ -347,34 +358,73 @@ const SalesOfficerRoles = () => {
                 type="email"
                 value={newUser.email}
                 onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="col-span-3"
                 placeholder="john.smith@example.com"
                 required
               />
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="mobile" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={newUser.password}
+                onChange={(e) => {
+                  setNewUser({ ...newUser, password: e.target.value });
+                  if (passwordError && e.target.value === confirmPassword) {
+                    setPasswordError("");
+                  }
+                }}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">
+                Confirm Password
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (passwordError && newUser.password === e.target.value) {
+                    setPasswordError("");
+                  }
+                }}
+                placeholder="••••••••"
+                required
+              />
+              {passwordError && (
+                <p className="text-sm font-medium text-destructive">{passwordError}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="mobile">
                 Mobile
               </Label>
               <Input
                 id="mobile"
                 value={newUser.mobile}
                 onChange={(e) => setNewUser({ ...newUser, mobile: e.target.value })}
-                className="col-span-3"
                 placeholder="123-456-7890"
               />
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="department" className="text-right">
+            <div className="space-y-2">
+              <Label htmlFor="department">
                 Department
               </Label>
               <Select 
                 value={newUser.department} 
                 onValueChange={(value) => setNewUser({ ...newUser, department: value })}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger>
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
@@ -389,7 +439,11 @@ const SalesOfficerRoles = () => {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsAddUserDialogOpen(false);
+              setPasswordError("");
+              setConfirmPassword("");
+            }}>
               Cancel
             </Button>
             <Button onClick={handleAddUser}>

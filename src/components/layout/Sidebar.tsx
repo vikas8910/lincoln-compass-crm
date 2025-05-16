@@ -45,7 +45,7 @@ const MainSidebar = () => {
       href: "/leads-mapping",
     },
     {
-      title: "User Roles Allocation",
+      title: "User & Role Management",
       icon: UserCog,
       href: "/sales-officer-roles",
     },
@@ -64,8 +64,12 @@ const MainSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
+                // Fix the highlighting issue by ensuring exact path matching for specific routes
                 const isActive = location.pathname === item.href || 
-                  (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+                  (item.href !== '/dashboard' && 
+                   item.href !== '/leads' && 
+                   item.href !== '/leads-mapping' && 
+                   location.pathname.startsWith(item.href));
                 
                 return (
                   <SidebarMenuItem key={item.title}>
