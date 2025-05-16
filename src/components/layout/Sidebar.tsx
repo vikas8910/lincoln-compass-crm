@@ -64,11 +64,12 @@ const MainSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                // Fix the highlighting issue by ensuring exact path matching for specific routes
-                const isActive = location.pathname === item.href || 
+                // Ensure exact path matching for specific routes to fix highlighting issue
+                const isActive = 
+                  location.pathname === item.href || 
                   (item.href !== '/dashboard' && 
                    item.href !== '/leads' && 
-                   item.href !== '/leads-mapping' && 
+                   item.href !== '/leads-mapping' &&
                    location.pathname.startsWith(item.href));
                 
                 return (

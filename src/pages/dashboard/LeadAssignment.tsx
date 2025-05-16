@@ -80,7 +80,7 @@ const LeadAssignment = () => {
       company: "Global Solutions Ltd.",
       email: "bob.johnson@example.com",
       phone: "234-567-8901",
-      status: "Contacted" as LeadStatus,
+      status: "In Contact" as LeadStatus,
       source: "Referral",
       assignedTo: "2",
       createdAt: "2023-01-05",
@@ -91,7 +91,7 @@ const LeadAssignment = () => {
       company: "Data Analytics Corp.",
       email: "charlie.brown@example.com",
       phone: "345-678-9012",
-      status: "Qualified" as LeadStatus,
+      status: "Follow up" as LeadStatus,
       source: "Email",
       assignedTo: "1",
       createdAt: "2023-01-10",
@@ -102,7 +102,7 @@ const LeadAssignment = () => {
       company: "Software Dynamics LLC",
       email: "diana.miller@example.com",
       phone: "456-789-0123",
-      status: "Proposal" as LeadStatus,
+      status: "Set Meeting" as LeadStatus,
       source: "Web",
       assignedTo: "3",
       createdAt: "2023-01-15",
@@ -124,7 +124,7 @@ const LeadAssignment = () => {
       company: "AI Innovations Ltd.",
       email: "fiona.white@example.com",
       phone: "678-901-2345",
-      status: "Closed" as LeadStatus,
+      status: "Enrolled" as LeadStatus,
       source: "Email",
       assignedTo: "1",
       createdAt: "2023-01-25",
@@ -146,7 +146,7 @@ const LeadAssignment = () => {
       company: "Mobile Apps LLC",
       email: "hannah.green@example.com",
       phone: "890-123-4567",
-      status: "Contacted" as LeadStatus,
+      status: "In Contact" as LeadStatus,
       source: "Referral",
       assignedTo: "3",
       createdAt: "2023-02-05",
@@ -157,7 +157,7 @@ const LeadAssignment = () => {
       company: "Digital Marketing Group",
       email: "isaac.blue@example.com",
       phone: "901-234-5678",
-      status: "Qualified" as LeadStatus,
+      status: "Follow up" as LeadStatus,
       source: "Email",
       assignedTo: "2",
       createdAt: "2023-02-10",
@@ -168,7 +168,7 @@ const LeadAssignment = () => {
       company: "E-commerce Solutions Ltd.",
       email: "julia.red@example.com",
       phone: "012-345-6789",
-      status: "Proposal" as LeadStatus,
+      status: "Set Meeting" as LeadStatus,
       source: "Web",
       assignedTo: null,
       createdAt: "2023-02-15",
@@ -459,14 +459,22 @@ const LeadAssignment = () => {
                             className={`${
                               lead.status === "New"
                                 ? "bg-blue-50 text-blue-700 hover:bg-blue-50"
-                                : lead.status === "Contacted"
+                                : lead.status === "In Contact"
                                 ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-50"
-                                : lead.status === "Qualified"
+                                : lead.status === "Follow up"
                                 ? "bg-green-50 text-green-700 hover:bg-green-50"
-                                : lead.status === "Proposal"
+                                : lead.status === "Set Meeting"
                                 ? "bg-purple-50 text-purple-700 hover:bg-purple-50"
                                 : lead.status === "Negotiation"
                                 ? "bg-orange-50 text-orange-700 hover:bg-orange-50"
+                                : lead.status === "Enrolled"
+                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                                : lead.status === "Junk/Lost"
+                                ? "bg-red-50 text-red-700 hover:bg-red-50"
+                                : lead.status === "On Campus"
+                                ? "bg-cyan-50 text-cyan-700 hover:bg-cyan-50"
+                                : lead.status === "Customer"
+                                ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-50"
                                 : "bg-gray-50 text-gray-700 hover:bg-gray-50"
                             }`}
                           >
