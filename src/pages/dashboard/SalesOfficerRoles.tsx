@@ -31,6 +31,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 // Define interfaces
 interface User {
@@ -39,7 +50,6 @@ interface User {
   email: string;
   role: string | null;
   avatar?: string;
-  department?: string;
   mobile?: string;
   password?: string;
 }
@@ -49,6 +59,21 @@ interface Role {
   name: string;
 }
 
+// Define the Zod schema for new user
+const newUserSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Confirm password is required"),
+  mobile: z.string().optional(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+// Type inferred from Zod schema
+type NewUserFormValues = z.infer<typeof newUserSchema>;
+
 const SalesOfficerRoles = () => {
   const [users, setUsers] = useState<User[]>([
     {
@@ -56,7 +81,6 @@ const SalesOfficerRoles = () => {
       name: "John Smith",
       email: "john.smith@example.com",
       role: "Admin",
-      department: "Sales",
       mobile: "123-456-7890",
     },
     {
@@ -64,7 +88,6 @@ const SalesOfficerRoles = () => {
       name: "Jane Doe",
       email: "jane.doe@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7891",
     },
     {
@@ -72,7 +95,6 @@ const SalesOfficerRoles = () => {
       name: "Robert Johnson",
       email: "robert.johnson@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7892",
     },
     {
@@ -80,7 +102,6 @@ const SalesOfficerRoles = () => {
       name: "Emily Williams",
       email: "emily.williams@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7893",
     },
     {
@@ -88,7 +109,6 @@ const SalesOfficerRoles = () => {
       name: "Michael Brown",
       email: "michael.brown@example.com",
       role: "Marketing Officer",
-      department: "Marketing",
       mobile: "123-456-7894",
     },
     {
@@ -96,7 +116,6 @@ const SalesOfficerRoles = () => {
       name: "Sarah Johnson",
       email: "sarah.johnson@example.com",
       role: "Admin",
-      department: "IT",
       mobile: "123-456-7895",
     },
     {
@@ -104,7 +123,6 @@ const SalesOfficerRoles = () => {
       name: "David Rodriguez",
       email: "david.rodriguez@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7896",
     },
     {
@@ -112,7 +130,6 @@ const SalesOfficerRoles = () => {
       name: "Jessica Lee",
       email: "jessica.lee@example.com",
       role: "Marketing Officer",
-      department: "Marketing",
       mobile: "123-456-7897",
     },
   ]);
@@ -130,23 +147,24 @@ const SalesOfficerRoles = () => {
   
   // New user dialog states
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState<Omit<User, "id" | "role">>({
-    name: "",
-    email: "",
-    department: "Sales",
-    mobile: "",
-    password: "",
+
+  // Set up React Hook Form with Zod validation
+  const form = useForm<NewUserFormValues>({
+    resolver: zodResolver(newUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      mobile: "",
+    },
+    mode: "onBlur", // Validate on blur for better user experience
   });
   
-  // Added for password confirmation
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.department && user.department.toLowerCase().includes(searchTerm.toLowerCase()))
+    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Paginate the filtered results
@@ -170,41 +188,30 @@ const SalesOfficerRoles = () => {
   };
   
   // Handle adding a new user
-  const handleAddUser = () => {
-    if (!newUser.name || !newUser.email || !newUser.password) {
-      toast.error("Name, email, and password are required");
-      return;
-    }
-    
-    if (newUser.password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return;
-    }
-    
+  const onSubmit = (data: NewUserFormValues) => {
     const newId = String(users.length + 1);
     
     const userToAdd: User = {
       id: newId,
-      ...newUser,
-      role: null, // Set role to null by default
+      name: data.name,
+      email: data.email,
+      role: null,
+      mobile: data.mobile,
+      password: data.password,
     };
     
     setUsers(prev => [...prev, userToAdd]);
     
     // Reset form and close dialog
-    setNewUser({
-      name: "",
-      email: "",
-      department: "Sales",
-      mobile: "",
-      password: "",
-    });
-    setConfirmPassword("");
-    setPasswordError("");
-    
+    form.reset();
     setIsAddUserDialogOpen(false);
     
-    toast.success(`User ${newUser.name} added successfully`);
+    toast.success(`User ${data.name} added successfully`);
+  };
+
+  const handleDialogClose = () => {
+    form.reset();
+    setIsAddUserDialogOpen(false);
   };
 
   // Reset to first page when search changes
@@ -325,8 +332,8 @@ const SalesOfficerRoles = () => {
         </CardContent>
       </Card>
       
-      {/* Add New User Dialog - Updated to match login form style */}
-      <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+      {/* Add New User Dialog - Updated to use React Hook Form with Zod validation */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
@@ -335,121 +342,113 @@ const SalesOfficerRoles = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                placeholder="John Smith"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="John Smith"
+                        className={form.formState.errors.name ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                placeholder="john.smith@example.com"
-                required
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="john.smith@example.com"
+                        className={form.formState.errors.email ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={newUser.password}
-                onChange={(e) => {
-                  setNewUser({ ...newUser, password: e.target.value });
-                  if (passwordError && e.target.value === confirmPassword) {
-                    setPasswordError("");
-                  }
-                }}
-                placeholder="••••••••"
-                required
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className={form.formState.errors.password ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">
-                Confirm Password
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  if (passwordError && newUser.password === e.target.value) {
-                    setPasswordError("");
-                  }
-                }}
-                placeholder="••••••••"
-                required
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className={form.formState.errors.confirmPassword ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {passwordError && (
-                <p className="text-sm font-medium text-destructive">{passwordError}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="mobile">
-                Mobile
-              </Label>
-              <Input
-                id="mobile"
-                value={newUser.mobile}
-                onChange={(e) => setNewUser({ ...newUser, mobile: e.target.value })}
-                placeholder="123-456-7890"
+              
+              <FormField
+                control={form.control}
+                name="mobile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123-456-7890"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="department">
-                Department
-              </Label>
-              <Select 
-                value={newUser.department} 
-                onValueChange={(value) => setNewUser({ ...newUser, department: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Sales">Sales</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="HR">HR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsAddUserDialogOpen(false);
-              setPasswordError("");
-              setConfirmPassword("");
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddUser}>
-              Add User
-            </Button>
-          </DialogFooter>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleDialogClose}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={!form.formState.isValid && form.formState.isSubmitted}
+                >
+                  Add User
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </MainLayout>
