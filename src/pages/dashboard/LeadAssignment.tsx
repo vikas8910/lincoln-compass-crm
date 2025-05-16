@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -299,7 +300,7 @@ const LeadAssignment = () => {
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Sales Mapping</h1>
+        <h1 className="text-3xl font-bold">Leads Mapping</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={resetAssignments}>
             <FiRefreshCw className="mr-2 h-4 w-4" /> Reset Assignments
@@ -487,38 +488,6 @@ const LeadAssignment = () => {
               onPageSizeChange={setPageSize}
               totalItems={filteredLeads.length}
             />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Assignment History */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Assignment History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {assignmentHistory.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              No assignments have been made yet.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {assignmentHistory
-                .slice()
-                .reverse()
-                .map((item, index) => (
-                  <div key={index} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <span className="font-medium">{item.leadName}</span>
-                      {" was assigned to "}
-                      <span className="font-medium">{item.officerName}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(item.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-            </div>
           )}
         </CardContent>
       </Card>

@@ -40,9 +40,9 @@ const MainSidebar = () => {
       href: "/leads",
     },
     {
-      title: "Sales Mapping",
+      title: "Leads Mapping",
       icon: ClipboardList,
-      href: "/sales-mapping",
+      href: "/leads-mapping",
     },
     {
       title: "User Roles Allocation",
