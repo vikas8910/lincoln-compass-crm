@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -19,6 +20,17 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SalesOfficer } from "@/pages/dashboard/SalesOfficers";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 interface SalesOfficerDialogProps {
   officer: SalesOfficer | null;
@@ -27,30 +39,53 @@ interface SalesOfficerDialogProps {
   onSave: (officer: SalesOfficer) => void;
 }
 
+// Define the schema for form validation
+const formSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email format"),
+  phone: z.string()
+    .min(1, "Phone is required")
+    .regex(/^[0-9\-+() ]*$/, "Phone number can only contain digits, spaces, and +, -, ()"),
+  status: z.enum(["active", "inactive"]),
+  dateJoined: z.string(),
+  performance: z.enum(["excellent", "good", "average", "poor"]),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const SalesOfficerDialog: React.FC<SalesOfficerDialogProps> = ({
   officer,
   open,
   onClose,
   onSave,
 }) => {
-  const [formData, setFormData] = useState<SalesOfficer>({
-    id: "",
-    name: "",
-    email: "",
-    phone: "",
-    status: "active",
-    dateJoined: new Date().toISOString().split("T")[0],
-    performance: "good",
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      status: "active",
+      dateJoined: new Date().toISOString().split("T")[0],
+      performance: "good",
+    }
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (officer) {
-      setFormData(officer);
+      form.reset({
+        id: officer.id,
+        name: officer.name,
+        email: officer.email,
+        phone: officer.phone,
+        status: officer.status,
+        dateJoined: officer.dateJoined,
+        performance: officer.performance,
+      });
     } else {
       // Reset form for a new officer
-      setFormData({
+      form.reset({
         id: Date.now().toString(), // Generate a temporary ID
         name: "",
         email: "",
@@ -60,55 +95,15 @@ const SalesOfficerDialog: React.FC<SalesOfficerDialogProps> = ({
         performance: "good",
       });
     }
-    setErrors({});
-  }, [officer]);
+  }, [officer, form]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone is required";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
-      try {
-        onSave(formData);
-        toast.success(`${officer ? "Updated" : "Created"} sales officer successfully`);
-      } catch (error) {
-        toast.error("An error occurred. Please try again.");
-        console.error("Error saving sales officer:", error);
-      }
+  const onSubmit = (data: FormValues) => {
+    try {
+      onSave(data as SalesOfficer);
+      toast.success(`${officer ? "Updated" : "Created"} sales officer successfully`);
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+      console.error("Error saving sales officer:", error);
     }
   };
 
@@ -129,101 +124,124 @@ const SalesOfficerDialog: React.FC<SalesOfficerDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={errors.name ? "border-red-500" : ""}
-              />
-              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-            </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={errors.email ? "border-red-500" : ""}
-              />
-              {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-            </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="john@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={errors.phone ? "border-red-500" : ""}
-              />
-              {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-            </div>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123-456-7890" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value as "active" | "inactive" })}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="dateJoined">Date Joined</Label>
-              <Input
-                id="dateJoined"
-                name="dateJoined"
-                type="date"
-                value={formData.dateJoined}
-                onChange={handleChange}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="dateJoined"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date Joined</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="performance">Performance</Label>
-              <Select
-                value={formData.performance}
-                onValueChange={(value) => setFormData({ 
-                  ...formData, 
-                  performance: value as "excellent" | "good" | "average" | "poor" 
-                })}
-              >
-                <SelectTrigger id="performance">
-                  <SelectValue placeholder="Select performance" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="average">Average</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">{officer ? "Update" : "Create"}</Button>
-          </DialogFooter>
-        </form>
+            <FormField
+              control={form.control}
+              name="performance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Performance</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select performance" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="excellent">Excellent</SelectItem>
+                      <SelectItem value="good">Good</SelectItem>
+                      <SelectItem value="average">Average</SelectItem>
+                      <SelectItem value="poor">Poor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">{officer ? "Update" : "Create"}</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

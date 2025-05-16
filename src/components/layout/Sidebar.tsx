@@ -45,7 +45,7 @@ const MainSidebar = () => {
       href: "/leads-mapping",
     },
     {
-      title: "User Roles Allocation",
+      title: "User & Role Management",
       icon: UserCog,
       href: "/sales-officer-roles",
     },
@@ -64,8 +64,12 @@ const MainSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const isActive = location.pathname === item.href || 
-                  (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+                // Fix the highlighting logic to correctly handle the leads-mapping route
+                const isActive = 
+                  location.pathname === item.href || 
+                  (location.pathname.startsWith(item.href) && 
+                   item.href !== '/dashboard' && 
+                   item.href !== '/leads');
                 
                 return (
                   <SidebarMenuItem key={item.title}>

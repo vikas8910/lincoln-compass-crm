@@ -54,7 +54,6 @@ import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/ro
 interface Permission {
   id: string;
   name: string;
-  category: string;
   description?: string;
 }
 
@@ -70,31 +69,19 @@ const RolesPermissions = () => {
   const [roles, setRoles] = useState<Role[]>([]);
 
   const [permissions, setPermissions] = useState<Permission[]>([
-    { id: "1", name: "View Dashboard", category: "Dashboard", description: "Access to view the dashboard" },
-    { id: "2", name: "View Reports", category: "Dashboard", description: "Access to view reports" },
-    { id: "3", name: "Export Reports", category: "Dashboard", description: "Ability to export reports" },
-    { id: "4", name: "Manage Users", category: "Administration", description: "Create, edit and delete users" },
-    { id: "5", name: "Manage Roles", category: "Administration", description: "Create, edit and delete roles" },
-    { id: "6", name: "View Leads", category: "Leads", description: "Access to view leads" },
-    { id: "7", name: "Create Leads", category: "Leads", description: "Ability to create new leads" },
-    { id: "8", name: "Edit Leads", category: "Leads", description: "Ability to edit leads" },
-    { id: "9", name: "Delete Leads", category: "Leads", description: "Ability to delete leads" },
-    { id: "10", name: "Assign Leads", category: "Leads", description: "Ability to assign leads to sales officers" },
-    { id: "11", name: "View Sales Officers", category: "Sales", description: "Access to view sales officers" },
-    { id: "12", name: "Manage Sales Officers", category: "Sales", description: "Create, edit and delete sales officers" },
+    { id: "1", name: "View Dashboard", description: "Access to view the dashboard" },
+    { id: "2", name: "View Reports", description: "Access to view reports" },
+    { id: "3", name: "Export Reports", description: "Ability to export reports" },
+    { id: "4", name: "Manage Users", description: "Create, edit and delete users" },
+    { id: "5", name: "Manage Roles", description: "Create, edit and delete roles" },
+    { id: "6", name: "View Leads", description: "Access to view leads" },
+    { id: "7", name: "Create Leads", description: "Ability to create new leads" },
+    { id: "8", name: "Edit Leads", description: "Ability to edit leads" },
+    { id: "9", name: "Delete Leads", description: "Ability to delete leads" },
+    { id: "10", name: "Assign Leads", description: "Ability to assign leads to sales officers" },
+    { id: "11", name: "View Sales Officers", description: "Access to view sales officers" },
+    { id: "12", name: "Manage Sales Officers", description: "Create, edit and delete sales officers" },
   ]);
-
-  // Extract unique categories for dropdown
-  const uniqueCategories = Array.from(new Set(permissions.map(p => p.category)));
-
-  // Group permissions by category
-  const permissionsByCategory = permissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = [];
-    }
-    acc[permission.category].push(permission);
-    return acc;
-  }, {} as Record<string, Permission[]>);
 
   // State for role operations
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -108,13 +95,8 @@ const RolesPermissions = () => {
   const [isEditingPermission, setIsEditingPermission] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
   
-  // State for handling category input - separate from newPermission to avoid issues
-  const [isNewCategorySelected, setIsNewCategorySelected] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  
   const [newPermission, setNewPermission] = useState<Omit<Permission, "id">>({
     name: "",
-    category: "",
     description: ""
   });
   
@@ -227,7 +209,6 @@ const RolesPermissions = () => {
       setSelectedPermission(permission);
       setNewPermission({
         name: permission.name,
-        category: permission.category,
         description: permission.description || ""
       });
       setIsEditingPermission(true);
@@ -235,14 +216,10 @@ const RolesPermissions = () => {
       setSelectedPermission(null);
       setNewPermission({
         name: "",
-        category: uniqueCategories.length > 0 ? uniqueCategories[0] : "",
         description: ""
       });
       setIsEditingPermission(false);
     }
-    // Reset new category state
-    setIsNewCategorySelected(false);
-    setNewCategoryName("");
     setIsPermissionDialogOpen(true);
   };
 
@@ -277,25 +254,6 @@ const RolesPermissions = () => {
     setIsPermissionDeleteDialogOpen(false);
   };
 
-  // Handle category selection change
-  const handleCategoryChange = (value: string) => {
-    if (value === "New Category") {
-      setIsNewCategorySelected(true);
-      // We don't clear newCategoryName here to preserve user input
-    } else {
-      setIsNewCategorySelected(false);
-      setNewPermission({...newPermission, category: value});
-    }
-  };
-
-  // Handle new category name input
-  const handleNewCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNewCategoryName(value);
-    // We also update the permission category directly to ensure it's always in sync
-    setNewPermission({...newPermission, category: value});
-  };
-
   const handleSavePermission = () => {
     if (!newPermission.name.trim()) {
       toast({
@@ -306,31 +264,11 @@ const RolesPermissions = () => {
       return;
     }
 
-    // Use the new category name if a new category is selected
-    let finalCategory = newPermission.category;
-    if (isNewCategorySelected) {
-      finalCategory = newCategoryName.trim();
-    }
-    
-    if (!finalCategory) {
-      toast({
-        title: "Error",
-        description: "Category is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const permissionToSave = {
-      ...newPermission,
-      category: finalCategory
-    };
-
     if (isEditingPermission && selectedPermission) {
       // Update existing permission
       const updatedPermissions = permissions.map(p => 
         p.id === selectedPermission.id 
-          ? { ...p, ...permissionToSave } 
+          ? { ...p, ...newPermission } 
           : p
       );
       setPermissions(updatedPermissions);
@@ -341,16 +279,13 @@ const RolesPermissions = () => {
     } else {
       // Create new permission
       const newId = String(permissions.length + 1);
-      setPermissions([...permissions, { ...permissionToSave, id: newId }]);
+      setPermissions([...permissions, { ...newPermission, id: newId }]);
       toast({
         title: "Success",
         description: "Permission created successfully"
       });
     }
     
-    // Reset state after saving
-    setIsNewCategorySelected(false);
-    setNewCategoryName("");
     setIsPermissionDialogOpen(false);
   };
 
@@ -378,7 +313,7 @@ const RolesPermissions = () => {
     if (!selectedRole) return;
     
     setRoles(roles.map(role => 
-      role.name === selectedRole.name ? selectedRole : role
+      role.id === selectedRole.id ? selectedRole : role
     ));
     
     toast({
@@ -397,7 +332,6 @@ const RolesPermissions = () => {
   // Filter permissions based on search
   const filteredPermissions = permissions.filter(permission =>
     permission.name.toLowerCase().includes(searchPermissions.toLowerCase()) ||
-    permission.category.toLowerCase().includes(searchPermissions.toLowerCase()) ||
     (permission.description && permission.description.toLowerCase().includes(searchPermissions.toLowerCase()))
   );
 
@@ -506,7 +440,7 @@ const RolesPermissions = () => {
         <CardHeader>
           <CardTitle>Permission Management</CardTitle>
           <CardDescription>
-            View and manage system permissions grouped by category.
+            View and manage system permissions.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -514,7 +448,6 @@ const RolesPermissions = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Permission</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -522,7 +455,7 @@ const RolesPermissions = () => {
             <TableBody>
               {filteredPermissions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={3} className="h-24 text-center">
                     No permissions found.
                   </TableCell>
                 </TableRow>
@@ -530,7 +463,6 @@ const RolesPermissions = () => {
                 filteredPermissions.map((permission) => (
                   <TableRow key={permission.id}>
                     <TableCell className="font-medium">{permission.name}</TableCell>
-                    <TableCell>{permission.category}</TableCell>
                     <TableCell>{permission.description}</TableCell>
                     <TableCell className="text-right">
                       <Button 
@@ -682,34 +614,6 @@ const RolesPermissions = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="permission-category">Category</Label>
-              <Select
-                value={isNewCategorySelected ? "New Category" : newPermission.category}
-                onValueChange={handleCategoryChange}
-              >
-                <SelectTrigger id="permission-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {uniqueCategories.map((category) => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                  <SelectItem value="New Category">+ Add New Category</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {isNewCategorySelected && (
-                <div className="mt-2">
-                  <Input
-                    placeholder="Enter new category name"
-                    value={newCategoryName}
-                    onChange={handleNewCategoryNameChange}
-                    autoFocus
-                  />
-                </div>
-              )}
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="permission-description">Description</Label>
               <Input
                 id="permission-description"
@@ -769,33 +673,28 @@ const RolesPermissions = () => {
           </DialogHeader>
 
           <div className="py-4 space-y-6">
-            {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => (
-              <div key={category} className="space-y-2">
-                <h3 className="text-lg font-medium">{category}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
-                  {categoryPermissions.map((permission) => (
-                    <div key={permission.id} className="flex items-start space-x-2">
-                      <Checkbox 
-                        id={`permission-${permission.id}`}
-                        checked={selectedRole?.permissionIds.includes(permission.id)}
-                        onCheckedChange={() => togglePermission(permission.id)}
-                      />
-                      <div className="grid gap-0.5">
-                        <Label 
-                          htmlFor={`permission-${permission.id}`}
-                          className="text-sm font-medium cursor-pointer"
-                        >
-                          {permission.name}
-                        </Label>
-                        {permission.description && (
-                          <p className="text-xs text-muted-foreground">{permission.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
+              {permissions.map((permission) => (
+                <div key={permission.id} className="flex items-start space-x-2">
+                  <Checkbox 
+                    id={`permission-${permission.id}`}
+                    checked={selectedRole?.permissions.includes(permission.id)}
+                    onCheckedChange={() => togglePermission(permission.id)}
+                  />
+                  <div className="grid gap-0.5">
+                    <Label 
+                      htmlFor={`permission-${permission.id}`}
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      {permission.name}
+                    </Label>
+                    {permission.description && (
+                      <p className="text-xs text-muted-foreground">{permission.description}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           <DialogFooter>
@@ -823,54 +722,39 @@ const RolesPermissions = () => {
           </DialogHeader>
 
           <div className="py-4 space-y-6">
-            {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => {
-              // Check if this category has any permissions for the selected role
-              const categoryHasPermissions = categoryPermissions.some(
-                permission => selectedRole?.permissionIds.includes(permission.id)
-              );
-              
-              // Only show categories with permissions
-              if (!categoryHasPermissions) return null;
-              
-              return (
-                <div key={category} className="space-y-2">
-                  <h3 className="text-lg font-medium">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
-                    {categoryPermissions.map((permission) => {
-                      // Only show permissions that are assigned to the role
-                      if (!selectedRole?.permissionIds.includes(permission.id)) return null;
-                      
-                      return (
-                        <div key={permission.id} className="flex items-start space-x-2">
-                          <Checkbox 
-                            id={`view-permission-${permission.id}`}
-                            checked={true}
-                            disabled={true}
-                          />
-                          <div className="grid gap-0.5">
-                            <Label 
-                              htmlFor={`view-permission-${permission.id}`}
-                              className="text-sm font-medium"
-                            >
-                              {permission.name}
-                            </Label>
-                            {permission.description && (
-                              <p className="text-xs text-muted-foreground">{permission.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
+              {permissions.map((permission) => {
+                // Only show permissions that are assigned to the role
+                if (!selectedRole?.permissions.includes(permission.id)) return null;
+                
+                return (
+                  <div key={permission.id} className="flex items-start space-x-2">
+                    <Checkbox 
+                      id={`view-permission-${permission.id}`}
+                      checked={true}
+                      disabled={true}
+                    />
+                    <div className="grid gap-0.5">
+                      <Label 
+                        htmlFor={`view-permission-${permission.id}`}
+                        className="text-sm font-medium"
+                      >
+                        {permission.name}
+                      </Label>
+                      {permission.description && (
+                        <p className="text-xs text-muted-foreground">{permission.description}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            {selectedRole && selectedRole.permissionIds.length === 0 && (
-              <div className="text-center py-6 text-muted-foreground">
-                No permissions assigned to this role.
-              </div>
-            )}
+              {selectedRole && selectedRole.permissions.length === 0 && (
+                <div className="text-center py-6 text-muted-foreground">
+                  No permissions assigned to this role.
+                </div>
+              )}
+            </div>
           </div>
 
           <DialogFooter>

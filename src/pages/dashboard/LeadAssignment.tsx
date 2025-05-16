@@ -2,17 +2,7 @@
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,18 +11,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { FiSearch, FiRefreshCw, FiUserPlus } from "react-icons/fi";
+import {
+  FiCheck,
+  FiSearch,
+  FiUser,
+} from "react-icons/fi";
+import { LeadStatus } from "@/types/lead";
 import TablePagination from "@/components/table/TablePagination";
 
-// Define types
+// Define mock data
 interface Lead {
   id: string;
   name: string;
   company: string;
   email: string;
-  status: string;
-  assigned?: string;
+  phone: string;
+  status: LeadStatus;
+  source: string;
+  assignedTo: string | null;
+  createdAt: string;
 }
 
 interface SalesOfficer {
@@ -40,454 +48,443 @@ interface SalesOfficer {
   name: string;
   email: string;
   role: string;
-  leadCount: number;
-  assignedLeads: string[];
+  assignedLeads: number;
 }
 
 const LeadAssignment = () => {
-  // Mock data
   const [leads, setLeads] = useState<Lead[]>([
-    { id: "1", name: "John Doe", company: "Acme Inc", email: "john@acme.com", status: "New" },
-    { id: "2", name: "Jane Smith", company: "Globex Corp", email: "jane@globex.com", status: "Contacted" },
-    { id: "3", name: "Mike Johnson", company: "Initech", email: "mike@initech.com", status: "Qualified" },
-    { id: "4", name: "Emily Brown", company: "Massive Dynamic", email: "emily@massive.com", status: "New" },
-    { id: "5", name: "Robert Davis", company: "Soylent Corp", email: "robert@soylent.com", status: "New" },
-    { id: "6", name: "Sarah Wilson", company: "Wayne Enterprises", email: "sarah@wayne.com", status: "Contacted" },
-    { id: "7", name: "Michael Thompson", company: "Stark Industries", email: "michael@stark.com", status: "Qualified" },
-    { id: "8", name: "Jessica Lee", company: "Umbrella Corp", email: "jessica@umbrella.com", status: "New" },
-    { id: "9", name: "David Miller", company: "Cyberdyne Systems", email: "david@cyberdyne.com", status: "Contacted" },
-    { id: "10", name: "Lisa Garcia", company: "Oscorp Industries", email: "lisa@oscorp.com", status: "New" },
-    { id: "11", name: "Thomas Anderson", company: "Metacortex", email: "thomas@metacortex.com", status: "Qualified" },
-    { id: "12", name: "Jennifer White", company: "Weyland-Yutani", email: "jennifer@weyland.com", status: "New" },
+    {
+      id: "1",
+      name: "Alice Smith",
+      company: "Tech Innovations Inc.",
+      email: "alice.smith@example.com",
+      phone: "123-456-7890",
+      status: "New" as LeadStatus,
+      source: "Web",
+      assignedTo: "1",
+      createdAt: "2023-01-01",
+    },
+    {
+      id: "2",
+      name: "Bob Johnson",
+      company: "Global Solutions Ltd.",
+      email: "bob.johnson@example.com",
+      phone: "234-567-8901",
+      status: "In Contact" as LeadStatus,
+      source: "Referral",
+      assignedTo: "2",
+      createdAt: "2023-01-05",
+    },
+    {
+      id: "3",
+      name: "Charlie Brown",
+      company: "Data Analytics Corp.",
+      email: "charlie.brown@example.com",
+      phone: "345-678-9012",
+      status: "Follow up" as LeadStatus,
+      source: "Email",
+      assignedTo: "1",
+      createdAt: "2023-01-10",
+    },
+    {
+      id: "4",
+      name: "Diana Miller",
+      company: "Software Dynamics LLC",
+      email: "diana.miller@example.com",
+      phone: "456-789-0123",
+      status: "Set Meeting" as LeadStatus,
+      source: "Web",
+      assignedTo: "3",
+      createdAt: "2023-01-15",
+    },
+    {
+      id: "5",
+      name: "Ethan Davis",
+      company: "Cloud Services Group",
+      email: "ethan.davis@example.com",
+      phone: "567-890-1234",
+      status: "Negotiation" as LeadStatus,
+      source: "Referral",
+      assignedTo: "2",
+      createdAt: "2023-01-20",
+    },
+    {
+      id: "6",
+      name: "Fiona White",
+      company: "AI Innovations Ltd.",
+      email: "fiona.white@example.com",
+      phone: "678-901-2345",
+      status: "Enrolled" as LeadStatus,
+      source: "Email",
+      assignedTo: "1",
+      createdAt: "2023-01-25",
+    },
+    {
+      id: "7",
+      name: "George Black",
+      company: "Cyber Solutions Corp.",
+      email: "george.black@example.com",
+      phone: "789-012-3456",
+      status: "New" as LeadStatus,
+      source: "Web",
+      assignedTo: null,
+      createdAt: "2023-01-30",
+    },
+    {
+      id: "8",
+      name: "Hannah Green",
+      company: "Mobile Apps LLC",
+      email: "hannah.green@example.com",
+      phone: "890-123-4567",
+      status: "In Contact" as LeadStatus,
+      source: "Referral",
+      assignedTo: "3",
+      createdAt: "2023-02-05",
+    },
+    {
+      id: "9",
+      name: "Isaac Blue",
+      company: "Digital Marketing Group",
+      email: "isaac.blue@example.com",
+      phone: "901-234-5678",
+      status: "Follow up" as LeadStatus,
+      source: "Email",
+      assignedTo: "2",
+      createdAt: "2023-02-10",
+    },
+    {
+      id: "10",
+      name: "Julia Red",
+      company: "E-commerce Solutions Ltd.",
+      email: "julia.red@example.com",
+      phone: "012-345-6789",
+      status: "Set Meeting" as LeadStatus,
+      source: "Web",
+      assignedTo: null,
+      createdAt: "2023-02-15",
+    },
   ]);
-
   const [salesOfficers, setSalesOfficers] = useState<SalesOfficer[]>([
-    { id: "1", name: "Alex Turner", email: "alex@example.com", role: "Senior Sales Officer", leadCount: 8, assignedLeads: [] },
-    { id: "2", name: "Sarah Johnson", email: "sarah@example.com", role: "Sales Officer", leadCount: 5, assignedLeads: [] },
-    { id: "3", name: "Michael Brown", email: "michael@example.com", role: "Junior Sales Officer", leadCount: 3, assignedLeads: [] },
+    {
+      id: "1",
+      name: "Oliver Williams",
+      email: "oliver.williams@example.com",
+      role: "Sales Officer",
+      assignedLeads: 5,
+    },
+    {
+      id: "2",
+      name: "Sophia Brown",
+      email: "sophia.brown@example.com",
+      role: "Sales Officer",
+      assignedLeads: 3,
+    },
+    {
+      id: "3",
+      name: "William Davis",
+      email: "william.davis@example.com",
+      role: "Sales Officer",
+      assignedLeads: 2,
+    },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<"all" | "assigned" | "unassigned">("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
-  const [batchOfficerId, setBatchOfficerId] = useState<string>("");
-  const [assignmentHistory, setAssignmentHistory] = useState<{
-    leadId: string;
-    leadName: string;
-    officerId: string;
-    officerName: string;
-    timestamp: string;
-  }[]>([]);
-
-  // Pagination states
+  const [assigningTo, setAssigningTo] = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState(false);
+  
+  // Added pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Get unique statuses for filter
-  const uniqueStatuses = Array.from(new Set(leads.map(lead => lead.status)));
-
-  // Filter leads based on filter and search term
-  const filteredLeads = leads.filter(lead => {
-    // Filter by assigned status
-    if (filter === "assigned" && !lead.assigned) return false;
-    if (filter === "unassigned" && lead.assigned) return false;
-    
-    // Filter by lead status
-    if (statusFilter !== "all" && lead.status !== statusFilter) return false;
-    
-    // Search term filter
-    if (searchTerm && !lead.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !lead.company.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !lead.email.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedLeads(paginatedLeads.map((lead) => lead.id));
+    } else {
+      setSelectedLeads([]);
     }
-    
-    return true;
-  });
+  };
 
-  // Paginate the filtered results
+  const handleSelectLead = (leadId: string) => {
+    if (selectedLeads.includes(leadId)) {
+      setSelectedLeads(selectedLeads.filter((id) => id !== leadId));
+    } else {
+      setSelectedLeads([...selectedLeads, leadId]);
+    }
+  };
+
+  // Handle individual lead assignment
+  const handleAssign = (leadId: string, officerId: string | null) => {
+    const officer = salesOfficers.find((o) => o.id === officerId);
+    const lead = leads.find((l) => l.id === leadId);
+
+    if (!lead) {
+      toast.error("Lead not found.");
+      return;
+    }
+
+    // Update lead's assignedTo
+    setLeads((prevLeads) =>
+      prevLeads.map((l) =>
+        l.id === leadId ? { ...l, assignedTo: officerId } : l
+      )
+    );
+
+    // Update sales officer's assignedLeads count
+    setSalesOfficers((prevOfficers) =>
+      prevOfficers.map((o) => {
+        if (o.id === officerId) {
+          return { ...o, assignedLeads: o.assignedLeads + 1 };
+        } else if (o.id === lead.assignedTo && lead.assignedTo !== officerId) {
+          return { ...o, assignedLeads: o.assignedLeads - 1 };
+        } else {
+          return o;
+        }
+      })
+    );
+
+    toast.success(
+      `Lead "${lead.name}" ${
+        officerId ? `assigned to ${officer?.name}` : "unassigned"
+      }.`
+    );
+  };
+
+  // Handle bulk assignment
+  const handleBulkAssign = () => {
+    if (!assigningTo) {
+      toast.error("Please select a sales officer to assign the leads to.");
+      return;
+    }
+
+    setIsAssigning(true);
+
+    const officer = salesOfficers.find((o) => o.id === assigningTo);
+
+    if (!officer) {
+      toast.error("Sales officer not found.");
+      setIsAssigning(false);
+      return;
+    }
+
+    // Update leads' assignedTo
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        selectedLeads.includes(lead.id) ? { ...lead, assignedTo: assigningTo } : lead
+      )
+    );
+
+    // Update sales officer's assignedLeads count
+    setSalesOfficers((prevOfficers) =>
+      prevOfficers.map((o) =>
+        o.id === assigningTo
+          ? { ...o, assignedLeads: o.assignedLeads + selectedLeads.length }
+          : o
+      )
+    );
+
+    toast.success(
+      `Assigned ${selectedLeads.length} leads to ${officer.name}.`
+    );
+
+    setSelectedLeads([]);
+    setAssigningTo(null);
+    setIsAssigning(false);
+  };
+
+  // Helper function to get officer name by ID
+  const getOfficerName = (id: string | null) => {
+    const officer = salesOfficers.find((o) => o.id === id);
+    return officer ? officer.name : "Unassigned";
+  };
+
+  // Filter and paginate leads
+  const filteredLeads = leads.filter(
+    (lead) =>
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredLeads.length / pageSize);
+  
+  // Get current page data
   const paginatedLeads = filteredLeads.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-
-  // Calculate total pages
-  const totalPages = Math.ceil(filteredLeads.length / pageSize);
-
-  // Assign a lead to a sales officer
-  const assignLead = (leadId: string, officerId: string) => {
-    if (!officerId) {
-      toast.error("Please select a sales officer");
-      return;
-    }
-    
-    // Update the lead's assigned field
-    const updatedLeads = leads.map(lead => 
-      lead.id === leadId ? { ...lead, assigned: officerId } : lead
-    );
-    
-    // Update the officer's assigned leads
-    const updatedOfficers = salesOfficers.map(officer => {
-      if (officer.id === officerId) {
-        return {
-          ...officer,
-          leadCount: officer.leadCount + 1,
-          assignedLeads: [...officer.assignedLeads, leadId]
-        };
-      }
-      return officer;
-    });
-    
-    // Add to assignment history
-    const lead = leads.find(l => l.id === leadId);
-    const officer = salesOfficers.find(o => o.id === officerId);
-    
-    if (lead && officer) {
-      setAssignmentHistory([
-        ...assignmentHistory,
-        {
-          leadId,
-          leadName: lead.name,
-          officerId,
-          officerName: officer.name,
-          timestamp: new Date().toISOString(),
-        }
-      ]);
-    }
-    
-    setLeads(updatedLeads);
-    setSalesOfficers(updatedOfficers);
-  };
-
-  // Handle batch assignment - FIXED: now properly assigns all selected leads
-  const handleBatchAssign = () => {
-    if (!batchOfficerId) {
-      toast.error("Please select a sales officer for batch assignment");
-      return;
-    }
-    
-    if (selectedLeads.length === 0) {
-      toast.error("Please select leads to assign");
-      return;
-    }
-    
-    // Create copies for updating
-    let updatedLeads = [...leads];
-    let updatedOfficers = [...salesOfficers];
-    let newHistory = [...assignmentHistory];
-    
-    // Find the target officer
-    const officer = salesOfficers.find(o => o.id === batchOfficerId);
-    if (!officer) {
-      toast.error("Selected sales officer not found");
-      return;
-    }
-    
-    // Track new leads being assigned to this officer
-    const newAssignedLeads: string[] = [];
-    
-    // Update all selected leads
-    selectedLeads.forEach(leadId => {
-      // Update leads
-      updatedLeads = updatedLeads.map(lead => 
-        lead.id === leadId ? { ...lead, assigned: batchOfficerId } : lead
-      );
-      
-      // Add to new assigned leads
-      newAssignedLeads.push(leadId);
-      
-      // Add to history
-      const lead = leads.find(l => l.id === leadId);
-      if (lead) {
-        newHistory.push({
-          leadId,
-          leadName: lead.name,
-          officerId: batchOfficerId,
-          officerName: officer.name,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-    
-    // Update the officer's assigned leads and count
-    updatedOfficers = updatedOfficers.map(o => {
-      if (o.id === batchOfficerId) {
-        return {
-          ...o,
-          leadCount: o.leadCount + newAssignedLeads.length,
-          assignedLeads: [...o.assignedLeads, ...newAssignedLeads]
-        };
-      }
-      return o;
-    });
-    
-    // Update state
-    setLeads(updatedLeads);
-    setSalesOfficers(updatedOfficers);
-    setAssignmentHistory(newHistory);
-    
-    // Clear selections after assignment
-    setSelectedLeads([]);
-    setBatchOfficerId("");
-    
-    toast.success(`Assigned ${selectedLeads.length} leads to ${officer.name}`);
-  };
-
-  // Reset all assignments
-  const resetAssignments = () => {
-    if (window.confirm("Are you sure you want to reset all lead assignments?")) {
-      const updatedLeads = leads.map(lead => ({ ...lead, assigned: undefined }));
-      const updatedOfficers = salesOfficers.map(officer => ({
-        ...officer,
-        leadCount: 0,
-        assignedLeads: []
-      }));
-      
-      setLeads(updatedLeads);
-      setSalesOfficers(updatedOfficers);
-      toast.success("All lead assignments have been reset");
-    }
-  };
-
-  // Toggle lead selection for batch assignment
-  const toggleLeadSelection = (leadId: string) => {
-    setSelectedLeads(prev => 
-      prev.includes(leadId) 
-        ? prev.filter(id => id !== leadId) 
-        : [...prev, leadId]
-    );
-  };
-
-  // Check if all filtered leads are selected
-  const allSelected = filteredLeads.length > 0 && filteredLeads.every(lead => 
-    selectedLeads.includes(lead.id)
-  );
-
-  // Toggle selection of all filtered leads
-  const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedLeads(prev => prev.filter(id => 
-        !filteredLeads.some(lead => lead.id === id)
-      ));
-    } else {
-      setSelectedLeads(prev => {
-        const newSelection = [...prev];
-        filteredLeads.forEach(lead => {
-          if (!newSelection.includes(lead.id)) {
-            newSelection.push(lead.id);
-          }
-        });
-        return newSelection;
-      });
-    }
-  };
-
-  // Get assigned officer name for a lead
-  const getAssignedOfficerName = (leadId: string) => {
-    const lead = leads.find(l => l.id === leadId);
-    if (!lead?.assigned) return "Unassigned";
-    
-    const officer = salesOfficers.find(o => o.id === lead.assigned);
-    return officer?.name || "Unknown";
-  };
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filter, statusFilter]);
 
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Leads Mapping</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={resetAssignments}>
-            <FiRefreshCw className="mr-2 h-4 w-4" /> Reset Assignments
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <FiSearch className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search leads..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Select value={filter} onValueChange={(value) => setFilter(value as "all" | "assigned" | "unassigned")}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Leads</SelectItem>
-                  <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by lead status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {uniqueStatuses.map(status => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Batch Assignment */}
-      {selectedLeads.length > 0 && (
-        <Card className="mb-6 border-blue-400 shadow-sm">
-          <CardContent className="py-4 flex items-center justify-between">
+          {selectedLeads.length > 0 && (
             <div className="flex items-center gap-2">
-              <Badge>{selectedLeads.length} leads selected</Badge>
-              <span className="text-sm text-muted-foreground">Assign selected leads to:</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={batchOfficerId} onValueChange={setBatchOfficerId}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select officer" />
+              <Select onValueChange={(value) => setAssigningTo(value)}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select Sales Officer" />
                 </SelectTrigger>
                 <SelectContent>
                   {salesOfficers.map((officer) => (
                     <SelectItem key={officer.id} value={officer.id}>
-                      {officer.name}
+                      {officer.name} ({officer.assignedLeads} leads)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleBatchAssign} disabled={!batchOfficerId}>
-                Assign Selected
+              <Button
+                disabled={!assigningTo}
+                onClick={handleBulkAssign}
+                className="whitespace-nowrap"
+              >
+                <FiCheck className="mr-2 h-4 w-4" />
+                Assign {selectedLeads.length} Leads
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+      </div>
 
-      {/* Leads Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Lead Assignments</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle>Lead Assignments</CardTitle>
+            <div className="relative w-full sm:w-auto max-w-sm">
+              <FiSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search leads..."
+                className="pl-8 w-full sm:w-[300px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox 
-                    checked={allSelected} 
-                    onCheckedChange={toggleSelectAll} 
-                    aria-label="Select all leads"
-                  />
-                </TableHead>
-                <TableHead>Lead</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Assigned To</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedLeads.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No leads found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedLeads.map((lead) => {
-                  const isAssigned = !!lead.assigned;
-                  
-                  return (
-                    <TableRow key={lead.id}>
-                      <TableCell>
-                        <Checkbox 
-                          checked={selectedLeads.includes(lead.id)} 
-                          onCheckedChange={() => toggleLeadSelection(lead.id)}
-                          aria-label={`Select ${lead.name}`}
+          {paginatedLeads.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <p>No leads found matching your search criteria.</p>
+            </div>
+          ) : (
+            <div>
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">
+                        <Checkbox
+                          checked={
+                            selectedLeads.length === paginatedLeads.length &&
+                            paginatedLeads.length > 0
+                          }
+                          onCheckedChange={handleSelectAll}
                         />
-                      </TableCell>
-                      <TableCell className="font-medium">{lead.name}</TableCell>
-                      <TableCell>{lead.company}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{lead.status}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={lead.assigned || "unassigned"} 
-                          onValueChange={(value) => {
-                            if (value !== "unassigned") {
-                              assignLead(lead.id, value);
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Unassigned">
-                              {getAssignedOfficerName(lead.id)}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="unassigned">Unassigned</SelectItem>
-                            {salesOfficers.map((officer) => (
-                              <SelectItem key={officer.id} value={officer.id}>
-                                {officer.name} ({officer.leadCount})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            if (lead.assigned) {
-                              // Unassign - set to unassigned
-                              const updatedLeads = leads.map(l => 
-                                l.id === lead.id ? { ...l, assigned: undefined } : l
-                              );
-                              setLeads(updatedLeads);
-                              toast.success(`Unassigned ${lead.name}`);
-                            } else {
-                              toast.error("Please select a sales officer first");
-                            }
-                          }}
-                          disabled={!isAssigned}
-                        >
-                          {isAssigned ? "Unassign" : "No Officer"}
-                        </Button>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead>Lead Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-
-          {/* Pagination */}
-          {filteredLeads.length > 0 && (
-            <TablePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              pageSize={pageSize}
-              onPageSizeChange={setPageSize}
-              totalItems={filteredLeads.length}
-            />
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedLeads.map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedLeads.includes(lead.id)}
+                            onCheckedChange={() => handleSelectLead(lead.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{lead.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {lead.company}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{lead.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={`${
+                              lead.status === "New"
+                                ? "bg-blue-50 text-blue-700 hover:bg-blue-50"
+                                : lead.status === "In Contact"
+                                ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-50"
+                                : lead.status === "Follow up"
+                                ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                : lead.status === "Set Meeting"
+                                ? "bg-purple-50 text-purple-700 hover:bg-purple-50"
+                                : lead.status === "Negotiation"
+                                ? "bg-orange-50 text-orange-700 hover:bg-orange-50"
+                                : lead.status === "Enrolled"
+                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                                : lead.status === "Junk/Lost"
+                                ? "bg-red-50 text-red-700 hover:bg-red-50"
+                                : lead.status === "On Campus"
+                                ? "bg-cyan-50 text-cyan-700 hover:bg-cyan-50"
+                                : lead.status === "Customer"
+                                ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-50"
+                                : "bg-gray-50 text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {lead.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{lead.source}</TableCell>
+                        <TableCell>
+                          {lead.assignedTo ? (
+                            <div className="flex items-center gap-2">
+                              <FiUser className="h-4 w-4 text-muted-foreground" />
+                              <span>{getOfficerName(lead.assignedTo)}</span>
+                            </div>
+                          ) : (
+                            <div className="text-muted-foreground italic">
+                              Unassigned
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Select
+                            value={lead.assignedTo || "unassigned"}
+                            onValueChange={(value) => {
+                              handleAssign(lead.id, value === "unassigned" ? null : value);
+                            }}
+                          >
+                            <SelectTrigger className="w-[140px] ml-auto">
+                              <SelectValue placeholder="Assign to..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="unassigned">Unassigned</SelectItem>
+                              {salesOfficers.map((officer) => (
+                                <SelectItem key={officer.id} value={officer.id}>
+                                  {officer.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination controls */}
+              <TablePagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                totalItems={filteredLeads.length}
+              />
+            </div>
           )}
         </CardContent>
       </Card>

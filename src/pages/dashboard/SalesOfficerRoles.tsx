@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 // Define interfaces
 interface User {
@@ -40,14 +50,33 @@ interface User {
   email: string;
   role: string | null;
   avatar?: string;
-  department?: string;
   mobile?: string;
+  password?: string;
+  department?: string; // Added the department property
 }
 
 interface Role {
   id: string;
   name: string;
 }
+
+// Define the Zod schema for new user
+const newUserSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Confirm password is required"),
+  mobile: z.string()
+    .min(1, "Mobile number is required")
+    .regex(/^[0-9\-+() ]*$/, "Mobile number can only contain digits, spaces, and +, -, ()")
+    .min(10, "Mobile number must be at least 10 characters"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+// Type inferred from Zod schema
+type NewUserFormValues = z.infer<typeof newUserSchema>;
 
 const SalesOfficerRoles = () => {
   const [users, setUsers] = useState<User[]>([
@@ -56,7 +85,6 @@ const SalesOfficerRoles = () => {
       name: "John Smith",
       email: "john.smith@example.com",
       role: "Admin",
-      department: "Sales",
       mobile: "123-456-7890",
     },
     {
@@ -64,7 +92,6 @@ const SalesOfficerRoles = () => {
       name: "Jane Doe",
       email: "jane.doe@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7891",
     },
     {
@@ -72,7 +99,6 @@ const SalesOfficerRoles = () => {
       name: "Robert Johnson",
       email: "robert.johnson@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7892",
     },
     {
@@ -80,7 +106,6 @@ const SalesOfficerRoles = () => {
       name: "Emily Williams",
       email: "emily.williams@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7893",
     },
     {
@@ -88,7 +113,6 @@ const SalesOfficerRoles = () => {
       name: "Michael Brown",
       email: "michael.brown@example.com",
       role: "Marketing Officer",
-      department: "Marketing",
       mobile: "123-456-7894",
     },
     {
@@ -96,7 +120,6 @@ const SalesOfficerRoles = () => {
       name: "Sarah Johnson",
       email: "sarah.johnson@example.com",
       role: "Admin",
-      department: "IT",
       mobile: "123-456-7895",
     },
     {
@@ -104,7 +127,6 @@ const SalesOfficerRoles = () => {
       name: "David Rodriguez",
       email: "david.rodriguez@example.com",
       role: "Sales Officer",
-      department: "Sales",
       mobile: "123-456-7896",
     },
     {
@@ -112,7 +134,6 @@ const SalesOfficerRoles = () => {
       name: "Jessica Lee",
       email: "jessica.lee@example.com",
       role: "Marketing Officer",
-      department: "Marketing",
       mobile: "123-456-7897",
     },
   ]);
@@ -123,26 +144,32 @@ const SalesOfficerRoles = () => {
     { id: "2", name: "Sales Officer" },
     { id: "3", name: "Marketing Officer" },
   ]);
-
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   
   // New user dialog states
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState<Omit<User, "id" | "role">>({
-    name: "",
-    email: "",
-    department: "Sales",
-    mobile: "",
-  });
 
+  // Set up React Hook Form with Zod validation
+  const form = useForm<NewUserFormValues>({
+    resolver: zodResolver(newUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      mobile: "",
+    },
+    mode: "onBlur", // Validate on blur for better user experience
+  });
+  
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.department && user.department.toLowerCase().includes(searchTerm.toLowerCase()))
+    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Paginate the filtered results
@@ -166,33 +193,30 @@ const SalesOfficerRoles = () => {
   };
   
   // Handle adding a new user
-  const handleAddUser = () => {
-    if (!newUser.name || !newUser.email) {
-      toast.error("Name and email are required");
-      return;
-    }
-    
+  const onSubmit = (data: NewUserFormValues) => {
     const newId = String(users.length + 1);
     
     const userToAdd: User = {
       id: newId,
-      ...newUser,
-      role: null, // Set role to null by default
+      name: data.name,
+      email: data.email,
+      role: null,
+      mobile: data.mobile,
+      password: data.password,
     };
     
     setUsers(prev => [...prev, userToAdd]);
     
     // Reset form and close dialog
-    setNewUser({
-      name: "",
-      email: "",
-      department: "Sales",
-      mobile: "",
-    });
-    
+    form.reset();
     setIsAddUserDialogOpen(false);
     
-    toast.success(`User ${newUser.name} added successfully`);
+    toast.success(`User ${data.name} added successfully`);
+  };
+
+  const handleDialogClose = () => {
+    form.reset();
+    setIsAddUserDialogOpen(false);
   };
 
   // Reset to first page when search changes
@@ -203,7 +227,7 @@ const SalesOfficerRoles = () => {
   return (
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">User Roles Allocation</h1>
+        <h1 className="text-3xl font-bold">User & Role Management</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -231,7 +255,6 @@ const SalesOfficerRoles = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[300px]">User</TableHead>
-                  <TableHead>Department</TableHead>
                   <TableHead>Current Role</TableHead>
                   <TableHead className="text-right">Assign Role</TableHead>
                 </TableRow>
@@ -265,9 +288,6 @@ const SalesOfficerRoles = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {user.department || "N/A"}
-                      </TableCell>
-                      <TableCell>
                         <span className="font-medium">{user.role || "None"}</span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -291,7 +311,7 @@ const SalesOfficerRoles = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                       No users found matching your search.
                     </TableCell>
                   </TableRow>
@@ -313,8 +333,8 @@ const SalesOfficerRoles = () => {
         </CardContent>
       </Card>
       
-      {/* Add New User Dialog */}
-      <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+      {/* Add New User Dialog - Updated to use React Hook Form with Zod validation */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
@@ -323,79 +343,114 @@ const SalesOfficerRoles = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                className="col-span-3"
-                placeholder="John Smith"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="John Smith"
+                        className={form.formState.errors.name ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="col-span-3"
-                placeholder="john.smith@example.com"
-                required
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="john.smith@example.com"
+                        className={form.formState.errors.email ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="mobile" className="text-right">
-                Mobile
-              </Label>
-              <Input
-                id="mobile"
-                value={newUser.mobile}
-                onChange={(e) => setNewUser({ ...newUser, mobile: e.target.value })}
-                className="col-span-3"
-                placeholder="123-456-7890"
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className={form.formState.errors.password ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="department" className="text-right">
-                Department
-              </Label>
-              <Select 
-                value={newUser.department} 
-                onValueChange={(value) => setNewUser({ ...newUser, department: value })}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Sales">Sales</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="HR">HR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddUser}>
-              Add User
-            </Button>
-          </DialogFooter>
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className={form.formState.errors.confirmPassword ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="mobile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123-456-7890"
+                        className={form.formState.errors.mobile ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleDialogClose}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={!form.formState.isValid && form.formState.isSubmitted}
+                >
+                  Add User
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </MainLayout>
