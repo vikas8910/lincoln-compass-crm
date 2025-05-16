@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { FiBell, FiSearch, FiSettings, FiUser, FiMenu } from "react-icons/fi";
+import { logout } from "@/services/auth/auth";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -26,8 +27,9 @@ const Header = () => {
     // In a real app, this would trigger a search
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user_type");
+  const handleLogout = async () => {
+    await logout();
+    localStorage.removeItem("token");
     toast.success("Logged out successfully");
     navigate("/login");
   };

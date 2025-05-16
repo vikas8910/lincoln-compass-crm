@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FiEye, FiEyeOff, FiLock, FiUser } from "react-icons/fi";
+import { login } from "@/services/auth/auth";
 
 type UserType = "admin" | "sales";
 
@@ -43,7 +44,7 @@ const Login = () => {
     try {
       // This is a mock authentication function
       // In a real app, you would make an API call to your backend
-      await mockAuthenticate(email, password);
+      await authenticate(email, password);
       
       if (rememberMe) {
         localStorage.setItem("crm_email", email);
@@ -61,25 +62,9 @@ const Login = () => {
     }
   };
 
-  // Mock authentication function - replace with actual API call in production
-  const mockAuthenticate = async (email: string, password: string): Promise<UserType> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Simulate admin login
-        if (email === "admin@example.com" && password === "admin123") {
-          localStorage.setItem("user_type", "admin");
-          resolve("admin");
-        } 
-        // Simulate sales officer login
-        else if (email === "sales@example.com" && password === "sales123") {
-          localStorage.setItem("user_type", "sales");
-          resolve("sales");
-        } 
-        else {
-          reject(new Error("Invalid email or password"));
-        }
-      }, 1000); // Simulate network delay
-    });
+  const authenticate = async (email: string, password: string) => {
+    const res = await login(email, password);
+    localStorage.setItem("token", res.token);
   };
 
   const handleForgotPassword = () => {
