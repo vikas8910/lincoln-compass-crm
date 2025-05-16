@@ -83,6 +83,7 @@ const LeadAssignment = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [editingLeadId, setEditingLeadId] = useState<number | null>(null);
 
   // Filter leads based on search term and status
   const filteredLeads = leads.filter(lead => {
@@ -147,6 +148,26 @@ const LeadAssignment = () => {
     setIsAssignDialogOpen(false);
     setSelectedOfficer("");
     setSelectedLeads([]);
+    setEditingLeadId(null);
+  };
+
+  const handleAssignSingleLead = (leadId: number, officerId: string) => {
+    if (!officerId) {
+      return;
+    }
+
+    const officerName = salesOfficers.find(so => so.id === parseInt(officerId))?.name;
+    
+    setLeads(prev => 
+      prev.map(lead => 
+        lead.id === leadId
+          ? { ...lead, assignedTo: officerName } 
+          : lead
+      )
+    );
+    
+    toast.success(`Lead assigned to ${officerName}`);
+    setEditingLeadId(null);
   };
 
   const statusOptions = ["all", "New", "Contacted", "Qualified"];
@@ -244,7 +265,38 @@ const LeadAssignment = () => {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>{lead.assignedTo || "Unassigned"}</TableCell>
+                      <TableCell>
+                        {editingLeadId === lead.id ? (
+                          <Select 
+                            value={selectedOfficer} 
+                            onValueChange={(value) => {
+                              setSelectedOfficer(value);
+                              handleAssignSingleLead(lead.id, value);
+                            }}
+                            onOpenChange={(open) => {
+                              if (!open) setEditingLeadId(null);
+                            }}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select Officer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {salesOfficers.map((officer) => (
+                                <SelectItem key={officer.id} value={officer.id.toString()}>
+                                  {officer.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div 
+                            className="cursor-pointer hover:text-blue-500"
+                            onClick={() => setEditingLeadId(lead.id)}
+                          >
+                            {lead.assignedTo || "Unassigned"}
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

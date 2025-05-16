@@ -65,8 +65,8 @@ const MainSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const isActive = location.pathname === item.href || 
-                  (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+                // Fixed the active detection to ensure exact matches only
+                const isActive = location.pathname === item.href;
                 
                 return (
                   <SidebarMenuItem key={item.title}>
