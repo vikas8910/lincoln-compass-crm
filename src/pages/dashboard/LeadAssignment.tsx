@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +26,6 @@ import {
   FiCheck,
   FiSearch,
   FiUser,
-  FiUsers,
-  FiRefreshCw,
-  FiClipboard,
 } from "react-icons/fi";
 import { LeadStatus } from "@/types/lead";
 import TablePagination from "@/components/table/TablePagination";
@@ -51,14 +49,6 @@ interface SalesOfficer {
   email: string;
   role: string;
   assignedLeads: number;
-}
-
-interface AssignmentHistoryItem {
-  leadId: string;
-  leadName: string;
-  officerId: string;
-  officerName: string;
-  timestamp: string;
 }
 
 const LeadAssignment = () => {
@@ -197,9 +187,6 @@ const LeadAssignment = () => {
       assignedLeads: 2,
     },
   ]);
-  const [assignmentHistory, setAssignmentHistory] = useState<
-    AssignmentHistoryItem[]
-  >([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -256,18 +243,6 @@ const LeadAssignment = () => {
       })
     );
 
-    // Record assignment history
-    setAssignmentHistory((prevHistory) => [
-      ...prevHistory,
-      {
-        leadId: leadId,
-        leadName: lead.name,
-        officerId: officerId || "unassigned",
-        officerName: officer ? officer.name : "Unassigned",
-        timestamp: new Date().toISOString(),
-      },
-    ]);
-
     toast.success(
       `Lead "${lead.name}" ${
         officerId ? `assigned to ${officer?.name}` : "unassigned"
@@ -308,20 +283,6 @@ const LeadAssignment = () => {
       )
     );
 
-    // Record assignment history
-    const newAssignments = selectedLeads.map((leadId) => {
-      const lead = leads.find((l) => l.id === leadId);
-      return {
-        leadId: leadId,
-        leadName: lead?.name || "Unknown Lead",
-        officerId: assigningTo,
-        officerName: officer.name,
-        timestamp: new Date().toISOString(),
-      };
-    });
-
-    setAssignmentHistory((prevHistory) => [...prevHistory, ...newAssignments]);
-
     toast.success(
       `Assigned ${selectedLeads.length} leads to ${officer.name}.`
     );
@@ -353,11 +314,6 @@ const LeadAssignment = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-  
-  // Function to reset all assignments (optional)
-  const resetAssignments = () => {
-    // Implement reset logic here
-  };
 
   return (
     <MainLayout>
@@ -409,7 +365,6 @@ const LeadAssignment = () => {
         <CardContent>
           {paginatedLeads.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-              <FiClipboard className="mx-auto h-8 w-8 mb-3" />
               <p>No leads found matching your search criteria.</p>
             </div>
           ) : (
