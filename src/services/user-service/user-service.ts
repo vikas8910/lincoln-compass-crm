@@ -1,6 +1,7 @@
+
 import { USER } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
-import { RoleAssignment, UserRequest} from "@/types";
+import { RoleAssignment, UserRequest, UserResponse } from "@/types";
 
 export const getUsers = async () => {
     try {
@@ -20,15 +21,23 @@ export const updateUserRole = async (userId: string, payload: RoleAssignment) =>
     }
 };
 
-// TODO: implement once UI will available 
-// export const deleteUser = async () => {
-//     try {
-//         const response = await axiosInstance.delete("/user");
-//         return response.data;
-//     } catch (error) {
-//         throw error;
-//     }
-// };
+export const deleteUser = async (userId: string) => {
+    try {
+        const response = await axiosInstance.delete(`${USER}/${userId}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const updateUser = async (userId: string, payload: Partial<UserRequest>) => {
+    try {
+        const response = await axiosInstance.put(`${USER}/${userId}`, payload);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
 
 export const createUser = async (payload: UserRequest) => {
     try {
