@@ -48,6 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
 
 // Define types
 interface Permission {
@@ -57,34 +58,16 @@ interface Permission {
   description?: string;
 }
 
-interface Role {
-  id: string;
+export interface Role {
+  id?: string;
   name: string;
   description: string;
-  permissions: string[];
+  permissionIds?: string[];
+  permissions?: Permission[];
 }
 
 const RolesPermissions = () => {
-  const [roles, setRoles] = useState<Role[]>([
-    {
-      id: "1",
-      name: "Administrator",
-      description: "Full system access with all permissions",
-      permissions: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
-    },
-    {
-      id: "2",
-      name: "Sales Officer",
-      description: "Manage leads and sales activities",
-      permissions: ["1", "2", "3", "6", "7", "8"],
-    },
-    {
-      id: "3",
-      name: "Lead",
-      description: "Limited access to specific leads only",
-      permissions: ["1", "6"],
-    }
-  ]);
+  const [roles, setRoles] = useState<Role[]>([]);
 
   const [permissions, setPermissions] = useState<Permission[]>([
     { id: "1", name: "View Dashboard", category: "Dashboard", description: "Access to view the dashboard" },
@@ -139,16 +122,27 @@ const RolesPermissions = () => {
   const [searchRoles, setSearchRoles] = useState("");
   const [searchPermissions, setSearchPermissions] = useState("");
 
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const roles = await getRoles();
+        setRoles(roles.content);
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+      }
+    }
+    fetchRoles();
+  }, [])
+
   // Handle role creation/editing
   const handleOpenRoleDialog = (role?: Role) => {
     if (role) {
       setEditingRole({ ...role });
     } else {
       setEditingRole({
-        id: "",
         name: "",
         description: "",
-        permissions: []
+        permissionIds: []
       });
     }
     setIsRoleDialogOpen(true);
@@ -160,7 +154,7 @@ const RolesPermissions = () => {
     setIsViewPermissionsDialogOpen(true);
   };
 
-  const handleSaveRole = () => {
+  const handleSaveRole = async () => {
     if (!editingRole || !editingRole.name.trim()) {
       toast({
         title: "Error",
@@ -169,10 +163,24 @@ const RolesPermissions = () => {
       });
       return;
     }
-
-    if (editingRole.id) {
-      // Edit existing role
-      setRoles(roles.map(role => role.id === editingRole.id ? editingRole : role));
+    const existingRole = roles.find(role => role.name === editingRole.name);
+    const isPresent = !!existingRole;
+    const roleId = existingRole ? existingRole.id : undefined;
+    if(isPresent) {
+      const newRole = {
+        name: editingRole.name,
+        description: editingRole.description,
+        permissions: [],
+        permissionIds: []
+      };
+      await updateRole(roleId, {name: editingRole.name,
+        description: editingRole.description,
+        permissionIds: []});
+      setRoles(
+        roles.map(role =>
+          role.name === editingRole.name ? { ...role, name: editingRole.name, description: editingRole.description } : role
+        )
+      );
       toast({
         title: "Success",
         description: "Role updated successfully"
@@ -180,9 +188,11 @@ const RolesPermissions = () => {
     } else {
       // Create new role
       const newRole = {
-        ...editingRole,
-        id: String(roles.length + 1)
+        ...editingRole
+        , permissions: []
       };
+      const res = await createRole(newRole);
+      newRole.id = res.id;
       setRoles([...roles, newRole]);
       toast({
         title: "Success",
@@ -194,14 +204,15 @@ const RolesPermissions = () => {
   };
 
   // Handle role deletion
-  const handleDeleteRole = (role: Role) => {
-    setSelectedRole(role);
+  const handleDeleteRole = async (role: Role) => {
+    role.permissionIds = []
+    setSelectedRole(role);    
     setIsRoleDeleteDialogOpen(true);
   };
 
-  const confirmDeleteRole = () => {
+  const confirmDeleteRole = async () => {
     if (!selectedRole) return;
-    
+    await deleteRole(selectedRole.id);
     setRoles(roles.filter(role => role.id !== selectedRole.id));
     toast({
       title: "Success",
@@ -245,7 +256,7 @@ const RolesPermissions = () => {
 
     // Check if permission is used in any role
     const isPermissionInUse = roles.some(role => 
-      role.permissions.includes(selectedPermission.id)
+      role.permissionIds.includes(selectedPermission.id)
     );
 
     if (isPermissionInUse) {
@@ -352,14 +363,14 @@ const RolesPermissions = () => {
   const togglePermission = (permissionId: string) => {
     if (!selectedRole) return;
     
-    const hasPermission = selectedRole.permissions.includes(permissionId);
+    const hasPermission = selectedRole.permissionIds.includes(permissionId);
     const updatedPermissions = hasPermission
-      ? selectedRole.permissions.filter(id => id !== permissionId)
-      : [...selectedRole.permissions, permissionId];
+      ? selectedRole.permissionIds.filter(id => id !== permissionId)
+      : [...selectedRole.permissionIds, permissionId];
     
     setSelectedRole({
       ...selectedRole,
-      permissions: updatedPermissions
+      permissionIds: updatedPermissions
     });
   };
 
@@ -367,7 +378,7 @@ const RolesPermissions = () => {
     if (!selectedRole) return;
     
     setRoles(roles.map(role => 
-      role.id === selectedRole.id ? selectedRole : role
+      role.name === selectedRole.name ? selectedRole : role
     ));
     
     toast({
@@ -432,8 +443,8 @@ const RolesPermissions = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredRoles.map((role) => (
-                  <TableRow key={role.id}>
+                filteredRoles.map((role, index) => (
+                  <TableRow key={index}>
                     <TableCell className="font-medium">{role.name}</TableCell>
                     <TableCell>{role.description}</TableCell>
                     <TableCell>
@@ -558,8 +569,8 @@ const RolesPermissions = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
-            {roles.map((role) => (
-              <div key={role.id} className="border rounded-lg p-4">
+            {roles.map((role, index) => (
+              <div key={index} className="border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h3 className="text-lg font-medium">{role.name}</h3>
@@ -572,13 +583,13 @@ const RolesPermissions = () => {
                 <div className="text-sm">
                   <span className="font-medium">Permissions:</span> {role.permissions.length > 0 
                     ? permissions
-                        .filter(p => role.permissions.includes(p.id))
+                        .filter(p => role.permissionIds.includes(p.id))
                         .map(p => p.name)
                         .slice(0, 3)
                         .join(", ")
                     : "None"
                   }
-                  {role.permissions.length > 3 && `, +${role.permissions.length - 3} more`}
+                  {role.permissions.length > 3 && `, +${role.permissionIds.length - 3} more`}
                 </div>
               </div>
             ))}
@@ -594,9 +605,9 @@ const RolesPermissions = () => {
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{editingRole?.id ? "Edit Role" : "Create New Role"}</DialogTitle>
+            <DialogTitle>{editingRole?.name ? "Edit Role" : "Create New Role"}</DialogTitle>
             <DialogDescription>
-              {editingRole?.id ? "Update the role details." : "Add a new role to the system."}
+              {editingRole?.name ? "Update the role details." : "Add a new role to the system."}
             </DialogDescription>
           </DialogHeader>
 
@@ -621,7 +632,7 @@ const RolesPermissions = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveRole}>{editingRole?.id ? "Save Changes" : "Create Role"}</Button>
+            <Button onClick={handleSaveRole}>{editingRole?.name ? "Save Changes" : "Create Role"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -766,7 +777,7 @@ const RolesPermissions = () => {
                     <div key={permission.id} className="flex items-start space-x-2">
                       <Checkbox 
                         id={`permission-${permission.id}`}
-                        checked={selectedRole?.permissions.includes(permission.id)}
+                        checked={selectedRole?.permissionIds.includes(permission.id)}
                         onCheckedChange={() => togglePermission(permission.id)}
                       />
                       <div className="grid gap-0.5">
@@ -815,7 +826,7 @@ const RolesPermissions = () => {
             {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => {
               // Check if this category has any permissions for the selected role
               const categoryHasPermissions = categoryPermissions.some(
-                permission => selectedRole?.permissions.includes(permission.id)
+                permission => selectedRole?.permissionIds.includes(permission.id)
               );
               
               // Only show categories with permissions
@@ -827,7 +838,7 @@ const RolesPermissions = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
                     {categoryPermissions.map((permission) => {
                       // Only show permissions that are assigned to the role
-                      if (!selectedRole?.permissions.includes(permission.id)) return null;
+                      if (!selectedRole?.permissionIds.includes(permission.id)) return null;
                       
                       return (
                         <div key={permission.id} className="flex items-start space-x-2">
@@ -855,7 +866,7 @@ const RolesPermissions = () => {
               );
             })}
 
-            {selectedRole && selectedRole.permissions.length === 0 && (
+            {selectedRole && selectedRole.permissionIds.length === 0 && (
               <div className="text-center py-6 text-muted-foreground">
                 No permissions assigned to this role.
               </div>
