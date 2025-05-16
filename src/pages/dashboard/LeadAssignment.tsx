@@ -451,16 +451,16 @@ const LeadAssignment = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <Select
-                            value={lead.assignedTo || ""}
+                            value={lead.assignedTo || "unassigned"}
                             onValueChange={(value) => {
-                              handleAssign(lead.id, value === "" ? null : value);
+                              handleAssign(lead.id, value === "unassigned" ? null : value);
                             }}
                           >
                             <SelectTrigger className="w-[140px] ml-auto">
                               <SelectValue placeholder="Assign to..." />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">Unassigned</SelectItem>
+                              <SelectItem value="unassigned">Unassigned</SelectItem>
                               {salesOfficers.map((officer) => (
                                 <SelectItem key={officer.id} value={officer.id}>
                                   {officer.name}
