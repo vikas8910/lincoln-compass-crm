@@ -28,7 +28,6 @@ interface Permission {
   id: string;
   name: string;
   description: string;
-  category: string;
 }
 
 interface User {
@@ -36,7 +35,6 @@ interface User {
   name: string;
   email: string;
   role: string;
-  department: string;
   lastActive: string;
 }
 
@@ -69,20 +67,20 @@ const RolesUsers = () => {
   ]);
 
   const [permissions, setPermissions] = useState<Permission[]>([
-    { id: "1", name: "view_dashboard", description: "View Dashboard", category: "Dashboard" },
-    { id: "2", name: "manage_users", description: "Manage Users", category: "Administration" },
-    { id: "3", name: "manage_roles", description: "Manage Roles", category: "Administration" },
-    { id: "4", name: "view_leads", description: "View Leads", category: "Leads" },
-    { id: "5", name: "create_leads", description: "Create Leads", category: "Leads" },
-    { id: "6", name: "edit_leads", description: "Edit Leads", category: "Leads" },
-    { id: "7", name: "delete_leads", description: "Delete Leads", category: "Leads" }
+    { id: "1", name: "view_dashboard", description: "View Dashboard" },
+    { id: "2", name: "manage_users", description: "Manage Users" },
+    { id: "3", name: "manage_roles", description: "Manage Roles" },
+    { id: "4", name: "view_leads", description: "View Leads" },
+    { id: "5", name: "create_leads", description: "Create Leads" },
+    { id: "6", name: "edit_leads", description: "Edit Leads" },
+    { id: "7", name: "delete_leads", description: "Delete Leads" }
   ]);
 
   const [users, setUsers] = useState<User[]>([
-    { id: "1", name: "John Doe", email: "john@example.com", role: "Administrator", department: "Management", lastActive: "2023-05-01" },
-    { id: "2", name: "Jane Smith", email: "jane@example.com", role: "Sales Officer", department: "Sales", lastActive: "2023-05-02" },
-    { id: "3", name: "Robert Johnson", email: "robert@example.com", role: "Sales Officer", department: "Sales", lastActive: "2023-05-01" },
-    { id: "4", name: "Emily Davis", email: "emily@example.com", role: "Lead", department: "Marketing", lastActive: "2023-04-28" }
+    { id: "1", name: "John Doe", email: "john@example.com", role: "Administrator", lastActive: "2023-05-01" },
+    { id: "2", name: "Jane Smith", email: "jane@example.com", role: "Sales Officer", lastActive: "2023-05-02" },
+    { id: "3", name: "Robert Johnson", email: "robert@example.com", role: "Sales Officer", lastActive: "2023-05-01" },
+    { id: "4", name: "Emily Davis", email: "emily@example.com", role: "Lead", lastActive: "2023-04-28" }
   ]);
 
   // State for dialogs
@@ -97,9 +95,6 @@ const RolesUsers = () => {
   // State for new/editing role
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Role categories for grouping permissions
-  const permissionCategories = Array.from(new Set(permissions.map(p => p.category)));
   
   // Handle role dialog open
   const handleAddRole = () => {
@@ -288,29 +283,24 @@ const RolesUsers = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {permissionCategories.map((category) => (
-                  <div key={category} className="space-y-3">
-                    <h3 className="font-semibold text-lg">{category}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {permissions
-                        .filter(p => p.category === category)
-                        .map((permission) => (
-                          <div 
-                            key={permission.id} 
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div>
-                              <div className="font-medium">{permission.description}</div>
-                              <div className="text-sm text-muted-foreground">{permission.name}</div>
-                            </div>
-                            <div className="flex items-center">
-                              {roles.filter(r => r.permissions.includes(permission.id)).length} roles
-                            </div>
-                          </div>
-                        ))}
-                    </div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {permissions.map((permission) => (
+                      <div 
+                        key={permission.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">{permission.description}</div>
+                          <div className="text-sm text-muted-foreground">{permission.name}</div>
+                        </div>
+                        <div className="flex items-center">
+                          {roles.filter(r => r.permissions.includes(permission.id)).length} roles
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -339,7 +329,6 @@ const RolesUsers = () => {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Department</TableHead>
                     <TableHead>Last Active</TableHead>
                     <TableHead>Role</TableHead>
                   </TableRow>
@@ -349,7 +338,6 @@ const RolesUsers = () => {
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.department}</TableCell>
                       <TableCell>{new Date(user.lastActive).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <select 
@@ -424,30 +412,23 @@ const RolesUsers = () => {
               <div className="mt-2">
                 <h3 className="mb-2 text-sm font-medium">Permissions</h3>
                 <div className="border rounded-md p-4 space-y-4">
-                  {permissionCategories.map((category) => (
-                    <div key={category} className="space-y-2">
-                      <h4 className="text-sm font-medium">{category}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {permissions
-                          .filter(p => p.category === category)
-                          .map((permission) => (
-                            <div key={permission.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`permission-${permission.id}`}
-                                checked={currentRole.permissions.includes(permission.id)}
-                                onCheckedChange={() => togglePermission(permission.id)}
-                              />
-                              <Label 
-                                htmlFor={`permission-${permission.id}`}
-                                className="text-sm"
-                              >
-                                {permission.description}
-                              </Label>
-                            </div>
-                          ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {permissions.map((permission) => (
+                      <div key={permission.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`permission-${permission.id}`}
+                          checked={currentRole.permissions.includes(permission.id)}
+                          onCheckedChange={() => togglePermission(permission.id)}
+                        />
+                        <Label 
+                          htmlFor={`permission-${permission.id}`}
+                          className="text-sm"
+                        >
+                          {permission.description}
+                        </Label>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
