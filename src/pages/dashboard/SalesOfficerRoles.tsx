@@ -136,11 +136,6 @@ const SalesOfficerRoles = () => {
     department: "Sales",
     mobile: "",
   });
-  
-  // Password fields 
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -170,33 +165,10 @@ const SalesOfficerRoles = () => {
     toast.success(`Role updated successfully for ${users.find(u => u.id === userId)?.name}`);
   };
   
-  // Validate password
-  const validatePassword = () => {
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long");
-      return false;
-    }
-    if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return false;
-    }
-    setPasswordError("");
-    return true;
-  };
-  
   // Handle adding a new user
   const handleAddUser = () => {
     if (!newUser.name || !newUser.email) {
       toast.error("Name and email are required");
-      return;
-    }
-    
-    if (!password) {
-      toast.error("Password is required");
-      return;
-    }
-    
-    if (!validatePassword()) {
       return;
     }
     
@@ -217,8 +189,6 @@ const SalesOfficerRoles = () => {
       department: "Sales",
       mobile: "",
     });
-    setPassword("");
-    setConfirmPassword("");
     
     setIsAddUserDialogOpen(false);
     
@@ -233,7 +203,7 @@ const SalesOfficerRoles = () => {
   return (
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">User & Role Management</h1>
+        <h1 className="text-3xl font-bold">User Roles Allocation</h1>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -382,45 +352,6 @@ const SalesOfficerRoles = () => {
                 required
               />
             </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="col-span-3"
-                placeholder="********"
-                required
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="confirm-password" className="text-right">
-                Confirm Password
-              </Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="col-span-3"
-                placeholder="********"
-                required
-              />
-            </div>
-            
-            {passwordError && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <div className="col-span-1"></div>
-                <div className="col-span-3 text-sm text-red-500">
-                  {passwordError}
-                </div>
-              </div>
-            )}
             
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="mobile" className="text-right">

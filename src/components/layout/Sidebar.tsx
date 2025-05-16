@@ -40,15 +40,14 @@ const MainSidebar = () => {
       href: "/leads",
     },
     {
-      title: "Leads Mapping",
+      title: "Sales Mapping",
       icon: ClipboardList,
-      href: "/leads-mapping",
-      description: "Assign leads to sales officers",
+      href: "/sales-mapping",
     },
     {
-      title: "User & Role Management",
+      title: "User Roles Allocation",
       icon: UserCog,
-      href: "/user-role-management",
+      href: "/sales-officer-roles",
     },
     {
       title: "Roles & Permissions",
@@ -65,15 +64,15 @@ const MainSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                // Fixed the active detection to ensure exact matches only
-                const isActive = location.pathname === item.href;
+                const isActive = location.pathname === item.href || 
+                  (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
                 
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild 
                       isActive={isActive}
-                      tooltip={item.description || item.title}
+                      tooltip={item.title}
                       className={isActive ? "bg-blue-700 text-white" : "text-gray-300 hover:text-white hover:bg-blue-800/50"}
                     >
                       <Link to={item.href} className="flex items-center gap-2">
