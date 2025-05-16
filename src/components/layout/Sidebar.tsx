@@ -43,6 +43,7 @@ const MainSidebar = () => {
       title: "Leads Mapping",
       icon: ClipboardList,
       href: "/leads-mapping",
+      description: "Assign leads to sales officers",
     },
     {
       title: "User & Role Management",
@@ -72,7 +73,7 @@ const MainSidebar = () => {
                     <SidebarMenuButton 
                       asChild 
                       isActive={isActive}
-                      tooltip={item.title}
+                      tooltip={item.description || item.title}
                       className={isActive ? "bg-blue-700 text-white" : "text-gray-300 hover:text-white hover:bg-blue-800/50"}
                     >
                       <Link to={item.href} className="flex items-center gap-2">
