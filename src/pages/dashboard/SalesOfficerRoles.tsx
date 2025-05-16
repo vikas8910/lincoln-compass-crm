@@ -167,6 +167,7 @@ const SalesOfficerRoles = () => {
     mode: "onBlur", // Validate on blur for better user experience
   });
   
+  // Filter users based on search term
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -224,21 +225,6 @@ const SalesOfficerRoles = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Paginate the filtered results
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  // Calculate total pages
-  const totalPages = Math.ceil(filteredUsers.length / pageSize);
 
   return (
     <MainLayout>
