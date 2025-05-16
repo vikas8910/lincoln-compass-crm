@@ -47,8 +47,9 @@ const App = () => {
             <Route path="/lead-pipeline" element={<ProtectedRoute element={<LeadPipeline />} />} />
             <Route path="/roles-permissions" element={<ProtectedRoute element={<RolesPermissions />} />} />
             <Route path="/roles-users" element={<ProtectedRoute element={<RolesUsers />} />} />
-            <Route path="/sales-mapping" element={<ProtectedRoute element={<LeadAssignment />} />} />
-            <Route path="/lead-assignment" element={<ProtectedRoute element={<Navigate to="/sales-mapping" replace />} />} />
+            <Route path="/leads-mapping" element={<ProtectedRoute element={<LeadAssignment />} />} />
+            <Route path="/sales-mapping" element={<ProtectedRoute element={<Navigate to="/leads-mapping" replace />} />} />
+            <Route path="/lead-assignment" element={<ProtectedRoute element={<Navigate to="/leads-mapping" replace />} />} />
             <Route path="/sales-officer-roles" element={<ProtectedRoute element={<SalesOfficerRoles />} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
