@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -68,10 +67,9 @@ const newUserSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Confirm password is required"),
   mobile: z.string()
-    .min(10, "Mobile number must be at least 10 characters")
+    .min(1, "Mobile number is required")
     .regex(/^[0-9\-+() ]*$/, "Mobile number can only contain digits, spaces, and +, -, ()")
-    .optional()
-    .or(z.literal('')), // Allow empty string
+    .min(10, "Mobile number must be at least 10 characters"),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
