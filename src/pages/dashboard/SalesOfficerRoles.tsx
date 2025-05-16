@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -10,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -30,7 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,18 +40,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { createUser, getUsers, updateUserRole } from "@/services/user-service/user-service";
+import { RoleAssignment, UserRequest, UserResponse } from "@/types";
+import { getRoles } from "@/services/role/role";
 
-// Define interfaces
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string | null;
-  avatar?: string;
-  mobile?: string;
-  password?: string;
-  department?: string; // Added the department property
-}
+
 
 interface Role {
   id: string;
@@ -64,12 +55,12 @@ interface Role {
 const newUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().min(1, "Email is required").email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Confirm password is required"),
   mobile: z.string()
-    .min(1, "Mobile number is required")
-    .regex(/^[0-9\-+() ]*$/, "Mobile number can only contain digits, spaces, and +, -, ()")
-    .min(10, "Mobile number must be at least 10 characters"),
+    .min(10, "Mobile number is required")
+    .regex(/^[0-9]*$/, "Mobile number can only contain digits")
+    .max(10, "Mobile number must be at least 10 characters"),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -79,71 +70,10 @@ const newUserSchema = z.object({
 type NewUserFormValues = z.infer<typeof newUserSchema>;
 
 const SalesOfficerRoles = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Smith",
-      email: "john.smith@example.com",
-      role: "Admin",
-      mobile: "123-456-7890",
-    },
-    {
-      id: "2",
-      name: "Jane Doe",
-      email: "jane.doe@example.com",
-      role: "Sales Officer",
-      mobile: "123-456-7891",
-    },
-    {
-      id: "3",
-      name: "Robert Johnson",
-      email: "robert.johnson@example.com",
-      role: "Sales Officer",
-      mobile: "123-456-7892",
-    },
-    {
-      id: "4",
-      name: "Emily Williams",
-      email: "emily.williams@example.com",
-      role: "Sales Officer",
-      mobile: "123-456-7893",
-    },
-    {
-      id: "5",
-      name: "Michael Brown",
-      email: "michael.brown@example.com",
-      role: "Marketing Officer",
-      mobile: "123-456-7894",
-    },
-    {
-      id: "6",
-      name: "Sarah Johnson",
-      email: "sarah.johnson@example.com",
-      role: "Admin",
-      mobile: "123-456-7895",
-    },
-    {
-      id: "7",
-      name: "David Rodriguez",
-      email: "david.rodriguez@example.com",
-      role: "Sales Officer",
-      mobile: "123-456-7896",
-    },
-    {
-      id: "8",
-      name: "Jessica Lee",
-      email: "jessica.lee@example.com",
-      role: "Marketing Officer",
-      mobile: "123-456-7897",
-    },
-  ]);
+  const [users, setUsers] = useState<UserResponse[]>([]);
 
   // Updated roles array to include only the three specified roles
-  const [roles, setRoles] = useState<Role[]>([
-    { id: "1", name: "Admin" },
-    { id: "2", name: "Sales Officer" },
-    { id: "3", name: "Marketing Officer" },
-  ]);
+  const [roles, setRoles] = useState<Role[]>([]);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,6 +81,31 @@ const SalesOfficerRoles = () => {
   
   // New user dialog states
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+
+  useEffect(() => {
+
+    // Fetch roles from API
+    const fetchRoles = async () => {
+      try {
+        const data = await getRoles();
+        setRoles(data.content);
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+      }
+    };
+
+    // Fetch users from API
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers();
+        setUsers(data.content);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchRoles();
+    fetchUsers();
+  }, []);
 
   // Set up React Hook Form with Zod validation
   const form = useForm<NewUserFormValues>({
@@ -182,30 +137,33 @@ const SalesOfficerRoles = () => {
   const totalPages = Math.ceil(filteredUsers.length / pageSize);
 
   // Handle role change
-  const handleRoleChange = (userId: string, newRole: string) => {
+  const handleRoleChange = async (userDetails: UserResponse, newRole: string) => {
+    const roleId = roles.find(role => role.name === newRole)?.id;
+    const payload: RoleAssignment = {
+      roleIds: [roleId]
+    }
+    await updateUserRole(userDetails.id, payload);
     setUsers(prev => 
       prev.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
+        user.id === userDetails.id ? { ...user, roles: [{id:roleId, name:newRole }] } : user
       )
     );
     
-    toast.success(`Role updated successfully for ${users.find(u => u.id === userId)?.name}`);
+    toast.success(`Role updated successfully for ${users.find(u => u.id === userDetails.name)?.name}`);
   };
   
   // Handle adding a new user
-  const onSubmit = (data: NewUserFormValues) => {
-    const newId = String(users.length + 1);
+  const onSubmit = async (data: NewUserFormValues) => {
     
-    const userToAdd: User = {
-      id: newId,
-      name: data.name,
+    const userToAdd: UserRequest = {
       email: data.email,
-      role: null,
-      mobile: data.mobile,
       password: data.password,
+      name: data.name,
+      contactNumber: data.mobile,
+      roleIds: [],
     };
-    
-    setUsers(prev => [...prev, userToAdd]);
+    const res = await createUser(userToAdd);
+    setUsers(prev => [...prev, {...userToAdd, roles: res.roles, id: res.id}]);  
     
     // Reset form and close dialog
     form.reset();
@@ -261,26 +219,17 @@ const SalesOfficerRoles = () => {
               </TableHeader>
               <TableBody>
                 {paginatedUsers.length > 0 ? (
-                  paginatedUsers.map((user) => (
-                    <TableRow key={user.id}>
+                  paginatedUsers.map((user, index) => (
+                    <TableRow key={index}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar>
-                            {user.avatar ? (
-                              <img src={user.avatar} alt={user.name} />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center rounded-full bg-muted">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </Avatar>
                           <div>
                             <div className="font-medium">{user.name}</div>
                             <div className="text-sm text-muted-foreground">
                               {user.email}
-                              {user.mobile && (
+                              {user.contactNumber && (
                                 <div className="text-xs text-muted-foreground">
-                                  {user.mobile}
+                                  {user.contactNumber}
                                 </div>
                               )}
                             </div>
@@ -288,12 +237,12 @@ const SalesOfficerRoles = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{user.role || "None"}</span>
+                        <span className="font-medium">{user.roles[0]?.name || "None"}</span>
                       </TableCell>
                       <TableCell className="text-right">
                         <Select
-                          defaultValue={user.role || undefined}
-                          onValueChange={(value) => handleRoleChange(user.id, value)}
+                          defaultValue={user.roles[0]?.name || undefined}
+                          onValueChange={(value) => handleRoleChange(user, value)}
                         >
                           <SelectTrigger className="w-[200px] ml-auto">
                             <SelectValue placeholder="Select Role" />
