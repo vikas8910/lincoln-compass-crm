@@ -298,10 +298,10 @@ const RolesPermissions = () => {
   const togglePermission = (permissionId: string) => {
     if (!selectedRole) return;
     
-    const hasPermission = selectedRole.permissionIds.includes(permissionId);
+    const hasPermission = selectedRole.permissionIds?.includes(permissionId);
     const updatedPermissions = hasPermission
-      ? selectedRole.permissionIds.filter(id => id !== permissionId)
-      : [...selectedRole.permissionIds, permissionId];
+      ? selectedRole.permissionIds?.filter(id => id !== permissionId)
+      : [...(selectedRole.permissionIds || []), permissionId];
     
     setSelectedRole({
       ...selectedRole,
@@ -678,7 +678,7 @@ const RolesPermissions = () => {
                 <div key={permission.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={`permission-${permission.id}`}
-                    checked={selectedRole?.permissions.includes(permission.id)}
+                    checked={selectedRole?.permissionIds?.includes(permission.id)}
                     onCheckedChange={() => togglePermission(permission.id)}
                   />
                   <div className="grid gap-0.5">
@@ -725,7 +725,7 @@ const RolesPermissions = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
               {permissions.map((permission) => {
                 // Only show permissions that are assigned to the role
-                if (!selectedRole?.permissions.includes(permission.id)) return null;
+                if (!selectedRole?.permissionIds?.includes(permission.id)) return null;
                 
                 return (
                   <div key={permission.id} className="flex items-start space-x-2">
@@ -749,7 +749,7 @@ const RolesPermissions = () => {
                 );
               })}
 
-              {selectedRole && selectedRole.permissions.length === 0 && (
+              {selectedRole && selectedRole.permissionIds?.length === 0 && (
                 <div className="text-center py-6 text-muted-foreground">
                   No permissions assigned to this role.
                 </div>
