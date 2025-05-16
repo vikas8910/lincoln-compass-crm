@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   Form,
@@ -52,6 +52,7 @@ interface User {
   avatar?: string;
   mobile?: string;
   password?: string;
+  department?: string; // Added the department property
 }
 
 interface Role {
