@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,11 @@ const newUserSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Confirm password is required"),
-  mobile: z.string().optional(),
+  mobile: z.string()
+    .min(10, "Mobile number must be at least 10 characters")
+    .regex(/^[0-9\-+() ]*$/, "Mobile number can only contain digits, spaces, and +, -, ()")
+    .optional()
+    .or(z.literal('')), // Allow empty string
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -220,6 +225,21 @@ const SalesOfficerRoles = () => {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // Paginate the filtered results
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredUsers.length / pageSize);
+
   return (
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -251,7 +271,6 @@ const SalesOfficerRoles = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[300px]">User</TableHead>
-                  <TableHead>Department</TableHead>
                   <TableHead>Current Role</TableHead>
                   <TableHead className="text-right">Assign Role</TableHead>
                 </TableRow>
@@ -285,9 +304,6 @@ const SalesOfficerRoles = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {user.department || "N/A"}
-                      </TableCell>
-                      <TableCell>
                         <span className="font-medium">{user.role || "None"}</span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -311,7 +327,7 @@ const SalesOfficerRoles = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                       No users found matching your search.
                     </TableCell>
                   </TableRow>
@@ -429,6 +445,7 @@ const SalesOfficerRoles = () => {
                     <FormControl>
                       <Input
                         placeholder="123-456-7890"
+                        className={form.formState.errors.mobile ? "border-red-500" : ""}
                         {...field}
                       />
                     </FormControl>
