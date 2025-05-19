@@ -163,22 +163,18 @@ const EditUserForm: React.FC<{
     formState: { errors, isSubmitting },
   } = useForm<EditUserFormValues>({
     resolver: zodResolver(editUserSchema),
-    defaultValues: user
-      ? {
-          name: user.name,
-          email: user.email,
-          contactNumber: user.contactNumber,
-        }
-      : {
-          name: "",
-          email: "",
-          contactNumber: "",
-        },
+    // Important: Using empty defaults initially
+    defaultValues: {
+      name: "",
+      email: "",
+      contactNumber: "",
+    },
   });
 
-  // Reset form when dialog opens/closes or user changes
+  // Reset form with user data when dialog opens or user changes
   React.useEffect(() => {
     if (isOpen && user) {
+      // This properly sets the form values from the user data
       reset({
         name: user.name,
         email: user.email,
@@ -191,7 +187,6 @@ const EditUserForm: React.FC<{
   const onFormSubmit = async (data: EditUserFormValues) => {
     try {
       await onSubmit(data);
-      reset();
       onClose();
     } catch (error) {
       console.error("Error submitting form:", error);

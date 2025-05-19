@@ -25,6 +25,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Use custom hooks
   const { 
@@ -37,7 +38,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
     updatePaginationState 
   } = usePagination({
     onPageChange: (page, size) => {
-      fetchUsers(page, size);
+      fetchUsers(page, size, searchTerm);
     }
   });
 
@@ -49,8 +50,6 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       fetchUsers(0, pageSize, term);
     }
   });
-
-  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch users from API
   const fetchUsers = async (page: number, size: number, search: string = "") => {
@@ -68,9 +67,11 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
     }
   };
 
-  // Fetch users on initial load
+  // Fetch users on initial load only - fixed to prevent infinite calls
   useEffect(() => {
-    fetchUsers(currentPage, pageSize);
+    fetchUsers(currentPage, pageSize, searchTerm);
+    // We're only running this on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle editing a user
@@ -92,7 +93,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       await deleteUser(userToDelete.id);
       
       // Refresh the user list after deleting the user
-      fetchUsers(currentPage, pageSize);
+      fetchUsers(currentPage, pageSize, searchTerm);
       
       setIsDeleteUserDialogOpen(false);
       setUserToDelete(null);
@@ -116,7 +117,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       });
       
       // Refresh the user list after updating the user
-      fetchUsers(currentPage, pageSize);
+      fetchUsers(currentPage, pageSize, searchTerm);
       
       setIsEditUserDialogOpen(false);
       setEditingUser(null);

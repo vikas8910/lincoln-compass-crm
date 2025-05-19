@@ -32,6 +32,7 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Use custom hooks
   const { 
@@ -56,8 +57,6 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
       fetchUsers(0, pageSize, term);
     }
   });
-
-  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch users from API
   const fetchUsers = async (page: number, size: number, search: string = "") => {
@@ -93,9 +92,11 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
     fetchRoles();
   }, []);
 
-  // Fetch users on initial load
+  // Fetch users on initial load only - fixed to prevent infinite calls
   useEffect(() => {
-    fetchUsers(currentPage, pageSize);
+    fetchUsers(currentPage, pageSize, searchTerm);
+    // We're only running this on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle role change
