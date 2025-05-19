@@ -43,8 +43,7 @@ function DynamicTable<T extends { id?: string | number }>({
     if (typeof accessor === "function") {
       return accessor(item);
     }
-    // Explicitly cast the result to ReactNode to ensure type safety
-    return String(item[accessor as keyof T]) as React.ReactNode;
+    return item[accessor as keyof T];
   };
 
   return (

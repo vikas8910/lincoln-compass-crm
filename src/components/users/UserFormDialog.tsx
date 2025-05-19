@@ -2,248 +2,218 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { NewUserFormValues, EditUserFormValues, newUserSchema, editUserSchema } from "@/schemas/user-schemas";
 import { UserResponse } from "@/types";
-import { newUserSchema, editUserSchema, NewUserFormValues, EditUserFormValues } from "@/schemas/user-schemas";
 
-type UserFormDialogProps = {
+interface UserFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: NewUserFormValues | EditUserFormValues) => Promise<void>;
   user?: UserResponse | null;
   type: 'add' | 'edit';
-};
+}
 
 const UserFormDialog: React.FC<UserFormDialogProps> = ({
   isOpen,
   onClose,
   onSubmit,
   user,
-  type,
+  type
 }) => {
-  // Determine if we're adding or editing a user
-  const isAddMode = type === 'add';
+  const isEditing = type === 'edit';
   
-  // Use different form schemas and types based on mode
-  if (isAddMode) {
-    // Form for adding a new user
-    return <AddUserForm isOpen={isOpen} onClose={onClose} onSubmit={onSubmit} />;
-  } else {
-    // Form for editing an existing user
-    return <EditUserForm isOpen={isOpen} onClose={onClose} onSubmit={onSubmit} user={user} />;
-  }
-};
-
-// Component for adding a new user
-const AddUserForm: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: NewUserFormValues) => Promise<void>;
-}> = ({ isOpen, onClose, onSubmit }) => {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<NewUserFormValues>({
-    resolver: zodResolver(newUserSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      mobile: "",
-    },
+  const form = useForm<NewUserFormValues | EditUserFormValues>({
+    resolver: zodResolver(isEditing ? editUserSchema : newUserSchema),
+    defaultValues: isEditing && user 
+      ? {
+          name: user.name,
+          email: user.email,
+          contactNumber: user.contactNumber,
+        }
+      : {
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          mobile: "",
+        },
+    mode: "onBlur",
   });
 
-  // Reset form when dialog opens/closes
-  React.useEffect(() => {
-    if (isOpen) {
-      reset({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        mobile: "",
-      });
-    }
-  }, [isOpen, reset]);
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
 
-  // Submit handler with loading state
-  const onFormSubmit = async (data: NewUserFormValues) => {
-    try {
-      await onSubmit(data);
-      reset();
-      onClose();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      // Error is handled by the parent component
-    }
+  const handleSubmit = async (data: NewUserFormValues | EditUserFormValues) => {
+    await onSubmit(data);
+    form.reset();
+    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit User' : 'Add New User'}</DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? 'Update the user details.'
+              : 'Enter the details of the new user. You can assign their role later from the user table.'
+            }
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" {...register("name")} />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...register("password")} />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              {...register("confirmPassword")}
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="John Smith"
+                      className={form.formState.errors.name ? "border-red-500" : ""}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.confirmPassword && (
-              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="john.smith@example.com"
+                      className={form.formState.errors.email ? "border-red-500" : ""}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {!isEditing && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className={form.formState.errors.password ? "border-red-500" : ""}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          className={form.formState.errors.confirmPassword ? "border-red-500" : ""}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="mobile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="1234567890"
+                          className={form.formState.errors.mobile ? "border-red-500" : ""}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="mobile">Mobile Number</Label>
-            <Input id="mobile" {...register("mobile")} />
-            {errors.mobile && (
-              <p className="text-sm text-destructive">{errors.mobile.message}</p>
+            
+            {isEditing && (
+              <FormField
+                control={form.control}
+                name="contactNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="1234567890"
+                        className={form.formState.errors.contactNumber ? "border-red-500" : ""}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Add User"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-// Component for editing an existing user
-const EditUserForm: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: EditUserFormValues) => Promise<void>;
-  user?: UserResponse | null;
-}> = ({ isOpen, onClose, onSubmit, user }) => {
-  console.log("EditUserForm rendering with user:", user);
-  
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<EditUserFormValues>({
-    resolver: zodResolver(editUserSchema),
-    // Important: Using empty defaults initially
-    defaultValues: {
-      name: "",
-      email: "",
-      contactNumber: "",
-    },
-  });
-
-  // Reset form with user data when dialog opens or user changes
-  React.useEffect(() => {
-    console.log("EditUserForm useEffect triggered, isOpen:", isOpen, "user:", user);
-    
-    if (isOpen && user) {
-      // Explicitly set values for all form fields
-      console.log("Resetting form with user data:", {
-        name: user.name,
-        email: user.email,
-        contactNumber: user.contactNumber,
-      });
-      
-      reset({
-        name: user.name,
-        email: user.email,
-        contactNumber: user.contactNumber,
-      });
-    }
-  }, [isOpen, user, reset]);
-
-  // Submit handler with loading state
-  const onFormSubmit = async (data: EditUserFormValues) => {
-    try {
-      await onSubmit(data);
-      onClose();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      // Error is handled by the parent component
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" {...register("name")} />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="contactNumber">Contact Number</Label>
-            <Input id="contactNumber" {...register("contactNumber")} />
-            {errors.contactNumber && (
-              <p className="text-sm text-destructive">{errors.contactNumber.message}</p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={!form.formState.isValid && form.formState.isSubmitted}
+              >
+                {isEditing ? 'Save Changes' : 'Add User'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
