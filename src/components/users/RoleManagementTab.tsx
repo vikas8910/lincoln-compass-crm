@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from "react";
-import { FiSearch, FiUserPlus, FiLoader } from "react-icons/fi";
+import { FiSearch, FiLoader } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,8 +17,6 @@ import { getRoles } from "@/services/role/role";
 import { RoleAssignment, UserResponse } from "@/types";
 import usePagination from "@/hooks/usePagination";
 import useSearch from "@/hooks/useSearch";
-import UserFormDialog from "./UserFormDialog";
-import { NewUserFormValues } from "@/schemas/user-schemas";
 
 interface Role {
   id: string;
@@ -34,7 +31,6 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
-  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   
   // Use custom hooks
   const { 
@@ -47,7 +43,7 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
     updatePaginationState 
   } = usePagination({
     onPageChange: (page, size) => {
-      fetchUsers(page, size);
+      fetchUsers(page, size, searchTerm);
     }
   });
 
@@ -171,20 +167,14 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative max-w-md">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-9 w-full"
-            />
-          </div>
-          <Button onClick={() => setIsAddUserDialogOpen(true)}>
-            <FiUserPlus className="mr-2 h-4 w-4" />
-            Add New User
-          </Button>
+        <div className="relative max-w-md">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="pl-9 w-full"
+          />
         </div>
       </div>
 
@@ -209,13 +199,6 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
           />
         </CardContent>
       </Card>
-
-      <UserFormDialog 
-        isOpen={isAddUserDialogOpen}
-        onClose={() => setIsAddUserDialogOpen(false)}
-        onSubmit={onAddUser}
-        type="add"
-      />
     </>
   );
 };

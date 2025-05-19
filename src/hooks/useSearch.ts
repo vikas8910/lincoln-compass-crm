@@ -18,7 +18,7 @@ export default function useSearch({
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
       
-      if (onSearch && searchTerm.trim() !== "") {
+      if (onSearch) {
         onSearch(searchTerm);
       }
     }, delay);
