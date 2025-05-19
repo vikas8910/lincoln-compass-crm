@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +40,8 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
     }
   });
 
+  // Comment out the search hook usage but keep the import
+  /*
   const { 
     searchTerm, 
     handleSearchChange 
@@ -49,6 +50,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       fetchUsers(0, pageSize, term);
     }
   });
+  */
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -175,6 +177,8 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
     <>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
+          {/* Comment out search input but keep the FiSearch icon import */}
+          {/*
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -184,6 +188,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
               className="pl-9 w-full"
             />
           </div>
+          */}
           <Button onClick={() => setIsAddUserDialogOpen(true)}>
             <FiUserPlus className="mr-2 h-4 w-4" />
             Add New User
