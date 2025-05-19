@@ -39,11 +39,15 @@ function DynamicTable<T extends { id?: string | number }>({
   emptyMessage = "No data found.",
   pagination,
 }: DynamicTableProps<T>) {
+  // Fix: Modify getCellContent to ensure it returns a React.ReactNode
   const getCellContent = (item: T, accessor: Column<T>["accessor"]) => {
     if (typeof accessor === "function") {
       return accessor(item);
     }
-    return item[accessor as keyof T];
+    
+    // Convert to string if not already a ReactNode
+    const value = item[accessor as keyof T];
+    return value !== null && value !== undefined ? String(value) : "";
   };
 
   return (

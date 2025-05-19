@@ -40,23 +40,31 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
 }) => {
   const isEditing = type === 'edit';
   
-  const form = useForm<NewUserFormValues | EditUserFormValues>({
-    resolver: zodResolver(isEditing ? editUserSchema : newUserSchema),
-    defaultValues: isEditing && user 
-      ? {
-          name: user.name,
-          email: user.email,
-          contactNumber: user.contactNumber,
-        }
-      : {
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          mobile: "",
-        },
+  // Create separate form configurations based on the type
+  const addUserForm = useForm<NewUserFormValues>({
+    resolver: zodResolver(newUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      mobile: "",
+    },
     mode: "onBlur",
   });
+
+  const editUserForm = useForm<EditUserFormValues>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+      contactNumber: user?.contactNumber || "",
+    },
+    mode: "onBlur",
+  });
+
+  // Use the appropriate form based on whether we're editing or adding
+  const form = isEditing ? editUserForm : addUserForm;
 
   const handleClose = () => {
     form.reset();
@@ -68,6 +76,17 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     form.reset();
     onClose();
   };
+
+  React.useEffect(() => {
+    // Update form values when user prop changes (for editing)
+    if (isEditing && user) {
+      editUserForm.reset({
+        name: user.name,
+        email: user.email,
+        contactNumber: user.contactNumber,
+      });
+    }
+  }, [isEditing, user, editUserForm]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
