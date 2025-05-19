@@ -48,8 +48,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
-import { createPermission, getPermissions, updatePermission } from "@/services/permission-service/permission-service";
+import { createRole, deleteRole, getRoles, rolePermissionsMapping, updateRole } from "@/services/role/role";
+import { createPermission, deletePermission, getPermissions, updatePermission } from "@/services/permission-service/permission-service";
 
 // Define types
 export interface Permission {
@@ -234,12 +234,12 @@ const RolesPermissions = () => {
     setIsPermissionDeleteDialogOpen(true);
   };
 
-  const confirmDeletePermission = () => {
+  const confirmDeletePermission = async () => {
     if (!selectedPermission) return;
 
     // Check if permission is used in any role
     const isPermissionInUse = roles.some(role => 
-      role.permissionIds.includes(selectedPermission.id)
+      role.permissionIds?.includes(selectedPermission.id)
     );
 
     if (isPermissionInUse) {
@@ -252,6 +252,8 @@ const RolesPermissions = () => {
       return;
     }
     
+    await deletePermission(selectedPermission.id);
+
     setPermissions(permissions.filter(p => p.id !== selectedPermission.id));
     toast({
       title: "Success",
@@ -311,16 +313,20 @@ const RolesPermissions = () => {
     
     setSelectedRole({
       ...selectedRole,
+      permissions: updatedPermissions.map(id => permissions.find(p => p.id === id)),
       permissionIds: updatedPermissions
     });
   };
 
-  const handleSaveAssignedPermissions = () => {
+  const handleSaveAssignedPermissions = async () => {
     if (!selectedRole) return;
     
     setRoles(roles.map(role => 
       role.id === selectedRole.id ? selectedRole : role
     ));
+
+    //call the api for role permissions mapping
+    await rolePermissionsMapping(selectedRole.id, selectedRole.permissionIds || []);
     
     toast({
       title: "Success",
@@ -521,7 +527,7 @@ const RolesPermissions = () => {
                 <div className="text-sm">
                   <span className="font-medium">Permissions:</span> {role.permissions.length > 0 
                     ? permissions
-                        .filter(p => role.permissionIds.includes(p.id))
+                        .filter(p => role.permissions.some(rp => rp.id === p.id))
                         .map(p => p.name)
                         .slice(0, 3)
                         .join(", ")
@@ -630,7 +636,7 @@ const RolesPermissions = () => {
             <div className="grid gap-2">
               <Label>Actions</Label>
               <div className="flex flex-row gap-2 justify-between align-middle">
-                {["CREATE", "UPDATE", "DELETE", "GET"].map(action => (
+                {["CREATE", "UPDATE", "DELETE", "READ"].map(action => (
                   <div key={action} className="flex items-center">
                     <Checkbox
                       id={`action-${action}`}
@@ -705,7 +711,7 @@ const RolesPermissions = () => {
                 <div key={permission.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={`permission-${permission.id}`}
-                    checked={selectedRole?.permissionIds?.includes(permission.id)}
+                    checked={selectedRole?.permissions.some(rp => rp.id === permission.id)} 
                     onCheckedChange={() => togglePermission(permission.id)}
                   />
                   <div className="grid gap-0.5">
@@ -749,39 +755,40 @@ const RolesPermissions = () => {
           </DialogHeader>
 
           <div className="py-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
-              {permissions.map((permission) => {
-                // Only show permissions that are assigned to the role
-                if (!selectedRole?.permissionIds?.includes(permission.id)) return null;
-                
-                return (
-                  <div key={permission.id} className="flex items-start space-x-2">
-                    <Checkbox 
-                      id={`view-permission-${permission.id}`}
-                      checked={true}
-                      disabled={true}
-                    />
-                    <div className="grid gap-0.5">
-                      <Label 
-                        htmlFor={`view-permission-${permission.id}`}
-                        className="text-sm font-medium"
-                      >
-                        {permission.name}
-                      </Label>
-                      {permission.description && (
-                        <p className="text-xs text-muted-foreground">{permission.description}</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {selectedRole && selectedRole.permissionIds?.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">
+            
+            {selectedRole && selectedRole.permissions?.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
                   No permissions assigned to this role.
                 </div>
+              ): (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
+                  {permissions.map((permission) => {
+                    // Only show permissions that are assigned to the role
+                    if (!selectedRole?.permissions?.some(p => p.id === permission.id)) return null;
+                    
+                    return (
+                      <div key={permission.id} className="flex items-start space-x-2">
+                        <Checkbox 
+                          id={`view-permission-${permission.id}`}
+                          checked={true}
+                          disabled={true}
+                        />
+                        <div className="grid gap-0.5">
+                          <Label 
+                            htmlFor={`view-permission-${permission.id}`}
+                            className="text-sm font-medium"
+                          >
+                            {permission.name}
+                          </Label>
+                          {permission.description && (
+                            <p className="text-xs text-muted-foreground">{permission.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
-            </div>
           </div>
 
           <DialogFooter>

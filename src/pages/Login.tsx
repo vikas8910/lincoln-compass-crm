@@ -125,14 +125,7 @@ const Login = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Button
-                    variant="link"
-                    type="button"
-                    className="p-0 text-xs"
-                    onClick={handleForgotPassword}
-                  >
-                    Forgot password?
-                  </Button>
+                 
                 </div>
                 <div className="relative">
                   <FiLock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -172,9 +165,16 @@ const Login = () => {
                   onCheckedChange={(checked) => 
                     setRememberMe(checked === true)}
                 />
-                <Label htmlFor="remember" className="text-sm">
+                <Label htmlFor="remember" className="text-sm justify-evenly">
                   Remember me
-                </Label>
+                </Label> <Button
+                    variant="link"
+                    type="button"
+                    className="p-0 text-xs"
+                    onClick={handleForgotPassword}
+                  >
+                    Forgot password?
+                  </Button>
               </div>
             </CardContent>
             
@@ -189,14 +189,6 @@ const Login = () => {
             </CardFooter>
           </form>
         </Card>
-        
-        <div className="text-center text-sm">
-          <p className="text-muted-foreground">
-            Demo credentials: <br />
-            Admin: admin@example.com / admin123 <br />
-            Sales: sales@example.com / sales123
-          </p>
-        </div>
       </div>
     </div>
   );

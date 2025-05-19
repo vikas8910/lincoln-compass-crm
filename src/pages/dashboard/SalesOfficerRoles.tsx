@@ -394,14 +394,6 @@ const SalesOfficerRoles = () => {
                             <div className="flex items-center gap-3">
                               <div>
                                 <div className="font-medium">{user.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {user.email}
-                                  {user.contactNumber && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {user.contactNumber}
-                                    </div>
-                                  )}
-                                </div>
                               </div>
                             </div>
                           </TableCell>
@@ -410,7 +402,7 @@ const SalesOfficerRoles = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <Select
-                              defaultValue={user.roles && user.roles[0]?.name || undefined}
+                              value={user.roles && user.roles[0]?.name || undefined}
                               onValueChange={(value) => handleRoleChange(user, value)}
                             >
                               <SelectTrigger className="w-[200px] ml-auto">

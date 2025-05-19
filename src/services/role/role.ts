@@ -37,3 +37,12 @@ export const deleteRole = async (id: string) => {
         throw error;
     }
 }
+
+export const rolePermissionsMapping = async (roleId: string, permissionIds: string[]) => {
+    try {
+        const response = await axiosInstance.post(`${ROLE}/${roleId}/permissions`, { permissionIds: permissionIds });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

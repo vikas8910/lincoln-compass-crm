@@ -114,7 +114,7 @@ const TablePagination = ({
           <Label htmlFor="pageSize" className="text-sm inline-block">Rows per page:</Label>
           <Select
             value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(parseInt(value))}
+            onValueChange={(value) => {onPageSizeChange(parseInt(value)); onPageChange(1);}}
           >
             <SelectTrigger id="pageSize" className="w-[80px]">
               <SelectValue placeholder={pageSize.toString()} />

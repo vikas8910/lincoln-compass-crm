@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { AXIOS_TIMEOUT } from "@/lib/constants";
+import { toast } from "@/hooks/use-toast";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8080",
@@ -23,6 +24,13 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response) {
+      toast({
+        title: error.response.status + " " + error.response.statusText,
+        description: error.response.data.message,
+        variant: "destructive"
+      });
+    }
     return Promise.reject(error);
   }
 );
