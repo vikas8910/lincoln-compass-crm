@@ -156,6 +156,8 @@ const EditUserForm: React.FC<{
   onSubmit: (data: EditUserFormValues) => Promise<void>;
   user?: UserResponse | null;
 }> = ({ isOpen, onClose, onSubmit, user }) => {
+  console.log("EditUserForm rendering with user:", user);
+  
   const {
     register,
     handleSubmit,
@@ -173,8 +175,16 @@ const EditUserForm: React.FC<{
 
   // Reset form with user data when dialog opens or user changes
   React.useEffect(() => {
+    console.log("EditUserForm useEffect triggered, isOpen:", isOpen, "user:", user);
+    
     if (isOpen && user) {
-      // This properly sets the form values from the user data
+      // Explicitly set values for all form fields
+      console.log("Resetting form with user data:", {
+        name: user.name,
+        email: user.email,
+        contactNumber: user.contactNumber,
+      });
+      
       reset({
         name: user.name,
         email: user.email,

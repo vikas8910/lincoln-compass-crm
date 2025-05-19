@@ -43,20 +43,12 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
     handlePageChange, 
     handlePageSizeChange, 
     updatePaginationState 
-  } = usePagination({
-    onPageChange: (page, size) => {
-      fetchUsers(page, size, searchTerm);
-    }
-  });
+  } = usePagination();
 
   const { 
     searchTerm, 
     handleSearchChange 
-  } = useSearch({
-    onSearch: (term) => {
-      fetchUsers(0, pageSize, term);
-    }
-  });
+  } = useSearch();
 
   // Fetch users from API
   const fetchUsers = async (page: number, size: number, search: string = "") => {
@@ -95,9 +87,13 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   // Fetch users on initial load only - fixed to prevent infinite calls
   useEffect(() => {
     fetchUsers(currentPage, pageSize, searchTerm);
-    // We're only running this on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Empty dependency array to ensure it only runs once
+
+  // Handle manual search button click
+  const handleSearch = () => {
+    fetchUsers(0, pageSize, searchTerm);
+  };
 
   // Handle role change
   const handleRoleChange = async (userDetails: UserResponse, newRole: string) => {
@@ -169,7 +165,7 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="relative max-w-md">
+        <div className="relative max-w-md flex">
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search users..."
@@ -177,6 +173,12 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
             onChange={handleSearchChange}
             className="pl-9 w-full"
           />
+          <button 
+            onClick={handleSearch}
+            className="ml-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Search
+          </button>
         </div>
       </div>
 

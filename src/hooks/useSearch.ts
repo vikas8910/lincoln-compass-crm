@@ -15,7 +15,7 @@ export default function useSearch({
   
   // Handle search term change with debounce
   useEffect(() => {
-    // Only set up the debounce timer if searchTerm has a value or has changed from previous value
+    // Only set up the debounce timer if searchTerm has a value
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
       
