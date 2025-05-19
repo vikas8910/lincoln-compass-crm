@@ -17,6 +17,7 @@ import { getRoles } from "@/services/role/role";
 import { RoleAssignment, UserResponse } from "@/types";
 import usePagination from "@/hooks/usePagination";
 import useSearch from "@/hooks/useSearch";
+import { NewUserFormValues } from "@/schemas/user-schemas";
 
 interface Role {
   id: string;
