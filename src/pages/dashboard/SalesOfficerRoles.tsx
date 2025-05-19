@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import {
 import TablePagination from "@/components/table/TablePagination";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiLoader } from "react-icons/fi";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +67,20 @@ interface Role {
   name: string;
 }
 
+interface PageResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  first: boolean;
+  size: number;
+  number: number;
+}
+
 // Define the Zod schema for new user
 const newUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -98,9 +113,13 @@ const SalesOfficerRoles = () => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   
+  // Server-side pagination state
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [currentPage, setCurrentPage] = useState(0); // Start from page 0 for API
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   
   // New user dialog states
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
@@ -116,6 +135,15 @@ const SalesOfficerRoles = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState("role-management");
   
+  // User management tab pagination state
+  const [searchTermUserManagement, setSearchTermUserManagement] = useState("");
+  const [currentPageUserManagement, setCurrentPageUserManagement] = useState(0); // Start from page 0 for API
+  const [pageSizeUserManagement, setPageSizeUserManagement] = useState(10);
+  const [totalItemsUserManagement, setTotalItemsUserManagement] = useState(0);
+  const [totalPagesUserManagement, setTotalPagesUserManagement] = useState(0);
+  const [isLoadingUserManagement, setIsLoadingUserManagement] = useState(false);
+  
+  // Fetch roles and users from API
   useEffect(() => {
     // Fetch roles from API
     const fetchRoles = async () => {
@@ -124,22 +152,54 @@ const SalesOfficerRoles = () => {
         setRoles(data.content);
       } catch (error) {
         console.error("Error fetching roles:", error);
+        toast.error("Failed to fetch roles");
       }
     };
 
-    // Fetch users from API
+    fetchRoles();
+  }, []);
+
+  // Fetch users for role management tab
+  useEffect(() => {
     const fetchUsers = async () => {
+      setIsLoading(true);
       try {
-        const data = await getUsers();
-        setUsers(data.content);
+        const response = await getUsers(currentPage, pageSize);
+        setUsers(response.content);
+        setTotalItems(response.totalElements);
+        setTotalPages(response.totalPages);
       } catch (error) {
         console.error("Error fetching users:", error);
+        toast.error("Failed to fetch users for role management");
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    fetchRoles();
     fetchUsers();
-  }, []);
+  }, [currentPage, pageSize]);
+
+  // Fetch users for user management tab
+  useEffect(() => {
+    if (activeTab !== "user-management") return;
+    
+    const fetchUsers = async () => {
+      setIsLoadingUserManagement(true);
+      try {
+        const response = await getUsers(currentPageUserManagement, pageSizeUserManagement);
+        setUsers(response.content);
+        setTotalItemsUserManagement(response.totalElements);
+        setTotalPagesUserManagement(response.totalPages);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Failed to fetch users for user management");
+      } finally {
+        setIsLoadingUserManagement(false);
+      }
+    };
+    
+    fetchUsers();
+  }, [activeTab, currentPageUserManagement, pageSizeUserManagement]);
 
   // Add user form
   const addUserForm = useForm<NewUserFormValues>({
@@ -165,43 +225,65 @@ const SalesOfficerRoles = () => {
     mode: "onBlur",
   });
   
-  // Filter users based on search term for role management tab
-  const filteredUsersForRoles = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Paginate the filtered results for role management tab
-  const paginatedUsersForRoles = filteredUsersForRoles.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  // Calculate total pages for role management tab
-  const totalPagesForRoles = Math.ceil(filteredUsersForRoles.length / pageSize);
+  // Handle search for role management tab
+  useEffect(() => {
+    if (searchTerm.trim() === "") return;
+    
+    const timer = setTimeout(() => {
+      setCurrentPage(0); // Reset to first page when searching
+      fetchUsers(0, pageSize, searchTerm);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
   
-  // User management tab variables
-  const [searchTermUserManagement, setSearchTermUserManagement] = useState("");
-  const [currentPageUserManagement, setCurrentPageUserManagement] = useState(1);
-  const [pageSizeUserManagement, setPageSizeUserManagement] = useState(5);
+  // Handle search for user management tab
+  useEffect(() => {
+    if (searchTermUserManagement.trim() === "") return;
+    
+    const timer = setTimeout(() => {
+      setCurrentPageUserManagement(0); // Reset to first page when searching
+      fetchUsersForManagement(0, pageSizeUserManagement, searchTermUserManagement);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchTermUserManagement]);
   
-  // Filter users based on search term for user management tab
-  const filteredUsersForManagement = users.filter(user => 
-    user.name.toLowerCase().includes(searchTermUserManagement.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTermUserManagement.toLowerCase()) ||
-    user.contactNumber.toLowerCase().includes(searchTermUserManagement.toLowerCase()) ||
-    (user.role && user.role.toLowerCase().includes(searchTermUserManagement.toLowerCase()))
-  );
-
-  // Paginate the filtered results for user management tab
-  const paginatedUsersForManagement = filteredUsersForManagement.slice(
-    (currentPageUserManagement - 1) * pageSizeUserManagement,
-    currentPageUserManagement * pageSizeUserManagement
-  );
-
-  // Calculate total pages for user management tab
-  const totalPagesForManagement = Math.ceil(filteredUsersForManagement.length / pageSizeUserManagement);
+  // Fetch users with search term for role management tab
+  const fetchUsers = async (page: number, size: number, search: string = "") => {
+    setIsLoading(true);
+    try {
+      // In a real implementation, you would pass the search parameter to the API
+      // For now, we'll use the existing endpoint 
+      const response = await getUsers(page, size);
+      setUsers(response.content);
+      setTotalItems(response.totalElements);
+      setTotalPages(response.totalPages);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Fetch users with search term for user management tab
+  const fetchUsersForManagement = async (page: number, size: number, search: string = "") => {
+    setIsLoadingUserManagement(true);
+    try {
+      // In a real implementation, you would pass the search parameter to the API
+      // For now, we'll use the existing endpoint
+      const response = await getUsers(page, size);
+      setUsers(response.content);
+      setTotalItemsUserManagement(response.totalElements);
+      setTotalPagesUserManagement(response.totalPages);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
+    } finally {
+      setIsLoadingUserManagement(false);
+    }
+  };
 
   // Handle role change
   const handleRoleChange = async (userDetails: UserResponse, newRole: string) => {
@@ -214,6 +296,8 @@ const SalesOfficerRoles = () => {
     
     try {
       await updateUserRole(userDetails.id, payload);
+      
+      // Update the local state
       setUsers(prev => 
         prev.map(user => 
           user.id === userDetails.id ? { ...user, roles: [{id: roleId, name: newRole}] } : user
@@ -239,7 +323,13 @@ const SalesOfficerRoles = () => {
     
     try {
       const res = await createUser(userToAdd);
-      setUsers(prev => [...prev, {...userToAdd, roles: res.roles || [], id: res.id}]);
+      
+      // Refresh the user list after adding a new user
+      if (activeTab === "role-management") {
+        fetchUsers(currentPage, pageSize);
+      } else {
+        fetchUsersForManagement(currentPageUserManagement, pageSizeUserManagement);
+      }
       
       addUserForm.reset();
       setIsAddUserDialogOpen(false);
@@ -264,13 +354,8 @@ const SalesOfficerRoles = () => {
     try {
       await updateUser(editingUser.id, userToUpdate);
       
-      setUsers(prev => 
-        prev.map(user => 
-          user.id === editingUser.id 
-            ? { ...user, ...userToUpdate } 
-            : user
-        )
-      );
+      // Refresh the user list after updating the user
+      fetchUsersForManagement(currentPageUserManagement, pageSizeUserManagement);
       
       editUserForm.reset();
       setIsEditUserDialogOpen(false);
@@ -290,7 +375,9 @@ const SalesOfficerRoles = () => {
     try {
       await deleteUser(userToDelete.id);
       
-      setUsers(prev => prev.filter(user => user.id !== userToDelete.id));
+      // Refresh the user list after deleting the user
+      fetchUsersForManagement(currentPageUserManagement, pageSizeUserManagement);
+      
       setIsDeleteUserDialogOpen(false);
       setUserToDelete(null);
       
@@ -309,8 +396,6 @@ const SalesOfficerRoles = () => {
       email: user.email,
       contactNumber: user.contactNumber,
     });
-
-
     
     setIsEditUserDialogOpen(true);
   };
@@ -330,15 +415,14 @@ const SalesOfficerRoles = () => {
     setUserToDelete(user);
     setIsDeleteUserDialogOpen(true);
   };
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
   
-  useEffect(() => {
-    setCurrentPageUserManagement(1);
-  }, [searchTermUserManagement]);
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "user-management" && users.length === 0) {
+      fetchUsersForManagement(currentPageUserManagement, pageSizeUserManagement);
+    }
+  };
 
   return (
     <MainLayout>
@@ -346,13 +430,13 @@ const SalesOfficerRoles = () => {
         <h1 className="text-3xl font-bold">User & Role Management</h1>
       </div>
       
-      <Tabs defaultValue="role-management" className="space-y-6" onValueChange={setActiveTab}>
+      <Tabs defaultValue="role-management" className="space-y-6" onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="role-management">Role Management</TabsTrigger>
           <TabsTrigger value="user-management">User Management</TabsTrigger>
         </TabsList>
         
-        {/* Tab 1: Role Management (Unchanged) */}
+        {/* Tab 1: Role Management */}
         <TabsContent value="role-management">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div className="flex flex-col sm:flex-row gap-3">
@@ -387,8 +471,15 @@ const SalesOfficerRoles = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedUsersForRoles.length > 0 ? (
-                      paginatedUsersForRoles.map((user, index) => (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-8">
+                          <FiLoader className="h-6 w-6 mx-auto animate-spin" />
+                          <div className="mt-2">Loading users...</div>
+                        </TableCell>
+                      </TableRow>
+                    ) : users.length > 0 ? (
+                      users.map((user, index) => (
                         <TableRow key={index}>
                           <TableCell>
                             <div className="flex items-center gap-3">
@@ -430,14 +521,17 @@ const SalesOfficerRoles = () => {
                 </Table>
               </div>
 
-              {filteredUsersForRoles.length > 0 && (
+              {totalItems > 0 && (
                 <TablePagination
-                  currentPage={currentPage}
-                  totalPages={totalPagesForRoles}
-                  onPageChange={setCurrentPage}
+                  currentPage={currentPage + 1} // Add 1 for UI display (1-based)
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page - 1)} // Subtract 1 for API call (0-based)
                   pageSize={pageSize}
-                  onPageSizeChange={setPageSize}
-                  totalItems={filteredUsersForRoles.length}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(0); // Reset to first page when changing page size
+                  }}
+                  totalItems={totalItems}
                 />
               )}
             </CardContent>
@@ -481,8 +575,15 @@ const SalesOfficerRoles = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedUsersForManagement.length > 0 ? (
-                      paginatedUsersForManagement.map((user, index) => (
+                    {isLoadingUserManagement ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8">
+                          <FiLoader className="h-6 w-6 mx-auto animate-spin" />
+                          <div className="mt-2">Loading users...</div>
+                        </TableCell>
+                      </TableRow>
+                    ) : users.length > 0 ? (
+                      users.map((user, index) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">{user.name}</TableCell>
                           <TableCell>{user.email}</TableCell>
@@ -517,14 +618,17 @@ const SalesOfficerRoles = () => {
                 </Table>
               </div>
 
-              {filteredUsersForManagement.length > 0 && (
+              {totalItemsUserManagement > 0 && (
                 <TablePagination
-                  currentPage={currentPageUserManagement}
-                  totalPages={totalPagesForManagement}
-                  onPageChange={setCurrentPageUserManagement}
+                  currentPage={currentPageUserManagement + 1} // Add 1 for UI display (1-based)
+                  totalPages={totalPagesUserManagement}
+                  onPageChange={(page) => setCurrentPageUserManagement(page - 1)} // Subtract 1 for API call (0-based)
                   pageSize={pageSizeUserManagement}
-                  onPageSizeChange={setPageSizeUserManagement}
-                  totalItems={filteredUsersForManagement.length}
+                  onPageSizeChange={(size) => {
+                    setPageSizeUserManagement(size);
+                    setCurrentPageUserManagement(0); // Reset to first page when changing page size
+                  }}
+                  totalItems={totalItemsUserManagement}
                 />
               )}
             </CardContent>

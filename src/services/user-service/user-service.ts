@@ -1,11 +1,10 @@
-
 import { USER } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
 import { RoleAssignment, UserRequest } from "@/types";
 
-export const getUsers = async () => {
+export const getUsers = async (page: number = 0, size: number = 10) => {
     try {
-        const response = await axiosInstance.get(USER);
+        const response = await axiosInstance.get(`${USER}?page=${page}&size=${size}`);
         return response.data;
     } catch (error) {
         throw error;
