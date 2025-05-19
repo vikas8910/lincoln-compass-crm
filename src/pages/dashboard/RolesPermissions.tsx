@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -48,13 +48,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
+import { createRole, deleteRole, getRoles, rolePermissionsMapping, updateRole } from "@/services/role/role";
+import { createPermission, deletePermission, getPermissions, updatePermission } from "@/services/permission-service/permission-service";
 
 // Define types
-interface Permission {
+export interface Permission {
   id: string;
   name: string;
   description?: string;
+  actions?: string[];
 }
 
 export interface Role {
@@ -69,18 +71,6 @@ const RolesPermissions = () => {
   const [roles, setRoles] = useState<Role[]>([]);
 
   const [permissions, setPermissions] = useState<Permission[]>([
-    { id: "1", name: "View Dashboard", description: "Access to view the dashboard" },
-    { id: "2", name: "View Reports", description: "Access to view reports" },
-    { id: "3", name: "Export Reports", description: "Ability to export reports" },
-    { id: "4", name: "Manage Users", description: "Create, edit and delete users" },
-    { id: "5", name: "Manage Roles", description: "Create, edit and delete roles" },
-    { id: "6", name: "View Leads", description: "Access to view leads" },
-    { id: "7", name: "Create Leads", description: "Ability to create new leads" },
-    { id: "8", name: "Edit Leads", description: "Ability to edit leads" },
-    { id: "9", name: "Delete Leads", description: "Ability to delete leads" },
-    { id: "10", name: "Assign Leads", description: "Ability to assign leads to sales officers" },
-    { id: "11", name: "View Sales Officers", description: "Access to view sales officers" },
-    { id: "12", name: "Manage Sales Officers", description: "Create, edit and delete sales officers" },
   ]);
 
   // State for role operations
@@ -95,9 +85,11 @@ const RolesPermissions = () => {
   const [isEditingPermission, setIsEditingPermission] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
   
-  const [newPermission, setNewPermission] = useState<Omit<Permission, "id">>({
+  const [newPermission, setNewPermission] = useState<Permission>({
+    id: "",
     name: "",
-    description: ""
+    description: "",
+    actions: []
   });
   
   // State for search/filter
@@ -114,6 +106,16 @@ const RolesPermissions = () => {
       }
     }
     fetchRoles();
+
+    const fetchPermissions = async () => {
+      try {
+        const permissions = await getPermissions();
+        setPermissions(permissions);
+      } catch (error) {
+        console.error("Error fetching permissions:", error);
+      }
+    }
+    fetchPermissions();
   }, [])
 
   // Handle role creation/editing
@@ -208,15 +210,19 @@ const RolesPermissions = () => {
     if (permission) {
       setSelectedPermission(permission);
       setNewPermission({
+        id: permission.id,
         name: permission.name,
-        description: permission.description || ""
+        description: permission.description || "",
+        actions: permission.actions || []
       });
       setIsEditingPermission(true);
     } else {
       setSelectedPermission(null);
       setNewPermission({
+        id: "",
         name: "",
-        description: ""
+        description: "",
+        actions: []
       });
       setIsEditingPermission(false);
     }
@@ -228,12 +234,12 @@ const RolesPermissions = () => {
     setIsPermissionDeleteDialogOpen(true);
   };
 
-  const confirmDeletePermission = () => {
+  const confirmDeletePermission = async () => {
     if (!selectedPermission) return;
 
     // Check if permission is used in any role
     const isPermissionInUse = roles.some(role => 
-      role.permissionIds.includes(selectedPermission.id)
+      role.permissionIds?.includes(selectedPermission.id)
     );
 
     if (isPermissionInUse) {
@@ -246,6 +252,8 @@ const RolesPermissions = () => {
       return;
     }
     
+    await deletePermission(selectedPermission.id);
+
     setPermissions(permissions.filter(p => p.id !== selectedPermission.id));
     toast({
       title: "Success",
@@ -254,7 +262,7 @@ const RolesPermissions = () => {
     setIsPermissionDeleteDialogOpen(false);
   };
 
-  const handleSavePermission = () => {
+  const handleSavePermission = async () => {
     if (!newPermission.name.trim()) {
       toast({
         title: "Error",
@@ -271,15 +279,15 @@ const RolesPermissions = () => {
           ? { ...p, ...newPermission } 
           : p
       );
+      await updatePermission(selectedPermission.id, newPermission);
       setPermissions(updatedPermissions);
       toast({
         title: "Success",
         description: "Permission updated successfully"
       });
     } else {
-      // Create new permission
-      const newId = String(permissions.length + 1);
-      setPermissions([...permissions, { ...newPermission, id: newId }]);
+      const res = await createPermission(newPermission);
+      setPermissions([...permissions, { ...newPermission, id: res.id }]);
       toast({
         title: "Success",
         description: "Permission created successfully"
@@ -305,16 +313,20 @@ const RolesPermissions = () => {
     
     setSelectedRole({
       ...selectedRole,
+      permissions: updatedPermissions.map(id => permissions.find(p => p.id === id)),
       permissionIds: updatedPermissions
     });
   };
 
-  const handleSaveAssignedPermissions = () => {
+  const handleSaveAssignedPermissions = async () => {
     if (!selectedRole) return;
     
     setRoles(roles.map(role => 
       role.id === selectedRole.id ? selectedRole : role
     ));
+
+    //call the api for role permissions mapping
+    await rolePermissionsMapping(selectedRole.id, selectedRole.permissionIds || []);
     
     toast({
       title: "Success",
@@ -515,7 +527,7 @@ const RolesPermissions = () => {
                 <div className="text-sm">
                   <span className="font-medium">Permissions:</span> {role.permissions.length > 0 
                     ? permissions
-                        .filter(p => role.permissionIds.includes(p.id))
+                        .filter(p => role.permissions.some(rp => rp.id === p.id))
                         .map(p => p.name)
                         .slice(0, 3)
                         .join(", ")
@@ -621,6 +633,27 @@ const RolesPermissions = () => {
                 onChange={(e) => setNewPermission({...newPermission, description: e.target.value})}
               />
             </div>
+            <div className="grid gap-2">
+              <Label>Actions</Label>
+              <div className="flex flex-row gap-2 justify-between align-middle">
+                {["CREATE", "UPDATE", "DELETE", "READ"].map(action => (
+                  <div key={action} className="flex items-center">
+                    <Checkbox
+                      id={`action-${action}`}
+                      value={action}
+                      checked={newPermission.actions.includes(action)}
+                      onCheckedChange={(isChecked: boolean) => {
+                        const actions = isChecked
+                          ? [...newPermission.actions, action]
+                          : newPermission.actions.filter(a => a !== action);
+                        setNewPermission({ ...newPermission, actions });
+                      }}                      
+                    />
+                    <span className="ml-2">{action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
@@ -678,7 +711,7 @@ const RolesPermissions = () => {
                 <div key={permission.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={`permission-${permission.id}`}
-                    checked={selectedRole?.permissionIds?.includes(permission.id)}
+                    checked={selectedRole?.permissions.some(rp => rp.id === permission.id)} 
                     onCheckedChange={() => togglePermission(permission.id)}
                   />
                   <div className="grid gap-0.5">
@@ -722,39 +755,40 @@ const RolesPermissions = () => {
           </DialogHeader>
 
           <div className="py-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
-              {permissions.map((permission) => {
-                // Only show permissions that are assigned to the role
-                if (!selectedRole?.permissionIds?.includes(permission.id)) return null;
-                
-                return (
-                  <div key={permission.id} className="flex items-start space-x-2">
-                    <Checkbox 
-                      id={`view-permission-${permission.id}`}
-                      checked={true}
-                      disabled={true}
-                    />
-                    <div className="grid gap-0.5">
-                      <Label 
-                        htmlFor={`view-permission-${permission.id}`}
-                        className="text-sm font-medium"
-                      >
-                        {permission.name}
-                      </Label>
-                      {permission.description && (
-                        <p className="text-xs text-muted-foreground">{permission.description}</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {selectedRole && selectedRole.permissionIds?.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground">
+            
+            {selectedRole && selectedRole.permissions?.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
                   No permissions assigned to this role.
                 </div>
+              ): (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 border rounded-md p-4">
+                  {permissions.map((permission) => {
+                    // Only show permissions that are assigned to the role
+                    if (!selectedRole?.permissions?.some(p => p.id === permission.id)) return null;
+                    
+                    return (
+                      <div key={permission.id} className="flex items-start space-x-2">
+                        <Checkbox 
+                          id={`view-permission-${permission.id}`}
+                          checked={true}
+                          disabled={true}
+                        />
+                        <div className="grid gap-0.5">
+                          <Label 
+                            htmlFor={`view-permission-${permission.id}`}
+                            className="text-sm font-medium"
+                          >
+                            {permission.name}
+                          </Label>
+                          {permission.description && (
+                            <p className="text-xs text-muted-foreground">{permission.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
-            </div>
           </div>
 
           <DialogFooter>

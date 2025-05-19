@@ -74,7 +74,7 @@ const newUserSchema = z.object({
   confirmPassword: z.string().min(1, "Confirm password is required"),
   mobile: z.string()
     .min(10, "Mobile number must be at least 10 characters")
-    .regex(/^[0-9+\-() ]*$/, "Mobile number can only contain digits, spaces, +, -, and parentheses"),
+    .regex(/^[0-9]*$/, "Mobile number can only contain digits, spaces, +, -, and parentheses"),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -84,9 +84,10 @@ const newUserSchema = z.object({
 const editUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().min(1, "Email is required").email("Invalid email format"),
-  mobile: z.string()
+  contactNumber: z.string()
     .min(10, "Mobile number must be at least 10 characters")
-    .regex(/^[0-9+\-() ]*$/, "Mobile number can only contain digits, spaces, +, -, and parentheses"),
+    .regex(/^[0-9]*$/, "Mobile number can only contain digits, spaces, +, -, and parentheses")
+    .max(10, "Mobile number must be at least 10 characters"),
 });
 
 // Type inferred from Zod schema
@@ -159,7 +160,7 @@ const SalesOfficerRoles = () => {
     defaultValues: {
       name: "",
       email: "",
-      mobile: "",
+      contactNumber: "",
     },
     mode: "onBlur",
   });
@@ -257,7 +258,7 @@ const SalesOfficerRoles = () => {
     const userToUpdate: Partial<UserRequest> = {
       name: data.name,
       email: data.email,
-      contactNumber: data.mobile,
+      contactNumber: data.contactNumber,
     };
     
     try {
@@ -306,8 +307,10 @@ const SalesOfficerRoles = () => {
     editUserForm.reset({
       name: user.name,
       email: user.email,
-      mobile: user.contactNumber,
+      contactNumber: user.contactNumber,
     });
+
+
     
     setIsEditUserDialogOpen(true);
   };
@@ -391,14 +394,6 @@ const SalesOfficerRoles = () => {
                             <div className="flex items-center gap-3">
                               <div>
                                 <div className="font-medium">{user.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {user.email}
-                                  {user.contactNumber && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {user.contactNumber}
-                                    </div>
-                                  )}
-                                </div>
                               </div>
                             </div>
                           </TableCell>
@@ -407,7 +402,7 @@ const SalesOfficerRoles = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <Select
-                              defaultValue={user.roles && user.roles[0]?.name || undefined}
+                              value={user.roles && user.roles[0]?.name || undefined}
                               onValueChange={(value) => handleRoleChange(user, value)}
                             >
                               <SelectTrigger className="w-[200px] ml-auto">
@@ -709,14 +704,14 @@ const SalesOfficerRoles = () => {
               
               <FormField
                 control={editUserForm.control}
-                name="mobile"
+                name="contactNumber"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mobile</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="123-456-7890"
-                        className={editUserForm.formState.errors.mobile ? "border-red-500" : ""}
+                        className={editUserForm.formState.errors.contactNumber ? "border-red-500" : ""}
                         {...field}
                       />
                     </FormControl>

@@ -1,5 +1,4 @@
 
-import React from "react";
 import {
   Pagination,
   PaginationContent,
@@ -111,11 +110,11 @@ const TablePagination = ({
       </div>
       
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="pageSize" className="text-sm">Rows per page:</Label>
+        <div className="flex items-center gap-2 w-80">
+          <Label htmlFor="pageSize" className="text-sm inline-block">Rows per page:</Label>
           <Select
             value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(parseInt(value))}
+            onValueChange={(value) => {onPageSizeChange(parseInt(value)); onPageChange(1);}}
           >
             <SelectTrigger id="pageSize" className="w-[80px]">
               <SelectValue placeholder={pageSize.toString()} />

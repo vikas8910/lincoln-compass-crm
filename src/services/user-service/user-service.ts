@@ -1,7 +1,7 @@
 
 import { USER } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
-import { RoleAssignment, UserRequest, UserResponse } from "@/types";
+import { RoleAssignment, UserRequest } from "@/types";
 
 export const getUsers = async () => {
     try {

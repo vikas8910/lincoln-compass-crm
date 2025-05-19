@@ -25,25 +25,25 @@ const LeadLifecycleStage: React.FC<LeadLifecycleStageProps> = ({
     
     switch (stage.toLowerCase()) {
       case "new":
-        return isActive ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-800";
+        return isActive ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600";
       case "in contact":
-        return isActive ? "bg-purple-500 text-white" : "bg-purple-100 text-purple-800";
+        return isActive ? "bg-purple-500 text-white" : "bg-gray-200 text-gray-600";
       case "follow up":
-        return isActive ? "bg-amber-500 text-white" : "bg-amber-100 text-amber-800";
+        return isActive ? "bg-amber-500 text-white" : "bg-gray-200 text-gray-600";
       case "set meeting":
-        return isActive ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-800";
+        return isActive ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-600";
       case "negotiation":
-        return isActive ? "bg-pink-500 text-white" : "bg-pink-100 text-pink-800";
+        return isActive ? "bg-pink-500 text-white" : "bg-gray-200 text-gray-600";
       case "enrolled":
-        return isActive ? "bg-green-500 text-white" : "bg-green-100 text-green-800";
+        return isActive ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600";
       case "junk/lost":
-        return isActive ? "bg-red-500 text-white" : "bg-red-100 text-red-800";
+        return isActive ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600";
       case "on campus":
-        return isActive ? "bg-teal-500 text-white" : "bg-teal-100 text-teal-800";
+        return isActive ? "bg-teal-500 text-white" : "bg-gray-200 text-gray-600";
       case "customer":
-        return isActive ? "bg-emerald-500 text-white" : "bg-emerald-100 text-emerald-800";
+        return isActive ? "bg-emerald-500 text-white" : "bg-gray-200 text-gray-600";
       default:
-        return isActive ? "bg-gray-500 text-white" : "bg-gray-100 text-gray-800";
+        return isActive ? "bg-gray-500 text-white" : "bg-gray-200 text-gray-600";
     }
   };
 
@@ -85,14 +85,14 @@ const LeadLifecycleStage: React.FC<LeadLifecycleStageProps> = ({
               onClick={() => onStageChange(stage)}
             >
               {stage}
-              {isCurrentStage && (
+              {/* {isCurrentStage && (
                 <Badge
                   variant="secondary"
                   className="absolute -top-2 -right-2 px-1 py-0 text-[10px] bg-white border"
                 >
                   Current
                 </Badge>
-              )}
+              )} */}
             </div>
           );
         })}
