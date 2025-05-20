@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -550,7 +549,7 @@ const RolesPermissions = () => {
                         className="p-0 h-auto"
                       >
                         <Badge variant="outline" className="cursor-pointer hover:bg-secondary/50">
-                          {role.permissions?.length || 0}
+                          {(role.permissions || []).length || 0}
                         </Badge>
                       </Button>
                     </TableCell>
@@ -674,15 +673,15 @@ const RolesPermissions = () => {
                   </Button>
                 </div>
                 <div className="text-sm">
-                  <span className="font-medium">Permissions:</span> {role.permissions.length > 0 
+                  <span className="font-medium">Permissions:</span> {(role.permissions || []).length > 0 
                     ? permissions
-                        .filter(p => role.permissions.some(rp => rp.id === p.id))
+                        .filter(p => (role.permissions || []).some(rp => rp.id === p.id))
                         .map(p => p.name)
                         .slice(0, 3)
                         .join(", ")
                     : "None"
                   }
-                  {role.permissions.length > 3 && `, +${role.permissionIds.length - 3} more`}
+                  {(role.permissions || []).length > 3 && `, +${(role.permissionIds || []).length - 3} more`}
                 </div>
               </div>
             ))}
