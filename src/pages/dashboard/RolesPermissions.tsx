@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -317,7 +316,8 @@ const RolesPermissions = () => {
     if (!selectedRole || isReadOnlyMode) return;
     
     // Check if the permission is already selected
-    const isPermissionSelected = selectedRole.permissionIds?.includes(permissionId);
+    const isPermissionSelected = selectedRole.permissionIds?.includes(permissionId) || 
+                               selectedRole.permissions?.some(p => p.id === permissionId);
     
     if (isPermissionSelected) {
       // Remove the permission
@@ -348,7 +348,12 @@ const RolesPermissions = () => {
   // Check if a specific permission is selected
   const isPermissionSelected = (permissionId: string): boolean => {
     if (!selectedRole) return false;
-    return selectedRole.permissionIds?.includes(permissionId) || false;
+    
+    // Check in both permissionIds array and permissions array
+    return (
+      selectedRole.permissionIds?.includes(permissionId) || 
+      selectedRole.permissions?.some(p => p.id === permissionId)
+    ) || false;
   };
 
   const handleSaveAssignedPermissions = async () => {
@@ -787,42 +792,48 @@ const RolesPermissions = () => {
               <h3 className="text-lg font-medium mb-4">{resource}</h3>
               
               <div className="grid grid-cols-1 gap-4">
-                {resourcePermissions.map((permission) => (
-                  <div key={permission.id} className="border-b pb-3">
-                    <div className="flex items-center mb-2">
-                      <Checkbox 
-                        id={`permission-${permission.id}`}
-                        checked={isPermissionSelected(permission.id)}
-                        onCheckedChange={() => togglePermissionSelection(permission.id)}
-                        disabled={isReadOnlyMode}
-                      />
-                      <div className="ml-3">
-                        <p className="font-medium">{permission.name}</p>
-                        {permission.description && (
-                          <p className="text-xs text-muted-foreground">{permission.description}</p>
-                        )}
+                {resourcePermissions.map((permission) => {
+                  // Debug log to verify permission selection state
+                  const isPSelected = isPermissionSelected(permission.id);
+                  console.log(`Permission ${permission.name} (${permission.id}) isSelected:`, isPSelected);
+                  
+                  return (
+                    <div key={permission.id} className="border-b pb-3">
+                      <div className="flex items-center mb-2">
+                        <Checkbox 
+                          id={`permission-${permission.id}`}
+                          checked={isPermissionSelected(permission.id)}
+                          onCheckedChange={() => togglePermissionSelection(permission.id)}
+                          disabled={isReadOnlyMode}
+                        />
+                        <div className="ml-3">
+                          <p className="font-medium">{permission.name}</p>
+                          {permission.description && (
+                            <p className="text-xs text-muted-foreground">{permission.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
+                        {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
+                          <div key={action} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`permission-${permission.id}-${action}`}
+                              checked={permission.actions?.includes(action) || false}
+                              disabled={true}
+                            />
+                            <Label 
+                              htmlFor={`permission-${permission.id}-${action}`}
+                              className="text-sm cursor-default"
+                            >
+                              {actionLabels[action]}
+                            </Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                      {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
-                        <div key={action} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`permission-${permission.id}-${action}`}
-                            checked={permission.actions?.includes(action) || false}
-                            disabled={true}
-                          />
-                          <Label 
-                            htmlFor={`permission-${permission.id}-${action}`}
-                            className="text-sm cursor-default"
-                          >
-                            {actionLabels[action]}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
