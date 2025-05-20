@@ -133,12 +133,6 @@ const RolesPermissions = () => {
     setIsRoleDialogOpen(true);
   };
 
-  // Handle viewing permissions for a role
-  const handleViewPermissions = (role: Role) => {
-    setSelectedRole({ ...role });
-    setIsViewPermissionsDialogOpen(true);
-  };
-
   const handleSaveRole = async () => {
     if (!editingRole || !editingRole.name.trim()) {
       toast({
@@ -223,7 +217,7 @@ const RolesPermissions = () => {
         id: "",
         name: "",
         description: "",
-        resource: "USER",
+        resource: "Module", // Default category changed to "Module"
         actions: []
       });
       setIsEditingPermission(false);
@@ -287,7 +281,12 @@ const RolesPermissions = () => {
         description: "Permission updated successfully"
       });
     } else {
-      const res = await createPermission(newPermission);
+      // Create new permission with the selected resource (category)
+      const payloadToSend = {
+        ...newPermission,
+        resource: newPermission.resource // Use the selected resource instead of hardcoding "USER"
+      };
+      const res = await createPermission(payloadToSend);
       setPermissions([...permissions, { ...newPermission, id: res.id }]);
       toast({
         title: "Success",
@@ -304,73 +303,49 @@ const RolesPermissions = () => {
     setIsAssignPermissionsDialogOpen(true);
   };
 
-  // Modified: Toggle specific permission action
-  const togglePermissionAction = (permissionId: string, action: string) => {
+  // Handle viewing permissions for a role
+  const handleViewPermissions = (role: Role) => {
+    setSelectedRole({ ...role });
+    setIsViewPermissionsDialogOpen(true);
+  };
+
+  // Toggle permission selection (entire permission)
+  const togglePermissionSelection = (permissionId: string) => {
     if (!selectedRole) return;
     
-    // Find if the role already has this permission
-    const existingPermissionIndex = selectedRole.permissions?.findIndex(p => p.id === permissionId);
+    // Check if the permission is already selected
+    const isPermissionSelected = selectedRole.permissionIds?.includes(permissionId);
     
-    if (existingPermissionIndex !== undefined && existingPermissionIndex >= 0) {
-      // Permission exists, update its actions
-      const updatedPermissions = [...selectedRole.permissions || []];
-      const permissionToUpdate = { ...updatedPermissions[existingPermissionIndex] };
+    if (isPermissionSelected) {
+      // Remove the permission
+      const updatedPermissionIds = selectedRole.permissionIds?.filter(id => id !== permissionId) || [];
+      const updatedPermissions = selectedRole.permissions?.filter(p => p.id !== permissionId) || [];
       
-      // Update actions
-      if (permissionToUpdate.actions?.includes(action)) {
-        // Remove action
-        permissionToUpdate.actions = permissionToUpdate.actions.filter(a => a !== action);
-      } else {
-        // Add action
-        permissionToUpdate.actions = [...(permissionToUpdate.actions || []), action];
-      }
-      
-      if (permissionToUpdate.actions?.length === 0) {
-        // If no actions left, remove permission entirely
-        updatedPermissions.splice(existingPermissionIndex, 1);
-        const updatedPermissionIds = selectedRole.permissionIds?.filter(id => id !== permissionId) || [];
-        
-        setSelectedRole({
-          ...selectedRole,
-          permissions: updatedPermissions,
-          permissionIds: updatedPermissionIds
-        });
-      } else {
-        // Otherwise update the permission
-        updatedPermissions[existingPermissionIndex] = permissionToUpdate;
-        
-        setSelectedRole({
-          ...selectedRole,
-          permissions: updatedPermissions
-        });
-      }
+      setSelectedRole({
+        ...selectedRole,
+        permissionIds: updatedPermissionIds,
+        permissions: updatedPermissions
+      });
     } else {
-      // Permission doesn't exist, add it with the single action
+      // Add the permission
       const permissionToAdd = permissions.find(p => p.id === permissionId);
       if (permissionToAdd) {
-        const newPermission = {
-          ...permissionToAdd,
-          actions: [action]
-        };
-        
-        const updatedPermissions = [...(selectedRole.permissions || []), newPermission];
         const updatedPermissionIds = [...(selectedRole.permissionIds || []), permissionId];
+        const updatedPermissions = [...(selectedRole.permissions || []), permissionToAdd];
         
         setSelectedRole({
           ...selectedRole,
-          permissions: updatedPermissions,
-          permissionIds: updatedPermissionIds
+          permissionIds: updatedPermissionIds,
+          permissions: updatedPermissions
         });
       }
     }
   };
 
-  // Check if a specific permission action is assigned to the role
-  const isPermissionActionAssigned = (permissionId: string, action: string): boolean => {
+  // Check if a specific permission is selected
+  const isPermissionSelected = (permissionId: string): boolean => {
     if (!selectedRole) return false;
-    
-    const permission = selectedRole.permissions?.find(p => p.id === permissionId);
-    return permission?.actions?.includes(action) || false;
+    return selectedRole.permissionIds?.includes(permissionId) || false;
   };
 
   const handleSaveAssignedPermissions = async () => {
@@ -686,7 +661,7 @@ const RolesPermissions = () => {
     </>
   );
 
-  // Create/Edit Permission Dialog
+  // Create/Edit Permission Dialog - Updated with new category options
   const renderPermissionDialog = () => {
     return (
       <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
@@ -716,21 +691,19 @@ const RolesPermissions = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="permission-resource">Resource</Label>
+              <Label htmlFor="permission-resource">Categories</Label>
               <Select
-                value={newPermission.resource || "USER"}
+                value={newPermission.resource || "Module"}
                 onValueChange={(value) => setNewPermission({...newPermission, resource: value})}
               >
                 <SelectTrigger id="permission-resource">
-                  <SelectValue placeholder="Select resource" />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">USER</SelectItem>
-                  <SelectItem value="INVENTORY">INVENTORY</SelectItem>
-                  <SelectItem value="PRODUCT">PRODUCT</SelectItem>
-                  <SelectItem value="LEAD">LEAD</SelectItem>
-                  <SelectItem value="REPORT">REPORT</SelectItem>
-                  <SelectItem value="OTHER">OTHER</SelectItem>
+                  <SelectItem value="Module">Module</SelectItem>
+                  <SelectItem value="Emails">Emails</SelectItem>
+                  <SelectItem value="Sales Activities">Sales Activities</SelectItem>
+                  <SelectItem value="Actions">Actions</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -768,7 +741,7 @@ const RolesPermissions = () => {
     );
   };
 
-  // Updated Assign Permissions Dialog with action-level granularity
+  // Updated Assign Permissions Dialog with permission-level selection
   const renderAssignPermissionsDialog = () => (
     <Dialog 
       open={isAssignPermissionsDialogOpen} 
@@ -778,7 +751,7 @@ const RolesPermissions = () => {
         <DialogHeader>
           <DialogTitle>Assign Permissions to {selectedRole?.name}</DialogTitle>
           <DialogDescription>
-            Select the permissions and specific actions to assign to this role.
+            Select the permissions to assign to this role.
           </DialogDescription>
         </DialogHeader>
 
@@ -791,8 +764,13 @@ const RolesPermissions = () => {
               <div className="grid grid-cols-1 gap-4">
                 {resourcePermissions.map((permission) => (
                   <div key={permission.id} className="border-b pb-3">
-                    <div className="flex justify-between mb-2">
-                      <div>
+                    <div className="flex items-center mb-2">
+                      <Checkbox 
+                        id={`permission-${permission.id}`}
+                        checked={isPermissionSelected(permission.id)}
+                        onCheckedChange={() => togglePermissionSelection(permission.id)}
+                      />
+                      <div className="ml-3">
                         <p className="font-medium">{permission.name}</p>
                         {permission.description && (
                           <p className="text-xs text-muted-foreground">{permission.description}</p>
@@ -800,17 +778,17 @@ const RolesPermissions = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
                       {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
                         <div key={action} className="flex items-center space-x-2">
                           <Checkbox 
                             id={`permission-${permission.id}-${action}`}
-                            checked={isPermissionActionAssigned(permission.id, action)}
-                            onCheckedChange={() => togglePermissionAction(permission.id, action)}
+                            checked={permission.actions?.includes(action) || false}
+                            disabled={true} // Disabled as requested
                           />
                           <Label 
                             htmlFor={`permission-${permission.id}-${action}`}
-                            className="text-sm cursor-pointer"
+                            className="text-sm cursor-default"
                           >
                             {actionLabels[action]}
                           </Label>
@@ -830,6 +808,81 @@ const RolesPermissions = () => {
           </Button>
           <Button onClick={handleSaveAssignedPermissions}>
             Save Permissions
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Updated View Permissions Dialog (Read-only)
+  const renderViewPermissionsDialog = () => (
+    <Dialog 
+      open={isViewPermissionsDialogOpen} 
+      onOpenChange={setIsViewPermissionsDialogOpen}
+    >
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Permissions for {selectedRole?.name}</DialogTitle>
+          <DialogDescription>
+            View all permissions assigned to this role
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4 space-y-6">
+          {selectedRole && selectedRole.permissions?.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
+              No permissions assigned to this role.
+            </div>
+          ) : (
+            <div>
+              {/* Group permissions by resource */}
+              {Object.entries(
+                // Group the role's permissions by resource
+                selectedRole?.permissions?.reduce((acc, perm) => {
+                  const resource = perm.resource || "Other";
+                  if (!acc[resource]) {
+                    acc[resource] = [];
+                  }
+                  acc[resource].push(perm);
+                  return acc;
+                }, {} as Record<string, Permission[]>) || {}
+              ).map(([resource, resourcePermissions]) => (
+                <div key={resource} className="border rounded-md p-4 mb-4">
+                  <h3 className="text-lg font-medium mb-3">{resource}</h3>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    {resourcePermissions.map((permission) => (
+                      <div key={permission.id} className="border-b pb-3">
+                        <div className="font-medium">{permission.name}</div>
+                        {permission.description && (
+                          <p className="text-xs text-muted-foreground mb-2">{permission.description}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {permission.actions?.map(action => (
+                            <Badge key={action} variant="outline" className="bg-secondary/30">
+                              {actionLabels[action]}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => setIsViewPermissionsDialogOpen(false)}>Close</Button>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setIsViewPermissionsDialogOpen(false);
+              setTimeout(() => handleOpenAssignPermissionsDialog(selectedRole!), 100);
+            }}
+          >
+            Manage Permissions
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -860,79 +913,6 @@ const RolesPermissions = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Updated View Permissions Dialog with action-level granularity */}
-      <Dialog 
-        open={isViewPermissionsDialogOpen} 
-        onOpenChange={setIsViewPermissionsDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Permissions for {selectedRole?.name}</DialogTitle>
-            <DialogDescription>
-              View all permissions assigned to this role
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4 space-y-6">
-            {selectedRole && selectedRole.permissions?.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
-                No permissions assigned to this role.
-              </div>
-            ) : (
-              <div>
-                {/* Group permissions by resource */}
-                {Object.entries(
-                  // Group the role's permissions by resource
-                  selectedRole?.permissions?.reduce((acc, perm) => {
-                    const resource = perm.resource || "Other";
-                    if (!acc[resource]) {
-                      acc[resource] = [];
-                    }
-                    acc[resource].push(perm);
-                    return acc;
-                  }, {} as Record<string, Permission[]>) || {}
-                ).map(([resource, resourcePermissions]) => (
-                  <div key={resource} className="border rounded-md p-4 mb-4">
-                    <h3 className="text-lg font-medium mb-3">{resource}</h3>
-                    
-                    <div className="grid grid-cols-1 gap-3">
-                      {resourcePermissions.map((permission) => (
-                        <div key={permission.id} className="border-b pb-3">
-                          <div className="font-medium">{permission.name}</div>
-                          {permission.description && (
-                            <p className="text-xs text-muted-foreground mb-2">{permission.description}</p>
-                          )}
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {permission.actions?.map(action => (
-                              <Badge key={action} variant="outline" className="bg-secondary/30">
-                                {actionLabels[action]}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => setIsViewPermissionsDialogOpen(false)}>Close</Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setIsViewPermissionsDialogOpen(false);
-                setTimeout(() => handleOpenAssignPermissionsDialog(selectedRole!), 100);
-              }}
-            >
-              Manage Permissions
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 
@@ -958,6 +938,7 @@ const RolesPermissions = () => {
       {renderPermissionDialog()}
       {renderPermissionDialogs()}
       {renderAssignPermissionsDialog()}
+      {renderViewPermissionsDialog()}
     </MainLayout>
   );
 };

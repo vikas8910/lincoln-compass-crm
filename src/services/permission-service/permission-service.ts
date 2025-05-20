@@ -1,3 +1,4 @@
+
 import { PERMISSION_ENDPOINT } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
 import { Permission } from "@/pages/dashboard/RolesPermissions";
@@ -12,9 +13,9 @@ export const getPermissions = async () => {
 };
 
 export const createPermission = async ({ id, ...payload }: Permission) => {
+    // Use the resource from payload instead of hardcoding "USER"
     const data = {
-        ...payload,
-        resource: "USER"
+        ...payload
     };
     try {
         const response = await axiosInstance.post(PERMISSION_ENDPOINT, data);
