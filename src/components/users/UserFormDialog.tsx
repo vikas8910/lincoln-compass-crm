@@ -143,7 +143,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
             {!isEditing && (
               <>
                 <FormField
-                  control={form.control}
+                  control={addUserForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
@@ -152,7 +152,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                         <Input
                           type="password"
                           placeholder="••••••••"
-                          className={form.formState.errors.password ? "border-red-500" : ""}
+                          className={addUserForm.formState.errors.password ? "border-red-500" : ""}
                           {...field}
                         />
                       </FormControl>
@@ -162,7 +162,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                 />
                 
                 <FormField
-                  control={form.control}
+                  control={addUserForm.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
@@ -171,7 +171,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                         <Input
                           type="password"
                           placeholder="••••••••"
-                          className={form.formState.errors.confirmPassword ? "border-red-500" : ""}
+                          className={addUserForm.formState.errors.confirmPassword ? "border-red-500" : ""}
                           {...field}
                         />
                       </FormControl>
@@ -181,7 +181,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                 />
                 
                 <FormField
-                  control={form.control}
+                  control={addUserForm.control}
                   name="mobile"
                   render={({ field }) => (
                     <FormItem>
@@ -189,7 +189,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                       <FormControl>
                         <Input
                           placeholder="1234567890"
-                          className={form.formState.errors.mobile ? "border-red-500" : ""}
+                          className={addUserForm.formState.errors.mobile ? "border-red-500" : ""}
                           {...field}
                         />
                       </FormControl>
@@ -202,7 +202,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
             
             {isEditing && (
               <FormField
-                control={form.control}
+                control={editUserForm.control}
                 name="contactNumber"
                 render={({ field }) => (
                   <FormItem>
@@ -210,7 +210,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                     <FormControl>
                       <Input
                         placeholder="1234567890"
-                        className={form.formState.errors.contactNumber ? "border-red-500" : ""}
+                        className={editUserForm.formState.errors.contactNumber ? "border-red-500" : ""}
                         {...field}
                       />
                     </FormControl>
