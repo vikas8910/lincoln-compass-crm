@@ -13,7 +13,7 @@ export const getPermissions = async () => {
 };
 
 export const createPermission = async ({ id, ...payload }: Permission) => {
-    // Use the resource from payload instead of hardcoding "USER"
+    // Use the exact payload as provided without modification
     const data = {
         ...payload
     };

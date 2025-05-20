@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ const RolesPermissions = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isEditingPermission, setIsEditingPermission] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
+  const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
   
   const [newPermission, setNewPermission] = useState<Permission>({
     id: "",
@@ -301,6 +303,7 @@ const RolesPermissions = () => {
   const handleOpenAssignPermissionsDialog = (role: Role) => {
     setSelectedRole({ ...role });
     setIsAssignPermissionsDialogOpen(true);
+    setIsReadOnlyMode(false);
   };
 
   // Handle viewing permissions for a role
@@ -311,7 +314,7 @@ const RolesPermissions = () => {
 
   // Toggle permission selection (entire permission)
   const togglePermissionSelection = (permissionId: string) => {
-    if (!selectedRole) return;
+    if (!selectedRole || isReadOnlyMode) return;
     
     // Check if the permission is already selected
     const isPermissionSelected = selectedRole.permissionIds?.includes(permissionId);
@@ -367,6 +370,15 @@ const RolesPermissions = () => {
       description: "Permissions assigned successfully"
     });
     setIsAssignPermissionsDialogOpen(false);
+  };
+
+  // New function to switch from view-only to edit mode
+  const handleSwitchToEditMode = () => {
+    setIsViewPermissionsDialogOpen(false);
+    setTimeout(() => {
+      setIsAssignPermissionsDialogOpen(true);
+      setIsReadOnlyMode(false);
+    }, 100);
   };
 
   // Filter roles based on search
@@ -454,7 +466,11 @@ const RolesPermissions = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleViewPermissions(role)}
+                        onClick={() => {
+                          setIsReadOnlyMode(true);
+                          setSelectedRole(role);
+                          setIsAssignPermissionsDialogOpen(true);
+                        }}
                         className="p-0 h-auto"
                       >
                         <Badge variant="outline" className="cursor-pointer hover:bg-secondary/50">
@@ -745,13 +761,22 @@ const RolesPermissions = () => {
   const renderAssignPermissionsDialog = () => (
     <Dialog 
       open={isAssignPermissionsDialogOpen} 
-      onOpenChange={setIsAssignPermissionsDialogOpen}
+      onOpenChange={(open) => {
+        if (!open) setIsReadOnlyMode(false);
+        setIsAssignPermissionsDialogOpen(open);
+      }}
     >
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Assign Permissions to {selectedRole?.name}</DialogTitle>
+          <DialogTitle>
+            {isReadOnlyMode 
+              ? `View Permissions for ${selectedRole?.name}` 
+              : `Assign Permissions to ${selectedRole?.name}`}
+          </DialogTitle>
           <DialogDescription>
-            Select the permissions to assign to this role.
+            {isReadOnlyMode 
+              ? "Review permissions assigned to this role." 
+              : "Select the permissions to assign to this role."}
           </DialogDescription>
         </DialogHeader>
 
@@ -769,6 +794,7 @@ const RolesPermissions = () => {
                         id={`permission-${permission.id}`}
                         checked={isPermissionSelected(permission.id)}
                         onCheckedChange={() => togglePermissionSelection(permission.id)}
+                        disabled={isReadOnlyMode}
                       />
                       <div className="ml-3">
                         <p className="font-medium">{permission.name}</p>
@@ -784,7 +810,7 @@ const RolesPermissions = () => {
                           <Checkbox 
                             id={`permission-${permission.id}-${action}`}
                             checked={permission.actions?.includes(action) || false}
-                            disabled={true} // Disabled as requested
+                            disabled={true}
                           />
                           <Label 
                             htmlFor={`permission-${permission.id}-${action}`}
@@ -803,12 +829,25 @@ const RolesPermissions = () => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsAssignPermissionsDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSaveAssignedPermissions}>
-            Save Permissions
-          </Button>
+          {isReadOnlyMode ? (
+            <>
+              <Button variant="outline" onClick={() => setIsAssignPermissionsDialogOpen(false)}>
+                Close
+              </Button>
+              <Button onClick={handleSwitchToEditMode}>
+                Manage Permissions
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setIsAssignPermissionsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveAssignedPermissions}>
+                Save Permissions
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
