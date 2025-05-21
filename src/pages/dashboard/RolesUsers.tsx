@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +13,23 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
-import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
-import { Role, Permission } from "@/types";
 
 // Define types
+interface Role {
+  id: string;
+  name: string;
+  description: string;
+  status: "active" | "inactive";
+  usersCount: number;
+  permissions: string[];
+}
+
+interface Permission {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface User {
   id: string;
   name: string;
@@ -23,9 +37,6 @@ interface User {
   role: string;
   lastActive: string;
 }
-
-// Define operation mode type for clarity
-type OperationMode = 'add' | 'edit';
 
 const RolesUsers = () => {
   const [roles, setRoles] = useState<Role[]>([
@@ -35,7 +46,7 @@ const RolesUsers = () => {
       description: "Full system access with all permissions", 
       status: "active",
       usersCount: 2,
-      permissions: []
+      permissions: ["view_dashboard", "manage_users", "manage_roles", "view_leads", "create_leads", "edit_leads", "delete_leads"]
     },
     { 
       id: "2", 
@@ -43,7 +54,7 @@ const RolesUsers = () => {
       description: "Access to leads and sales activities", 
       status: "active",
       usersCount: 8,
-      permissions: []
+      permissions: ["view_dashboard", "view_leads", "create_leads", "edit_leads"]
     },
     { 
       id: "3", 
@@ -51,7 +62,7 @@ const RolesUsers = () => {
       description: "Limited access to specific features", 
       status: "active",
       usersCount: 15,
-      permissions: []
+      permissions: ["view_dashboard"]
     }
   ]);
 
@@ -71,7 +82,7 @@ const RolesUsers = () => {
     { id: "3", name: "Robert Johnson", email: "robert@example.com", role: "Sales Officer", lastActive: "2023-05-01" },
     { id: "4", name: "Emily Davis", email: "emily@example.com", role: "Lead", lastActive: "2023-04-28" }
   ]);
-  
+
   // State for dialogs
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
@@ -81,11 +92,11 @@ const RolesUsers = () => {
   const [roleSearch, setRoleSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   
-  // State for role operations with explicit mode tracking
+  // State for new/editing role
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
-  const [operationMode, setOperationMode] = useState<OperationMode>('add');
+  const [isEditing, setIsEditing] = useState(false);
   
-  // Handle role dialog open for adding a new role
+  // Handle role dialog open
   const handleAddRole = () => {
     setCurrentRole({
       id: "",
@@ -95,14 +106,14 @@ const RolesUsers = () => {
       usersCount: 0,
       permissions: []
     });
-    setOperationMode('add'); // Explicitly set to add mode
+    setIsEditing(false);
     setIsRoleDialogOpen(true);
   };
   
   // Handle role edit
   const handleEditRole = (role: Role) => {
     setCurrentRole({...role});
-    setOperationMode('edit'); // Explicitly set to edit mode
+    setIsEditing(true);
     setIsRoleDialogOpen(true);
   };
   
@@ -112,8 +123,8 @@ const RolesUsers = () => {
     setIsDeleteDialogOpen(true);
   };
   
-  // Save role - fixed to properly identify records by ID when updating
-  const handleSaveRole = async () => {
+  // Save role
+  const handleSaveRole = () => {
     if (!currentRole) return;
     
     if (!currentRole.name.trim()) {
@@ -121,68 +132,41 @@ const RolesUsers = () => {
       return;
     }
     
-    try {
-      if (operationMode === 'edit' && currentRole.id) {
-        // For edits, always use the ID to find the record and update it
-        const roleToUpdate = { ...currentRole };
-        await updateRole(currentRole.id, roleToUpdate);
-        
-        // Update local state using the ID for identification
-        setRoles(roles.map(r => r.id === currentRole.id ? currentRole : r));
-        toast.success("Role updated successfully");
-      } else {
-        // For new roles, create with a new ID
-        const newRole = { ...currentRole };
-        const response = await createRole(newRole);
-        
-        // Add the new role with the ID from the API response
-        const createdRole = {
-          ...currentRole,
-          id: response.id || String(roles.length + 1)
-        };
-        setRoles([...roles, createdRole]);
-        toast.success("Role created successfully");
-      }
-      
-      setIsRoleDialogOpen(false);
-    } catch (error) {
-      console.error("Error saving role:", error);
-      toast.error("Failed to save role");
+    if (isEditing) {
+      setRoles(roles.map(r => r.id === currentRole.id ? currentRole : r));
+      toast.success("Role updated successfully");
+    } else {
+      const newRole = {
+        ...currentRole,
+        id: String(roles.length + 1)
+      };
+      setRoles([...roles, newRole]);
+      toast.success("Role created successfully");
     }
+    
+    setIsRoleDialogOpen(false);
   };
   
   // Confirm role delete
-  const confirmDeleteRole = async () => {
+  const confirmDeleteRole = () => {
     if (!currentRole) return;
     
-    try {
-      if (currentRole.id) {
-        await deleteRole(currentRole.id);
-      }
-      
-      setRoles(roles.filter(r => r.id !== currentRole.id));
-      toast.success("Role deleted successfully");
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      console.error("Error deleting role:", error);
-      toast.error("Failed to delete role");
-    }
+    setRoles(roles.filter(r => r.id !== currentRole.id));
+    toast.success("Role deleted successfully");
+    setIsDeleteDialogOpen(false);
   };
   
   // Toggle permission for a role
   const togglePermission = (permissionId: string) => {
     if (!currentRole) return;
     
-    const permissionObj = permissions.find(p => p.id === permissionId);
-    if (!permissionObj) return;
-
-    const hasPermission = currentRole.permissions.some(p => p.id === permissionId);
+    const hasPermission = currentRole.permissions.includes(permissionId);
     
     setCurrentRole({
       ...currentRole,
       permissions: hasPermission 
-        ? currentRole.permissions.filter(p => p.id !== permissionId) 
-        : [...currentRole.permissions, permissionObj]
+        ? currentRole.permissions.filter(id => id !== permissionId) 
+        : [...currentRole.permissions, permissionId]
     });
   };
   
@@ -206,22 +190,6 @@ const RolesUsers = () => {
     user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
     user.role.toLowerCase().includes(userSearch.toLowerCase())
   );
-  
-  // Load roles from API on component mount
-  useEffect(() => {
-    const loadRoles = async () => {
-      try {
-        const response = await getRoles();
-        if (response && response.content) {
-          setRoles(response.content);
-        }
-      } catch (error) {
-        console.error("Error loading roles:", error);
-      }
-    };
-    
-    loadRoles();
-  }, []);
   
   return (
     <MainLayout>
@@ -284,7 +252,7 @@ const RolesUsers = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{role.usersCount}</TableCell>
-                      <TableCell>{role.permissions ? role.permissions.length : 0}</TableCell>
+                      <TableCell>{role.permissions.length}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleEditRole(role)}>
                           <FiEdit2 className="h-4 w-4" />
@@ -327,7 +295,7 @@ const RolesUsers = () => {
                           <div className="text-sm text-muted-foreground">{permission.name}</div>
                         </div>
                         <div className="flex items-center">
-                          {roles.filter(r => r.permissions && r.permissions.some(p => typeof p === 'object' && p.id === permission.id)).length} roles
+                          {roles.filter(r => r.permissions.includes(permission.id)).length} roles
                         </div>
                       </div>
                     ))}
@@ -393,13 +361,13 @@ const RolesUsers = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Role Dialog - Consistently using operationMode for UI state */}
+      {/* Role Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>{operationMode === 'edit' ? 'Edit Role' : 'Add Role'}</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit Role' : 'Add New Role'}</DialogTitle>
             <DialogDescription>
-              {operationMode === 'edit' 
+              {isEditing 
                 ? 'Update the role details and permissions'
                 : 'Create a new role with specific permissions'}
             </DialogDescription>
@@ -449,9 +417,7 @@ const RolesUsers = () => {
                       <div key={permission.id} className="flex items-center space-x-2">
                         <Checkbox 
                           id={`permission-${permission.id}`}
-                          checked={currentRole.permissions && currentRole.permissions.some(p => 
-                            typeof p === 'object' && p.id === permission.id
-                          )}
+                          checked={currentRole.permissions.includes(permission.id)}
                           onCheckedChange={() => togglePermission(permission.id)}
                         />
                         <Label 
@@ -473,7 +439,7 @@ const RolesUsers = () => {
               Cancel
             </Button>
             <Button onClick={handleSaveRole}>
-              {operationMode === 'edit' ? 'Save Changes' : 'Create Role'}
+              {isEditing ? 'Save Changes' : 'Create Role'}
             </Button>
           </DialogFooter>
         </DialogContent>
