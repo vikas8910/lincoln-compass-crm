@@ -10,7 +10,7 @@ import RoleManagementTab from "@/components/users/RoleManagementTab";
 import UserManagementTab from "@/components/users/UserManagementTab";
 
 const SalesOfficerRoles = () => {
-  const [activeTab, setActiveTab] = useState("role-management");
+  const [activeTab, setActiveTab] = useState("user-management");
 
   // Handle adding a new user
   const handleAddUser = async (data: NewUserFormValues) => {
@@ -41,13 +41,13 @@ const SalesOfficerRoles = () => {
   return (
     <MainLayout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">User & Role Management</h1>
+        <h1 className="text-3xl font-bold">User Management</h1>
       </div>
       
-      <Tabs defaultValue="role-management" className="space-y-6" onValueChange={handleTabChange}>
+      <Tabs defaultValue={activeTab} className="space-y-6" onValueChange={handleTabChange}>
         <TabsList>
-          <TabsTrigger value="role-management">Role Management</TabsTrigger>
           <TabsTrigger value="user-management">User Management</TabsTrigger>
+          <TabsTrigger value="role-management">Assign Roles</TabsTrigger>
         </TabsList>
         
         {/* Tab 1: Role Management */}

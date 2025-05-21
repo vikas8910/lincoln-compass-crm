@@ -45,7 +45,7 @@ const MainSidebar = () => {
       href: "/leads-mapping",
     },
     {
-      title: "User & Role Management",
+      title: "User Management",
       icon: UserCog,
       href: "/sales-officer-roles",
     },
