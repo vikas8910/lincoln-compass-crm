@@ -935,79 +935,120 @@ const RolesPermissions = () => {
   );
 
   // Updated View Permissions Dialog (Read-only) - Modified for Fix 2
-  const renderViewPermissionsDialog = () => (
-    <Dialog 
-      open={isViewPermissionsDialogOpen} 
-      onOpenChange={setIsViewPermissionsDialogOpen}
-    >
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Permissions for {selectedRole?.name}</DialogTitle>
-          <DialogDescription>
-            View all permissions assigned to this role
-          </DialogDescription>
-        </DialogHeader>
+  const renderViewPermissionsDialog = () => {
+    // First, filter the permissions to only include those assigned to the role
+    const assignedPermissionIds = selectedRole?.permissionIds || selectedRole?.permissions?.map(p => p.id) || [];
+    
+    // Group assigned permissions by resource
+    const assignedPermissionsByResource: Record<string, Permission[]> = {};
+    
+    if (selectedRole?.permissions) {
+      selectedRole.permissions.forEach(permission => {
+        const resource = permission.resource || "Other";
+        if (!assignedPermissionsByResource[resource]) {
+          assignedPermissionsByResource[resource] = [];
+        }
+        assignedPermissionsByResource[resource].push(permission);
+      });
+    } else if (selectedRole?.permissionIds) {
+      // If we only have IDs, find the full permission objects
+      selectedRole.permissionIds.forEach(id => {
+        const permission = permissions.find(p => p.id === id);
+        if (permission) {
+          const resource = permission.resource || "Other";
+          if (!assignedPermissionsByResource[resource]) {
+            assignedPermissionsByResource[resource] = [];
+          }
+          assignedPermissionsByResource[resource].push(permission);
+        }
+      });
+    }
+    
+    return (
+      <Dialog 
+        open={isViewPermissionsDialogOpen} 
+        onOpenChange={setIsViewPermissionsDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Permissions for {selectedRole?.name}</DialogTitle>
+            <DialogDescription>
+              View all permissions assigned to this role
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="py-4 space-y-6">
-          {selectedRole && (!selectedRole.permissions || selectedRole.permissions.length === 0) ? (
-            <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
-              No permissions assigned to this role.
-            </div>
-          ) : (
-            <div>
-              {/* Group assigned permissions by resource */}
-              {Object.entries(
-                // Only include permissions that are actually assigned to the role
-                (selectedRole?.permissions || []).reduce((acc, perm) => {
-                  const resource = perm.resource || "Other";
-                  if (!acc[resource]) {
-                    acc[resource] = [];
-                  }
-                  acc[resource].push(perm);
-                  return acc;
-                }, {} as Record<string, Permission[]>) || {}
-              ).map(([resource, resourcePermissions]) => (
-                <div key={resource} className="border rounded-md p-4 mb-4">
-                  <h3 className="text-lg font-medium mb-3">{resource}</h3>
-                  
-                  <div className="grid grid-cols-1 gap-3">
-                    {resourcePermissions.map((permission) => (
-                      <div key={permission.id} className="border-b pb-3">
-                        <div className="font-medium">{permission.name}</div>
-                        {permission.description && (
-                          <p className="text-xs text-muted-foreground mb-2">{permission.description}</p>
-                        )}
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {permission.actions?.map(action => (
-                            <Badge key={action} variant="outline" className="bg-secondary/30">
-                              {actionLabels[action]}
-                            </Badge>
-                          ))}
+          <div className="py-4 space-y-6">
+            {(!selectedRole?.permissions || selectedRole.permissions.length === 0) && 
+             (!selectedRole?.permissionIds || selectedRole.permissionIds.length === 0) ? (
+              <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
+                No permissions assigned to this role.
+              </div>
+            ) : (
+              <div>
+                {Object.entries(assignedPermissionsByResource).map(([resource, resourcePermissions]) => (
+                  <div key={resource} className="border rounded-md p-4 mb-4">
+                    <h3 className="text-lg font-medium mb-4">{resource}</h3>
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                      {resourcePermissions.map((permission) => (
+                        <div key={permission.id} className="border-b pb-3">
+                          <div className="flex items-center mb-2">
+                            <Checkbox 
+                              id={`view-permission-${permission.id}`}
+                              checked={true} // Always checked since we're only showing assigned permissions
+                              disabled={true} // Always disabled in view mode
+                            />
+                            <div className="ml-3">
+                              <p className="font-medium">{permission.name}</p>
+                              {permission.description && (
+                                <p className="text-xs text-muted-foreground">{permission.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
+                            {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
+                              <div key={action} className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`view-permission-${permission.id}-${action}`}
+                                  checked={permission.actions?.includes(action) || false}
+                                  disabled={true} // Always disabled in view mode
+                                />
+                                <Label 
+                                  htmlFor={`view-permission-${permission.id}-${action}`}
+                                  className="text-sm cursor-default"
+                                >
+                                  {actionLabels[action]}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        <DialogFooter>
-          <Button onClick={() => setIsViewPermissionsDialogOpen(false)}>Close</Button>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setIsViewPermissionsDialogOpen(false);
-              setTimeout(() => handleOpenAssignPermissionsDialog(selectedRole!), 100);
-            }}
-          >
-            Manage Permissions
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewPermissionsDialogOpen(false)}>
+              Close
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsViewPermissionsDialogOpen(false);
+                setTimeout(() => handleOpenAssignPermissionsDialog(selectedRole!), 100);
+              }}
+            >
+              Manage Permissions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   const renderPermissionDialogs = () => (
     <>
