@@ -61,7 +61,7 @@ export interface Permission {
 }
 
 export interface Role {
-  id?: string;
+  id: string;
   name: string;
   description: string;
   permissionIds?: string[];
@@ -127,6 +127,7 @@ const RolesPermissions = () => {
       setEditingRole({ ...role });
     } else {
       setEditingRole({
+        id: "",
         name: "",
         description: "",
         permissionIds: []
@@ -144,7 +145,7 @@ const RolesPermissions = () => {
       });
       return;
     }
-    const existingRole = roles.find(role => role.name === editingRole.name);
+    const existingRole = roles.find(role => role.id === editingRole.id);
     const isPresent = !!existingRole;
     const roleId = existingRole ? existingRole.id : undefined;
     if(isPresent) {
@@ -154,12 +155,15 @@ const RolesPermissions = () => {
         permissions: [],
         permissionIds: []
       };
-      await updateRole(roleId, {name: editingRole.name,
+      await updateRole(roleId, {
+        id: roleId, 
+        name: editingRole.name,
         description: editingRole.description,
-        permissionIds: []});
+        permissionIds: []
+      });
       setRoles(
         roles.map(role =>
-          role.name === editingRole.name ? { ...role, name: editingRole.name, description: editingRole.description } : role
+          role.id === editingRole.id ? { ...role, name: editingRole.name, description: editingRole.description } : role
         )
       );
       toast({
@@ -695,9 +699,9 @@ const RolesPermissions = () => {
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{editingRole?.name ? "Edit Role" : "Create New Role"}</DialogTitle>
+            <DialogTitle>{editingRole?.id ? "Edit Role" : "Create New Role"}</DialogTitle>
             <DialogDescription>
-              {editingRole?.name ? "Update the role details." : "Add a new role to the system."}
+              {editingRole?.id ? "Update the role details." : "Add a new role to the system."}
             </DialogDescription>
           </DialogHeader>
 
@@ -722,7 +726,7 @@ const RolesPermissions = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveRole}>{editingRole?.name ? "Save Changes" : "Create Role"}</Button>
+            <Button onClick={handleSaveRole}>{editingRole?.id ? "Save Changes" : "Create Role"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

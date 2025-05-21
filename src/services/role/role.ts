@@ -3,7 +3,7 @@ import { ROLE } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
 import { Role } from "@/pages/dashboard/RolesPermissions";
 
-export const createRole = async (payload: Role) => {
+export const createRole = async ({id, ...payload}: Role) => {
     const response = await axiosInstance.post(ROLE, payload);
     return response.data;
 }
@@ -13,8 +13,8 @@ export const getRoles = async () => {
     return response.data;
 }
 
-export const updateRole = async (id: string, payload: Role) => {
-    const response = await axiosInstance.put(`${ROLE}/${id}`, payload);
+export const updateRole = async (roleId: string, {id, ...payload}: Role) => {
+    const response = await axiosInstance.put(`${ROLE}/${roleId}`, payload);
     return response.data;
 }
 
