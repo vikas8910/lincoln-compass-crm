@@ -48,14 +48,14 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   });
 
   // Comment out the search hook usage but keep the import
-  const { 
-    searchTerm, 
-    handleSearchChange 
-  } = useSearch({
-    onSearch: (term) => {
-      fetchUsers(0, pageSize, term);
-    }
-  });
+  // const { 
+  //   searchTerm, 
+  //   handleSearchChange 
+  // } = useSearch({
+  //   onSearch: (term) => {
+  //     fetchUsers(0, pageSize, term);
+  //   }
+  // });
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -171,12 +171,12 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
+            {/* <Input
               placeholder="Search users..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-9 w-full"
-            />
+            /> */}
           </div>
         </div>
       </div>
