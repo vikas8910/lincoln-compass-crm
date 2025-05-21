@@ -70,9 +70,7 @@ export interface Role {
 
 const RolesPermissions = () => {
   const [roles, setRoles] = useState<Role[]>([]);
-
-  const [permissions, setPermissions] = useState<Permission[]>([
-  ]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
 
   // State for role operations
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -86,6 +84,9 @@ const RolesPermissions = () => {
   const [isEditingPermission, setIsEditingPermission] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
   const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
+  
+  // New state to track temporary selections separately from actual saved permissions
+  const [tempSelectedPermissions, setTempSelectedPermissions] = useState<string[]>([]);
   
   const [newPermission, setNewPermission] = useState<Permission>({
     id: "",
@@ -298,7 +299,7 @@ const RolesPermissions = () => {
     setIsPermissionDialogOpen(false);
   };
 
-  // Handle permission assignment to role
+  // Handle permission assignment to role - Modified for Fix 1
   const handleOpenAssignPermissionsDialog = (role: Role) => {
     // When opening the dialog, make sure we have complete permission information
     const roleWithFullPermissions = { ...role };
@@ -311,7 +312,7 @@ const RolesPermissions = () => {
     if (!roleWithFullPermissions.permissions) {
       roleWithFullPermissions.permissions = [];
       // If we only have IDs but no permission objects, find them from the permissions array
-      if (roleWithFullPermissions.permissionIds.length > 0) {
+      if (roleWithFullPermissions.permissionIds && roleWithFullPermissions.permissionIds.length > 0) {
         roleWithFullPermissions.permissionIds.forEach(id => {
           const permObj = permissions.find(p => p.id === id);
           if (permObj && !roleWithFullPermissions.permissions?.some(p => p.id === id)) {
@@ -321,17 +322,18 @@ const RolesPermissions = () => {
       }
     }
     
-    // Log for debugging
-    console.log("Opening assign permissions dialog with role:", roleWithFullPermissions);
-    console.log("Permission IDs:", roleWithFullPermissions.permissionIds);
-    console.log("Permission objects:", roleWithFullPermissions.permissions);
+    // Initialize temporary selections with the current saved permissions
+    const currentPermissionIds = roleWithFullPermissions.permissionIds || 
+                                roleWithFullPermissions.permissions?.map(p => p.id) || 
+                                [];
     
+    setTempSelectedPermissions([...currentPermissionIds]);
     setSelectedRole(roleWithFullPermissions);
     setIsAssignPermissionsDialogOpen(true);
     setIsReadOnlyMode(false);
   };
 
-  // Handle viewing permissions for a role
+  // Handle viewing permissions for a role - Modified for Fix 2
   const handleViewPermissions = (role: Role) => {
     // Similar logic to prepare the role data
     const roleWithFullPermissions = { ...role };
@@ -342,7 +344,7 @@ const RolesPermissions = () => {
     
     if (!roleWithFullPermissions.permissions) {
       roleWithFullPermissions.permissions = [];
-      if (roleWithFullPermissions.permissionIds.length > 0) {
+      if (roleWithFullPermissions.permissionIds && roleWithFullPermissions.permissionIds.length > 0) {
         roleWithFullPermissions.permissionIds.forEach(id => {
           const permObj = permissions.find(p => p.id === id);
           if (permObj) {
@@ -356,78 +358,61 @@ const RolesPermissions = () => {
     setIsViewPermissionsDialogOpen(true);
   };
 
-  // Toggle permission selection (entire permission)
+  // Toggle permission selection (entire permission) - Modified for Fix 1
   const togglePermissionSelection = (permissionId: string) => {
     if (!selectedRole || isReadOnlyMode) return;
     
-    // Create a new role object to avoid direct state mutation
-    const updatedRole = { ...selectedRole };
+    // Use temporary selections instead of directly modifying the selectedRole
+    const isSelected = tempSelectedPermissions.includes(permissionId);
     
-    // Ensure we have arrays to work with
-    if (!updatedRole.permissionIds) updatedRole.permissionIds = [];
-    if (!updatedRole.permissions) updatedRole.permissions = [];
-    
-    // Check if the permission is already selected
-    const isPermissionSelected = updatedRole.permissionIds.includes(permissionId);
-    
-    if (isPermissionSelected) {
+    if (isSelected) {
       // Remove the permission
-      updatedRole.permissionIds = updatedRole.permissionIds.filter(id => id !== permissionId);
-      updatedRole.permissions = updatedRole.permissions.filter(p => p.id !== permissionId);
+      setTempSelectedPermissions(tempSelectedPermissions.filter(id => id !== permissionId));
     } else {
       // Add the permission
-      const permissionToAdd = permissions.find(p => p.id === permissionId);
-      if (permissionToAdd) {
-        updatedRole.permissionIds.push(permissionId);
-        updatedRole.permissions.push(permissionToAdd);
-      }
+      setTempSelectedPermissions([...tempSelectedPermissions, permissionId]);
     }
-    
-    // Log for debugging
-    console.log("After toggle:", permissionId);
-    console.log("Updated permissionIds:", updatedRole.permissionIds);
-    console.log("Updated permissions:", updatedRole.permissions);
-    
-    setSelectedRole(updatedRole);
   };
 
-  // Check if a specific permission is selected
+  // Check if a specific permission is selected - Modified for Fix 1
   const isPermissionSelected = (permissionId: string): boolean => {
     if (!selectedRole) return false;
     
-    // Check both arrays to be safe
-    const inPermissionIds = selectedRole.permissionIds?.includes(permissionId) || false;
-    const inPermissions = selectedRole.permissions?.some(p => p.id === permissionId) || false;
+    // For read-only view, check against actual role permissions
+    if (isReadOnlyMode) {
+      const inPermissionIds = selectedRole.permissionIds?.includes(permissionId) || false;
+      const inPermissions = selectedRole.permissions?.some(p => p.id === permissionId) || false;
+      return inPermissionIds || inPermissions;
+    }
     
-    // Log for debugging
-    console.log(`Checking permission ${permissionId}: inIds=${inPermissionIds}, inObjects=${inPermissions}`);
-    
-    return inPermissionIds || inPermissions;
+    // For edit view, check against temporary selections
+    return tempSelectedPermissions.includes(permissionId);
   };
 
   const handleSaveAssignedPermissions = async () => {
     if (!selectedRole || !selectedRole.id) return;
     
-    // Make a copy of the selected role to avoid direct state mutation
-    const roleToUpdate = { ...selectedRole };
+    // Update the role with the temporary selections
+    const updatedRole = { ...selectedRole };
+    updatedRole.permissionIds = [...tempSelectedPermissions];
     
-    // Ensure permissionIds exists and has the complete list of permission IDs
-    if (!roleToUpdate.permissionIds || roleToUpdate.permissionIds.length === 0) {
-      // Fallback to extracting from permissions array if needed
-      roleToUpdate.permissionIds = roleToUpdate.permissions?.map(p => p.id) || [];
-    }
+    // Find all permission objects for the selected IDs
+    updatedRole.permissions = [];
+    tempSelectedPermissions.forEach(id => {
+      const permObj = permissions.find(p => p.id === id);
+      if (permObj) {
+        updatedRole.permissions.push(permObj);
+      }
+    });
     
     // Update the roles state with the updated role
     setRoles(roles.map(role => 
-      role.id === roleToUpdate.id ? roleToUpdate : role
+      role.id === updatedRole.id ? updatedRole : role
     ));
-    
-    console.log("Saving permissions for role:", roleToUpdate.id);
-    console.log("Permissions to save:", roleToUpdate.permissionIds);
     
     // Call the API for role permissions mapping
     try {
-      await rolePermissionsMapping(roleToUpdate.id, roleToUpdate.permissionIds);
+      await rolePermissionsMapping(updatedRole.id, updatedRole.permissionIds);
       
       toast({
         title: "Success",
@@ -445,12 +430,25 @@ const RolesPermissions = () => {
     setIsAssignPermissionsDialogOpen(false);
   };
 
-  // New function to switch from view-only to edit mode
+  // New function to handle dialog close without saving - Fix 1
+  const handleCloseAssignDialog = () => {
+    // Don't save temporary selections
+    setIsAssignPermissionsDialogOpen(false);
+    // Reset temporary selections
+    setTempSelectedPermissions([]);
+  };
+
+  // Function to switch from view-only to edit mode
   const handleSwitchToEditMode = () => {
     if (!selectedRole) return;
     
     setIsViewPermissionsDialogOpen(false);
     setTimeout(() => {
+      // Initialize temporary selections with current permissions when switching to edit mode
+      const currentPermissionIds = selectedRole.permissionIds || 
+                                  selectedRole.permissions?.map(p => p.id) || 
+                                  [];
+      setTempSelectedPermissions([...currentPermissionIds]);
       setIsAssignPermissionsDialogOpen(true);
       setIsReadOnlyMode(false);
     }, 100);
@@ -543,8 +541,8 @@ const RolesPermissions = () => {
                         size="sm" 
                         onClick={() => {
                           setIsReadOnlyMode(true);
-                          setSelectedRole(role);
-                          setIsAssignPermissionsDialogOpen(true);
+                          handleViewPermissions(role);
+                          setIsViewPermissionsDialogOpen(true);
                         }}
                         className="p-0 h-auto"
                       >
@@ -752,7 +750,6 @@ const RolesPermissions = () => {
     </>
   );
 
-  // Create/Edit Permission Dialog - Updated with new category options
   const renderPermissionDialog = () => {
     return (
       <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
@@ -834,13 +831,15 @@ const RolesPermissions = () => {
     );
   };
 
-  // Updated Assign Permissions Dialog with permission-level selection
+  // Updated Assign Permissions Dialog with permission-level selection - Modified for Fix 1
   const renderAssignPermissionsDialog = () => (
     <Dialog 
       open={isAssignPermissionsDialogOpen} 
       onOpenChange={(open) => {
-        if (!open) setIsReadOnlyMode(false);
-        setIsAssignPermissionsDialogOpen(open);
+        if (!open) {
+          // When closing without explicitly saving, reset any temporary changes
+          handleCloseAssignDialog();
+        }
       }}
     >
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
@@ -922,7 +921,7 @@ const RolesPermissions = () => {
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setIsAssignPermissionsDialogOpen(false)}>
+              <Button variant="outline" onClick={handleCloseAssignDialog}>
                 Cancel
               </Button>
               <Button onClick={handleSaveAssignedPermissions}>
@@ -935,7 +934,7 @@ const RolesPermissions = () => {
     </Dialog>
   );
 
-  // Updated View Permissions Dialog (Read-only)
+  // Updated View Permissions Dialog (Read-only) - Modified for Fix 2
   const renderViewPermissionsDialog = () => (
     <Dialog 
       open={isViewPermissionsDialogOpen} 
@@ -950,16 +949,16 @@ const RolesPermissions = () => {
         </DialogHeader>
 
         <div className="py-4 space-y-6">
-          {selectedRole && selectedRole.permissions?.length === 0 ? (
+          {selectedRole && (!selectedRole.permissions || selectedRole.permissions.length === 0) ? (
             <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
               No permissions assigned to this role.
             </div>
           ) : (
             <div>
-              {/* Group permissions by resource */}
+              {/* Group assigned permissions by resource */}
               {Object.entries(
-                // Group the role's permissions by resource
-                selectedRole?.permissions?.reduce((acc, perm) => {
+                // Only include permissions that are actually assigned to the role
+                (selectedRole?.permissions || []).reduce((acc, perm) => {
                   const resource = perm.resource || "Other";
                   if (!acc[resource]) {
                     acc[resource] = [];
