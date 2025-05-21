@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
 import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
-import { Permission, Role } from "@/pages/dashboard/RolesPermissions";
+import { Role, Permission } from "@/types";
 
 // Define types
 interface User {
@@ -71,7 +71,7 @@ const RolesUsers = () => {
     { id: "3", name: "Robert Johnson", email: "robert@example.com", role: "Sales Officer", lastActive: "2023-05-01" },
     { id: "4", name: "Emily Davis", email: "emily@example.com", role: "Lead", lastActive: "2023-04-28" }
   ]);
-
+  
   // State for dialogs
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);

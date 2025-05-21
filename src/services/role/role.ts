@@ -1,7 +1,7 @@
 
 import { ROLE } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
-import { Role } from "@/pages/dashboard/RolesPermissions";
+import { Role } from "@/types";
 
 export const createRole = async (payload: Role) => {
     const response = await axiosInstance.post(ROLE, payload);
