@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { getUsers, updateUser, deleteUser } from "@/services/user-service/user-service";
+import { getUsers, updateUser, deleteUser, searchUsers } from "@/services/user-service/user-service";
 import { UserResponse } from "@/types";
 import usePagination from "@/hooks/usePagination";
 import useSearch from "@/hooks/useSearch";
@@ -26,6 +25,7 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserResponse | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   
   // Use custom hooks
   const { 
@@ -38,27 +38,57 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     updatePaginationState 
   } = usePagination({
     onPageChange: (page, size) => {
-      fetchUsers(page, size);
+      if (isSearching && searchTerm) {
+        searchUsersFromAPI(searchTerm, page, size);
+      } else {
+        fetchUsers(page, size);
+      }
     }
   });
 
-  // Comment out the search hook usage but keep the import
-  // const { 
-  //   searchTerm, 
-  //   handleSearchChange 
-  // } = useSearch({
-  //   onSearch: (term) => {
-  //     fetchUsers(0, pageSize, term);
-  //   }
-  // });
+  // Re-enable the search hook
+  const { 
+    searchTerm, 
+    handleSearchChange,
+    setSearchTerm
+  } = useSearch({
+    delay: 400, // 400ms debounce
+    onSearch: (term) => {
+      if (term.trim() !== "") {
+        setIsSearching(true);
+        searchUsersFromAPI(term, 0, pageSize);
+      } else {
+        setIsSearching(false);
+        fetchUsers(0, pageSize);
+      }
+    }
+  });
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch users from API
-  const fetchUsers = async (page: number = currentPage, size: number = pageSize, search: string = "") => {
+  // Search users from API
+  const searchUsersFromAPI = async (name: string, page: number = 0, size: number = pageSize) => {
+    if (!name.trim()) {
+      return fetchUsers(page, size);
+    }
+    
     setIsLoading(true);
     try {
-      // In a real implementation, you would pass the search parameter to the API
+      const response = await searchUsers(name, page, size);
+      setUsers(response.content);
+      updatePaginationState(response.totalElements, response.totalPages);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      toast.error("Failed to search users");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch users from API
+  const fetchUsers = async (page: number = currentPage, size: number = pageSize) => {
+    setIsLoading(true);
+    try {
       const response = await getUsers(page, size);
       setUsers(response.content);
       updatePaginationState(response.totalElements, response.totalPages);
@@ -70,9 +100,24 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     }
   };
 
+  // Reset search
+  const resetSearch = () => {
+    if (isSearching) {
+      setSearchTerm("");
+      setIsSearching(false);
+      fetchUsers(0, pageSize);
+    }
+  };
+
   // Expose the refreshUsers method to parent component
   useImperativeHandle(ref, () => ({
-    refreshUsers: () => fetchUsers()
+    refreshUsers: () => {
+      if (isSearching && searchTerm) {
+        searchUsersFromAPI(searchTerm, currentPage, pageSize);
+      } else {
+        fetchUsers(currentPage, pageSize);
+      }
+    }
   }));
 
   // Fetch users on initial load
@@ -99,7 +144,11 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       await deleteUser(userToDelete.id);
       
       // Refresh the user list after deleting the user
-      fetchUsers(currentPage, pageSize);
+      if (isSearching && searchTerm) {
+        searchUsersFromAPI(searchTerm, currentPage, pageSize);
+      } else {
+        fetchUsers(currentPage, pageSize);
+      }
       
       setIsDeleteUserDialogOpen(false);
       setUserToDelete(null);
@@ -123,7 +172,11 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       });
       
       // Refresh the user list after updating the user
-      fetchUsers(currentPage, pageSize);
+      if (isSearching && searchTerm) {
+        searchUsersFromAPI(searchTerm, currentPage, pageSize);
+      } else {
+        fetchUsers(currentPage, pageSize);
+      }
       
       setIsEditUserDialogOpen(false);
       setEditingUser(null);
@@ -182,16 +235,15 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     <>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-3 justify-between w-full">
-          {/* Comment out search input but keep the FiSearch icon import */}
-          
+          {/* Re-enable search input */}
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            {/* <Input
-              placeholder="Search users..."
+            <Input
+              placeholder="Search users by name..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-9 w-full"
-            /> */}
+            />
           </div>
          
           <Button onClick={() => setIsAddUserDialogOpen(true)}>
@@ -203,14 +255,25 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>User Management</CardTitle>
+          <CardTitle>
+            {isSearching && searchTerm ? `Search Results for "${searchTerm}"` : "User Management"}
+            {isSearching && searchTerm && (
+              <Button 
+                variant="link" 
+                className="ml-2 text-sm" 
+                onClick={resetSearch}
+              >
+                Clear Search
+              </Button>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <DynamicTable
             columns={columns}
             data={users}
             isLoading={isLoading}
-            emptyMessage="No users found matching your search."
+            emptyMessage={isSearching ? "No users found matching your search." : "No users found."}
             pagination={{
               currentPage,
               pageSize,

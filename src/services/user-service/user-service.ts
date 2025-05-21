@@ -11,6 +11,15 @@ export const getUsers = async (page: number = 0, size: number = 10) => {
     }
 };
 
+export const searchUsers = async (name: string, page: number = 0, size: number = 10) => {
+    try {
+        const response = await axiosInstance.get(`${USER}/search?name=${encodeURIComponent(name)}&page=${page}&size=${size}`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const updateUserRole = async (userId: string, payload: RoleAssignment) => {
     try {
         const response = await axiosInstance.post(`${USER}/${userId}/roles`, payload);
