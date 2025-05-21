@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FiSearch } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ interface RoleManagementTabProps {
   onAddUser: (data: NewUserFormValues) => Promise<void>;
 }
 
-const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
+const RoleManagementTab = forwardRef<{ refreshUsers: () => void }, RoleManagementTabProps>(({ onAddUser }, ref) => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
@@ -60,7 +61,7 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch users from API
-  const fetchUsers = async (page: number, size: number, search: string = "") => {
+  const fetchUsers = async (page: number = currentPage, size: number = pageSize, search: string = "") => {
     setIsLoading(true);
     try {
       // In a real implementation, you would pass the search parameter to the API
@@ -74,6 +75,11 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
       setIsLoading(false);
     }
   };
+
+  // Expose the refreshUsers method to parent component
+  useImperativeHandle(ref, () => ({
+    refreshUsers: () => fetchUsers()
+  }));
 
   // Fetch roles from API
   useEffect(() => {
@@ -204,6 +210,9 @@ const RoleManagementTab: React.FC<RoleManagementTabProps> = ({ onAddUser }) => {
       </Card>
     </>
   );
-};
+});
+
+// Add display name for the component
+RoleManagementTab.displayName = "RoleManagementTab";
 
 export default RoleManagementTab;

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -11,6 +11,15 @@ import UserManagementTab from "@/components/users/UserManagementTab";
 
 const SalesOfficerRoles = () => {
   const [activeTab, setActiveTab] = useState("user-management");
+  
+  // Create refs to store component methods
+  const userManagementRef = useRef<{
+    refreshUsers: () => void;
+  }>(null);
+  
+  const roleManagementRef = useRef<{
+    refreshUsers: () => void;
+  }>(null);
 
   // Handle adding a new user
   const handleAddUser = async (data: NewUserFormValues) => {
@@ -25,6 +34,14 @@ const SalesOfficerRoles = () => {
     try {
       await createUser(userToAdd);
       toast.success(`User ${data.name} added successfully`);
+      
+      // Refresh the user list after successful user addition
+      if (activeTab === "user-management" && userManagementRef.current) {
+        userManagementRef.current.refreshUsers();
+      } else if (activeTab === "role-management" && roleManagementRef.current) {
+        roleManagementRef.current.refreshUsers();
+      }
+      
       return Promise.resolve();
     } catch (error) {
       console.error("Error creating user:", error);
@@ -52,12 +69,18 @@ const SalesOfficerRoles = () => {
         
         {/* Tab 1: Role Management */}
         <TabsContent value="role-management">
-          <RoleManagementTab onAddUser={handleAddUser} />
+          <RoleManagementTab 
+            onAddUser={handleAddUser} 
+            ref={roleManagementRef}
+          />
         </TabsContent>
         
         {/* Tab 2: User Management */}
         <TabsContent value="user-management">
-          <UserManagementTab onAddUser={handleAddUser} />
+          <UserManagementTab 
+            onAddUser={handleAddUser} 
+            ref={userManagementRef}
+          />
         </TabsContent>
       </Tabs>
     </MainLayout>

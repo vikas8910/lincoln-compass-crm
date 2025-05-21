@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,8 @@ interface UserManagementTabProps {
   onAddUser: (data: NewUserFormValues) => Promise<void>;
 }
 
-const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
+// Use forwardRef to expose methods to parent component
+const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagementTabProps>(({ onAddUser }, ref) => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
@@ -53,7 +55,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch users from API
-  const fetchUsers = async (page: number, size: number, search: string = "") => {
+  const fetchUsers = async (page: number = currentPage, size: number = pageSize, search: string = "") => {
     setIsLoading(true);
     try {
       // In a real implementation, you would pass the search parameter to the API
@@ -67,6 +69,11 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       setIsLoading(false);
     }
   };
+
+  // Expose the refreshUsers method to parent component
+  useImperativeHandle(ref, () => ({
+    refreshUsers: () => fetchUsers()
+  }));
 
   // Fetch users on initial load
   useEffect(() => {
@@ -258,6 +265,9 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       </ConfirmationDialog>
     </>
   );
-};
+});
+
+// Add display name for the component
+UserManagementTab.displayName = "UserManagementTab";
 
 export default UserManagementTab;
