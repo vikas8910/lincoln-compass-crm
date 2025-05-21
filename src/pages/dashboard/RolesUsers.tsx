@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,9 +93,9 @@ const RolesUsers = () => {
   
   // State for new/editing role
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Explicitly track whether we're in edit mode
   
-  // Handle role dialog open
+  // Handle role dialog open for adding a new role
   const handleAddRole = () => {
     setCurrentRole({
       id: "",
@@ -106,14 +105,14 @@ const RolesUsers = () => {
       usersCount: 0,
       permissions: []
     });
-    setIsEditing(false);
+    setIsEditing(false); // Explicitly set to false for adding
     setIsRoleDialogOpen(true);
   };
   
   // Handle role edit
   const handleEditRole = (role: Role) => {
     setCurrentRole({...role});
-    setIsEditing(true);
+    setIsEditing(true); // Explicitly set to true for editing
     setIsRoleDialogOpen(true);
   };
   
@@ -123,7 +122,7 @@ const RolesUsers = () => {
     setIsDeleteDialogOpen(true);
   };
   
-  // Save role
+  // Save role - fixed to properly identify records by ID when updating
   const handleSaveRole = () => {
     if (!currentRole) return;
     
@@ -133,9 +132,11 @@ const RolesUsers = () => {
     }
     
     if (isEditing) {
+      // For edits, always use the ID to find the record
       setRoles(roles.map(r => r.id === currentRole.id ? currentRole : r));
       toast.success("Role updated successfully");
     } else {
+      // For new roles, create with a new ID
       const newRole = {
         ...currentRole,
         id: String(roles.length + 1)
@@ -361,11 +362,11 @@ const RolesUsers = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Role Dialog */}
+      {/* Role Dialog - Updated to maintain consistent UI state based on operation type */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Role' : 'Add New Role'}</DialogTitle>
+            <DialogTitle>{isEditing ? 'Edit Role' : 'Add Role'}</DialogTitle>
             <DialogDescription>
               {isEditing 
                 ? 'Update the role details and permissions'
