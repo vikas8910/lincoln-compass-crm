@@ -7,15 +7,23 @@ export const getUsers = async (page: number = 0, size: number = 10) => {
         const response = await axiosInstance.get(`${USER}?page=${page}&size=${size}`);
         return response.data;
     } catch (error) {
+        console.error("Error fetching users:", error);
         throw error;
     }
 };
 
 export const searchUsers = async (name: string, page: number = 0, size: number = 10) => {
+    if (!name || name.trim() === "") {
+        return getUsers(page, size);
+    }
+    
     try {
-        const response = await axiosInstance.get(`${USER}/search?name=${encodeURIComponent(name)}&page=${page}&size=${size}`);
+        const response = await axiosInstance.get(
+            `${USER}/search?name=${encodeURIComponent(name.trim())}&page=${page}&size=${size}`
+        );
         return response.data;
     } catch (error) {
+        console.error("Error searching users:", error);
         throw error;
     }
 };

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Use custom hooks
   const { 
@@ -37,45 +39,22 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     handlePageSizeChange, 
     updatePaginationState 
   } = usePagination({
-    onPageChange: (page, size) => {
-      if (isSearching && searchTerm) {
-        searchUsersFromAPI(searchTerm, page, size);
-      } else {
-        fetchUsers(page, size);
-      }
-    }
+    initialPage: 0,
+    initialPageSize: 10,
+    onPageChange: null, // We'll handle page changes separately to avoid loops
   });
 
-  // Re-enable the search hook
-  const { 
-    searchTerm, 
-    handleSearchChange,
-    setSearchTerm
-  } = useSearch({
-    delay: 400, // 400ms debounce
-    onSearch: (term) => {
-      if (term.trim() !== "") {
-        setIsSearching(true);
-        searchUsersFromAPI(term, 0, pageSize);
-      } else {
-        setIsSearching(false);
-        fetchUsers(0, pageSize);
-      }
-    }
-  });
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Search users from API
-  const searchUsersFromAPI = async (name: string, page: number = 0, size: number = pageSize) => {
-    if (!name.trim()) {
+  // Search users from API - defined before the hook to avoid dependency issues
+  const searchUsersFromAPI = useCallback(async (term: string, page: number, size: number) => {
+    if (!term.trim()) {
+      setIsSearching(false);
       return fetchUsers(page, size);
     }
     
     setIsLoading(true);
     try {
-      const response = await searchUsers(name, page, size);
-      setUsers(response.content);
+      const response = await searchUsers(term, page, size);
+      setUsers(response.content || []);
       updatePaginationState(response.totalElements, response.totalPages);
     } catch (error) {
       console.error("Error searching users:", error);
@@ -83,14 +62,14 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [updatePaginationState]);
 
   // Fetch users from API
-  const fetchUsers = async (page: number = currentPage, size: number = pageSize) => {
+  const fetchUsers = useCallback(async (page: number, size: number) => {
     setIsLoading(true);
     try {
       const response = await getUsers(page, size);
-      setUsers(response.content);
+      setUsers(response.content || []);
       updatePaginationState(response.totalElements, response.totalPages);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -98,16 +77,46 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [updatePaginationState]);
 
-  // Reset search
-  const resetSearch = () => {
-    if (isSearching) {
-      setSearchTerm("");
+  // Handle search when term changes
+  const handleSearch = useCallback((term: string) => {
+    if (term.trim() === "") {
       setIsSearching(false);
       fetchUsers(0, pageSize);
+    } else {
+      setIsSearching(true);
+      searchUsersFromAPI(term, 0, pageSize);
     }
-  };
+  }, [fetchUsers, searchUsersFromAPI, pageSize]);
+
+  // Now initialize the search hook with our properly memoized handler
+  const { searchTerm, handleSearchChange, setSearchTerm } = useSearch({
+    delay: 400, // 400ms debounce
+    onSearch: handleSearch,
+  });
+
+  // Reset search
+  const resetSearch = useCallback(() => {
+    setSearchTerm("");
+    setIsSearching(false);
+    fetchUsers(0, pageSize);
+  }, [fetchUsers, pageSize, setSearchTerm]);
+
+  // Effect to handle page changes
+  useEffect(() => {
+    if (isSearching && searchTerm) {
+      searchUsersFromAPI(searchTerm, currentPage, pageSize);
+    } else {
+      fetchUsers(currentPage, pageSize);
+    }
+  }, [currentPage, pageSize, searchUsersFromAPI, fetchUsers, isSearching, searchTerm]);
+
+  // Initial fetch on component mount only
+  useEffect(() => {
+    fetchUsers(0, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Expose the refreshUsers method to parent component
   useImperativeHandle(ref, () => ({
@@ -118,12 +127,7 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
         fetchUsers(currentPage, pageSize);
       }
     }
-  }));
-
-  // Fetch users on initial load
-  useEffect(() => {
-    fetchUsers(currentPage, pageSize);
-  }, []);
+  }), [currentPage, fetchUsers, isSearching, pageSize, searchTerm, searchUsersFromAPI]);
 
   // Handle editing a user
   const handleEditUser = (user: UserResponse) => {
@@ -235,7 +239,6 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     <>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-3 justify-between w-full">
-          {/* Re-enable search input */}
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input

@@ -1,10 +1,10 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 interface UsePaginationProps {
   initialPage?: number;
   initialPageSize?: number;
-  onPageChange?: (page: number, pageSize: number) => void;
+  onPageChange?: ((page: number, pageSize: number) => void) | null;
 }
 
 export default function usePagination({
@@ -52,6 +52,8 @@ export default function usePagination({
     totalPages,
     handlePageChange,
     handlePageSizeChange,
-    updatePaginationState
+    updatePaginationState,
+    setCurrentPage,
+    setPageSize
   };
 }
