@@ -218,7 +218,7 @@ const RolesPermissions = () => {
         id: "",
         name: "",
         description: "",
-        resource: "Module", // Default category changed to "Module"
+        resource: "",
         actions: []
       });
       setIsEditingPermission(false);
@@ -784,17 +784,17 @@ const RolesPermissions = () => {
             <div className="grid gap-2">
               <Label htmlFor="permission-resource">Categories</Label>
               <Select
-                value={newPermission.resource || "Module"}
+                value={newPermission.resource}
                 onValueChange={(value) => setNewPermission({...newPermission, resource: value})}
               >
                 <SelectTrigger id="permission-resource">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Module">Module</SelectItem>
-                  <SelectItem value="Emails">Emails</SelectItem>
-                  <SelectItem value="Sales Activities">Sales Activities</SelectItem>
-                  <SelectItem value="Actions">Actions</SelectItem>
+                  <SelectItem value="MODULES">Modules</SelectItem>
+                  <SelectItem value="SALES_ACTIVITIES">Sales Activities</SelectItem>
+                  <SelectItem value="EMAILS">Emails</SelectItem>
+                  <SelectItem value="ACTIONS">Actions</SelectItem>
                 </SelectContent>
               </Select>
             </div>
