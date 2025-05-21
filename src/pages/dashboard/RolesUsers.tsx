@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,23 +13,9 @@ import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
 import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
+import { Permission, Role } from "@/pages/dashboard/RolesPermissions";
 
 // Define types
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  status: "active" | "inactive";
-  usersCount: number;
-  permissions: string[];
-}
-
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-}
-
 interface User {
   id: string;
   name: string;
@@ -50,7 +35,7 @@ const RolesUsers = () => {
       description: "Full system access with all permissions", 
       status: "active",
       usersCount: 2,
-      permissions: ["view_dashboard", "manage_users", "manage_roles", "view_leads", "create_leads", "edit_leads", "delete_leads"]
+      permissions: []
     },
     { 
       id: "2", 
@@ -58,7 +43,7 @@ const RolesUsers = () => {
       description: "Access to leads and sales activities", 
       status: "active",
       usersCount: 8,
-      permissions: ["view_dashboard", "view_leads", "create_leads", "edit_leads"]
+      permissions: []
     },
     { 
       id: "3", 
@@ -66,7 +51,7 @@ const RolesUsers = () => {
       description: "Limited access to specific features", 
       status: "active",
       usersCount: 15,
-      permissions: ["view_dashboard"]
+      permissions: []
     }
   ]);
 
@@ -139,21 +124,23 @@ const RolesUsers = () => {
     try {
       if (operationMode === 'edit' && currentRole.id) {
         // For edits, always use the ID to find the record and update it
-        await updateRole(currentRole.id, currentRole);
+        const roleToUpdate = { ...currentRole };
+        await updateRole(currentRole.id, roleToUpdate);
         
         // Update local state using the ID for identification
         setRoles(roles.map(r => r.id === currentRole.id ? currentRole : r));
         toast.success("Role updated successfully");
       } else {
         // For new roles, create with a new ID
-        const response = await createRole(currentRole);
+        const newRole = { ...currentRole };
+        const response = await createRole(newRole);
         
         // Add the new role with the ID from the API response
-        const newRole = {
+        const createdRole = {
           ...currentRole,
           id: response.id || String(roles.length + 1)
         };
-        setRoles([...roles, newRole]);
+        setRoles([...roles, createdRole]);
         toast.success("Role created successfully");
       }
       
@@ -186,13 +173,16 @@ const RolesUsers = () => {
   const togglePermission = (permissionId: string) => {
     if (!currentRole) return;
     
-    const hasPermission = currentRole.permissions.includes(permissionId);
+    const permissionObj = permissions.find(p => p.id === permissionId);
+    if (!permissionObj) return;
+
+    const hasPermission = currentRole.permissions.some(p => p.id === permissionId);
     
     setCurrentRole({
       ...currentRole,
       permissions: hasPermission 
-        ? currentRole.permissions.filter(id => id !== permissionId) 
-        : [...currentRole.permissions, permissionId]
+        ? currentRole.permissions.filter(p => p.id !== permissionId) 
+        : [...currentRole.permissions, permissionObj]
     });
   };
   
@@ -294,7 +284,7 @@ const RolesUsers = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{role.usersCount}</TableCell>
-                      <TableCell>{role.permissions.length}</TableCell>
+                      <TableCell>{role.permissions ? role.permissions.length : 0}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleEditRole(role)}>
                           <FiEdit2 className="h-4 w-4" />
@@ -337,7 +327,7 @@ const RolesUsers = () => {
                           <div className="text-sm text-muted-foreground">{permission.name}</div>
                         </div>
                         <div className="flex items-center">
-                          {roles.filter(r => r.permissions.includes(permission.id)).length} roles
+                          {roles.filter(r => r.permissions && r.permissions.some(p => typeof p === 'object' && p.id === permission.id)).length} roles
                         </div>
                       </div>
                     ))}
@@ -459,7 +449,9 @@ const RolesUsers = () => {
                       <div key={permission.id} className="flex items-center space-x-2">
                         <Checkbox 
                           id={`permission-${permission.id}`}
-                          checked={currentRole.permissions.includes(permission.id)}
+                          checked={currentRole.permissions && currentRole.permissions.some(p => 
+                            typeof p === 'object' && p.id === permission.id
+                          )}
                           onCheckedChange={() => togglePermission(permission.id)}
                         />
                         <Label 
