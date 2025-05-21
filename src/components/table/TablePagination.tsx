@@ -104,13 +104,13 @@ const TablePagination = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 m-4">
       <div className="text-sm text-muted-foreground">
         Showing {Math.min((currentPage - 1) * pageSize + 1, totalItems)} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} entries
       </div>
       
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 w-80">
+        <div className="flex items-center gap-2 w-full">
           <Label htmlFor="pageSize" className="text-sm inline-block">Rows per page:</Label>
           <Select
             value={pageSize.toString()}

@@ -791,6 +791,8 @@ const RolesPermissions = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="ROLE">Role</SelectItem>
                   <SelectItem value="MODULES">Modules</SelectItem>
                   <SelectItem value="SALES_ACTIVITIES">Sales Activities</SelectItem>
                   <SelectItem value="EMAILS">Emails</SelectItem>
@@ -1038,12 +1040,12 @@ const RolesPermissions = () => {
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Roles & Permissions</h1>
+        <h1 className="text-3xl font-bold">Roles & Permissions Management</h1>
       </div>
 
       <Tabs defaultValue="roles" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="roles">Roles Management</TabsTrigger>
+          <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
           <TabsTrigger value="assignment">Assign Permissions</TabsTrigger>
         </TabsList>

@@ -41,7 +41,6 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
   });
 
   // Comment out the search hook usage but keep the import
-  /*
   const { 
     searchTerm, 
     handleSearchChange 
@@ -50,7 +49,6 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
       fetchUsers(0, pageSize, term);
     }
   });
-  */
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -176,9 +174,9 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 justify-between w-full">
           {/* Comment out search input but keep the FiSearch icon import */}
-          {/*
+          
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -188,7 +186,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({ onAddUser }) => {
               className="pl-9 w-full"
             />
           </div>
-          */}
+         
           <Button onClick={() => setIsAddUserDialogOpen(true)}>
             <FiUserPlus className="mr-2 h-4 w-4" />
             Add New User
