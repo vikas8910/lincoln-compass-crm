@@ -1,7 +1,7 @@
 
 import { PERMISSION_ENDPOINT } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
-import { Permission } from "@/pages/dashboard/RolesPermissions";
+import { Permission } from "@/types";
 
 export const getPermissions = async () => {
     try {

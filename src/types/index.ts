@@ -22,16 +22,19 @@ export interface RoleAssignment {
 }
 
 export interface Role {
-    id: string;
+    id?: string; // Making this optional to match usage in RolesPermissions.tsx
     name: string;
     description?: string;
     status?: string;
     usersCount?: number;
     permissions?: Permission[];
+    permissionIds?: string[]; // Adding this property to match usage in RolesPermissions.tsx
 }
 
 export interface Permission {
     id: string;
     name: string;
     description?: string;
+    resource?: string;
+    actions?: string[];
 }
