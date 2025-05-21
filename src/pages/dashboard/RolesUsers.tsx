@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
+import { createRole, deleteRole, getRoles, updateRole } from "@/services/role/role";
 
 // Define types
 interface Role {
@@ -36,6 +38,9 @@ interface User {
   role: string;
   lastActive: string;
 }
+
+// Define operation mode type for clarity
+type OperationMode = 'add' | 'edit';
 
 const RolesUsers = () => {
   const [roles, setRoles] = useState<Role[]>([
@@ -91,9 +96,9 @@ const RolesUsers = () => {
   const [roleSearch, setRoleSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   
-  // State for new/editing role
+  // State for role operations with explicit mode tracking
   const [currentRole, setCurrentRole] = useState<Role | null>(null);
-  const [isEditing, setIsEditing] = useState(false); // Explicitly track whether we're in edit mode
+  const [operationMode, setOperationMode] = useState<OperationMode>('add');
   
   // Handle role dialog open for adding a new role
   const handleAddRole = () => {
@@ -105,14 +110,14 @@ const RolesUsers = () => {
       usersCount: 0,
       permissions: []
     });
-    setIsEditing(false); // Explicitly set to false for adding
+    setOperationMode('add'); // Explicitly set to add mode
     setIsRoleDialogOpen(true);
   };
   
   // Handle role edit
   const handleEditRole = (role: Role) => {
     setCurrentRole({...role});
-    setIsEditing(true); // Explicitly set to true for editing
+    setOperationMode('edit'); // Explicitly set to edit mode
     setIsRoleDialogOpen(true);
   };
   
@@ -123,7 +128,7 @@ const RolesUsers = () => {
   };
   
   // Save role - fixed to properly identify records by ID when updating
-  const handleSaveRole = () => {
+  const handleSaveRole = async () => {
     if (!currentRole) return;
     
     if (!currentRole.name.trim()) {
@@ -131,30 +136,50 @@ const RolesUsers = () => {
       return;
     }
     
-    if (isEditing) {
-      // For edits, always use the ID to find the record
-      setRoles(roles.map(r => r.id === currentRole.id ? currentRole : r));
-      toast.success("Role updated successfully");
-    } else {
-      // For new roles, create with a new ID
-      const newRole = {
-        ...currentRole,
-        id: String(roles.length + 1)
-      };
-      setRoles([...roles, newRole]);
-      toast.success("Role created successfully");
+    try {
+      if (operationMode === 'edit' && currentRole.id) {
+        // For edits, always use the ID to find the record and update it
+        await updateRole(currentRole.id, currentRole);
+        
+        // Update local state using the ID for identification
+        setRoles(roles.map(r => r.id === currentRole.id ? currentRole : r));
+        toast.success("Role updated successfully");
+      } else {
+        // For new roles, create with a new ID
+        const response = await createRole(currentRole);
+        
+        // Add the new role with the ID from the API response
+        const newRole = {
+          ...currentRole,
+          id: response.id || String(roles.length + 1)
+        };
+        setRoles([...roles, newRole]);
+        toast.success("Role created successfully");
+      }
+      
+      setIsRoleDialogOpen(false);
+    } catch (error) {
+      console.error("Error saving role:", error);
+      toast.error("Failed to save role");
     }
-    
-    setIsRoleDialogOpen(false);
   };
   
   // Confirm role delete
-  const confirmDeleteRole = () => {
+  const confirmDeleteRole = async () => {
     if (!currentRole) return;
     
-    setRoles(roles.filter(r => r.id !== currentRole.id));
-    toast.success("Role deleted successfully");
-    setIsDeleteDialogOpen(false);
+    try {
+      if (currentRole.id) {
+        await deleteRole(currentRole.id);
+      }
+      
+      setRoles(roles.filter(r => r.id !== currentRole.id));
+      toast.success("Role deleted successfully");
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting role:", error);
+      toast.error("Failed to delete role");
+    }
   };
   
   // Toggle permission for a role
@@ -191,6 +216,22 @@ const RolesUsers = () => {
     user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
     user.role.toLowerCase().includes(userSearch.toLowerCase())
   );
+  
+  // Load roles from API on component mount
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const response = await getRoles();
+        if (response && response.content) {
+          setRoles(response.content);
+        }
+      } catch (error) {
+        console.error("Error loading roles:", error);
+      }
+    };
+    
+    loadRoles();
+  }, []);
   
   return (
     <MainLayout>
@@ -362,13 +403,13 @@ const RolesUsers = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Role Dialog - Updated to maintain consistent UI state based on operation type */}
+      {/* Role Dialog - Consistently using operationMode for UI state */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Role' : 'Add Role'}</DialogTitle>
+            <DialogTitle>{operationMode === 'edit' ? 'Edit Role' : 'Add Role'}</DialogTitle>
             <DialogDescription>
-              {isEditing 
+              {operationMode === 'edit' 
                 ? 'Update the role details and permissions'
                 : 'Create a new role with specific permissions'}
             </DialogDescription>
@@ -440,7 +481,7 @@ const RolesUsers = () => {
               Cancel
             </Button>
             <Button onClick={handleSaveRole}>
-              {isEditing ? 'Save Changes' : 'Create Role'}
+              {operationMode === 'edit' ? 'Save Changes' : 'Create Role'}
             </Button>
           </DialogFooter>
         </DialogContent>

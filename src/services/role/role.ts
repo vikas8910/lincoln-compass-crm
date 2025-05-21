@@ -14,6 +14,7 @@ export const getRoles = async () => {
 }
 
 export const updateRole = async (id: string, payload: Role) => {
+    // Ensure we're using the role ID for identification
     const response = await axiosInstance.put(`${ROLE}/${id}`, payload);
     return response.data;
 }
