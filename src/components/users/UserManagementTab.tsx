@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,9 +39,9 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     handlePageSizeChange, 
     updatePaginationState 
   } = usePagination({
-    initialPage: 0,
-    initialPageSize: 10,
-    onPageChange: null, // We'll handle page changes separately to avoid loops
+    onPageChange: (page, size) => {
+      fetchUsers(page, size);
+    }
   });
 
   // Search users from API - defined before the hook to avoid dependency issues
@@ -54,7 +54,7 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     setIsLoading(true);
     try {
       const response = await searchUsers(term, page, size);
-      setUsers(response.content || []);
+      setUsers(response.users || []);
       updatePaginationState(response.totalElements, response.totalPages);
     } catch (error) {
       console.error("Error searching users:", error);
@@ -92,7 +92,6 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
 
   // Now initialize the search hook with our properly memoized handler
   const { searchTerm, handleSearchChange, setSearchTerm } = useSearch({
-    delay: 400, // 400ms debounce
     onSearch: handleSearch,
   });
 
@@ -104,19 +103,19 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
   }, [fetchUsers, pageSize, setSearchTerm]);
 
   // Effect to handle page changes
-  useEffect(() => {
-    if (isSearching && searchTerm) {
-      searchUsersFromAPI(searchTerm, currentPage, pageSize);
-    } else {
-      fetchUsers(currentPage, pageSize);
-    }
-  }, [currentPage, pageSize, searchUsersFromAPI, fetchUsers, isSearching, searchTerm]);
+  // useEffect(() => {
+  //   if (isSearching && searchTerm) {
+  //     searchUsersFromAPI(searchTerm, currentPage, pageSize);
+  //   } else {
+  //     fetchUsers(currentPage, pageSize);
+  //   }
+  // }, [currentPage, pageSize, searchUsersFromAPI, fetchUsers, isSearching, searchTerm]);
 
   // Initial fetch on component mount only
-  useEffect(() => {
-    fetchUsers(0, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // useEffect(() => {
+  //   fetchUsers(0, pageSize);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   // Expose the refreshUsers method to parent component
   useImperativeHandle(ref, () => ({

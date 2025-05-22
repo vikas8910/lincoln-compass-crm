@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import DynamicTable from "@/components/table/DynamicTable";
-import { getUsers, updateUserRole } from "@/services/user-service/user-service";
+import { getUsers, searchUsers, updateUserRole } from "@/services/user-service/user-service";
 import { getRoles } from "@/services/role/role";
 import { RoleAssignment, UserResponse } from "@/types";
 import usePagination from "@/hooks/usePagination";
@@ -49,14 +49,20 @@ const RoleManagementTab = forwardRef<{ refreshUsers: () => void }, RoleManagemen
   });
 
   // Comment out the search hook usage but keep the import
-  // const { 
-  //   searchTerm, 
-  //   handleSearchChange 
-  // } = useSearch({
-  //   onSearch: (term) => {
-  //     fetchUsers(0, pageSize, term);
-  //   }
-  // });
+  const { 
+    searchTerm, 
+    handleSearchChange 
+  } = useSearch({
+    onSearch: async (term) => {
+      if(term != "") {
+        const response = await searchUsers(term, currentPage, pageSize);
+        setUsers(response.users);
+        updatePaginationState(response.totalElements, response.totalPages);
+      } else {
+        fetchUsers(currentPage, pageSize);
+      }
+    }
+  });
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -100,9 +106,9 @@ const RoleManagementTab = forwardRef<{ refreshUsers: () => void }, RoleManagemen
   }, []);
 
   // Fetch users on initial load
-  useEffect(() => {
-    fetchUsers(currentPage, pageSize);
-  }, []);
+  // useEffect(() => {
+  //   fetchUsers(currentPage, pageSize);
+  // }, []);
 
   // Handle role change
   const handleRoleChange = async (userDetails: UserResponse, newRole: string) => {
@@ -177,12 +183,12 @@ const RoleManagementTab = forwardRef<{ refreshUsers: () => void }, RoleManagemen
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-md">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            {/* <Input
-              placeholder="Search users..."
+            <Input
+              placeholder="Search users by name..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-9 w-full"
-            /> */}
+            />
           </div>
         </div>
       </div>

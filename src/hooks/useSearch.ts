@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface UseSearchProps {
   delay?: number;
@@ -8,37 +7,43 @@ interface UseSearchProps {
 }
 
 export default function useSearch({
-  delay = 500,
+  delay = 600,
   onSearch,
   initialSearch = "",
 }: UseSearchProps = {}) {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(initialSearch);
 
-  // Handle search term change with debounce
+  // Ref to hold the latest onSearch function
+  const onSearchRef = useRef(onSearch);
+
+  // Update the ref if onSearch changes
   useEffect(() => {
-    // Only trigger debounce timer if searchTerm changes
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  // Debounce the search term
+  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
     }, delay);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [searchTerm, delay]);
 
-  // Separate effect to handle the actual search
+  // Trigger the onSearch callback only when the debounced term changes
   useEffect(() => {
-    // Only call onSearch if there's actually a search handler and debouncedSearchTerm has changed
-    if (onSearch) {
-      onSearch(debouncedSearchTerm);
+    if (onSearchRef.current) {
+      onSearchRef.current(debouncedSearchTerm);
     }
-  }, [debouncedSearchTerm, onSearch]);
+  }, [debouncedSearchTerm]);
 
-  // Handle search input change
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(event.target.value);
+    },
+    []
+  );
 
   return {
     searchTerm,
