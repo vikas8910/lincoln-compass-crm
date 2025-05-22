@@ -518,7 +518,13 @@ const RolesPermissions = () => {
   const isActionSelected = (permissionId: string, action: string): boolean => {
     // Convert action to lowercase for consistent comparison
     const actionLower = action.toLowerCase();
-    return permissionActions[permissionId]?.includes(actionLower) || false;
+    
+    // Check if the permission ID exists in permissionActions and if the action is in the array
+    if (permissionActions[permissionId]) {
+      return permissionActions[permissionId].some(a => a.toLowerCase() === actionLower);
+    }
+    
+    return false;
   };
 
   // Modified function to initialize permission actions when opening dialog - ensure case consistency
@@ -549,12 +555,22 @@ const RolesPermissions = () => {
                                roleWithFullPermissions.permissions?.map(p => p.id) || 
                                [];
     
-    // Initialize permission actions based on existing data - ensure all actions are lowercase
+    // Initialize permission actions based on existing data
     const initialPermissionActions: Record<string, string[]> = {};
+    
+    // Loop through each permission to check if it belongs to this role
     permissions.forEach(permission => {
       if (currentPermissionIds.includes(permission.id)) {
-        // Make sure all actions are stored in lowercase form
-        initialPermissionActions[permission.id] = permission.actions?.map(a => a.toLowerCase()) || [];
+        // Find the corresponding permission in the role's permissions array
+        const rolePermission = roleWithFullPermissions.permissions?.find(p => p.id === permission.id);
+        
+        // Use the actions from the role's permission or default to empty array
+        // Make sure to normalize action case to lowercase
+        if (rolePermission && rolePermission.actions) {
+          initialPermissionActions[permission.id] = rolePermission.actions.map(a => a.toLowerCase());
+        } else {
+          initialPermissionActions[permission.id] = [];
+        }
       }
     });
     
@@ -563,37 +579,6 @@ const RolesPermissions = () => {
     setSelectedRole(roleWithFullPermissions);
     setIsAssignPermissionsDialogOpen(true);
     setIsReadOnlyMode(false);
-  };
-
-  // Handle permission assignment to role - Modified for Fix 1
-  const togglePermissionSelection = (permissionId: string) => {
-    if (!selectedRole || isReadOnlyMode) return;
-    
-    // Use temporary selections instead of directly modifying the selectedRole
-    const isSelected = tempSelectedPermissions.includes(permissionId);
-    
-    if (isSelected) {
-      // Remove the permission
-      setTempSelectedPermissions(tempSelectedPermissions.filter(id => id !== permissionId));
-    } else {
-      // Add the permission
-      setTempSelectedPermissions([...tempSelectedPermissions, permissionId]);
-    }
-  };
-
-  // Check if a specific permission is selected - Modified for Fix 1
-  const isPermissionSelected = (permissionId: string): boolean => {
-    if (!selectedRole) return false;
-    
-    // For read-only view, check against actual role permissions
-    if (isReadOnlyMode) {
-      const inPermissionIds = selectedRole.permissionIds?.includes(permissionId) || false;
-      const inPermissions = selectedRole.permissions?.some(p => p.id === permissionId) || false;
-      return inPermissionIds || inPermissions;
-    }
-    
-    // For edit view, check against temporary selections
-    return tempSelectedPermissions.includes(permissionId);
   };
 
   // Modified function to save assigned permissions with the new payload structure
