@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -107,6 +106,9 @@ const RolesPermissions = () => {
     actions: []
   });
   
+  // New state to track form submission status
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   // State for search/filter
   const [searchRoles, setSearchRoles] = useState("");
   const [searchPermissions, setSearchPermissions] = useState("");
@@ -128,6 +130,11 @@ const RolesPermissions = () => {
         setRoles(roles.content);
       } catch (error) {
         console.error("Error fetching roles:", error);
+        toast({
+          title: "Failed to load roles",
+          description: "Could not retrieve roles. Please try again later.",
+          variant: "destructive"
+        });
       }
     }
     fetchRoles();
@@ -138,6 +145,11 @@ const RolesPermissions = () => {
         setPermissions(permissions);
       } catch (error) {
         console.error("Error fetching permissions:", error);
+        toast({
+          title: "Failed to load permissions",
+          description: "Could not retrieve permissions. Please try again later.",
+          variant: "destructive"
+        });
       }
     }
     fetchPermissions();
@@ -169,55 +181,94 @@ const RolesPermissions = () => {
   const handleSaveRole = async (data: RoleFormValues) => {
     if (!editingRole) return;
     
-    const existingRole = roles.find(role => role.id === editingRole.id);
-    const isPresent = !!existingRole;
-    const roleId = existingRole ? existingRole.id : undefined;
+    setIsSubmitting(true);
     
-    if(isPresent && roleId) {
-      // Updated this section to correctly include id in the objects
-      await updateRole(roleId, {
-        id: roleId,  // Ensure id is provided here
-        name: data.name,
-        description: data.description,
-        permissionIds: []
-      });
+    try {
+      const existingRole = roles.find(role => role.id === editingRole.id);
+      const isPresent = !!existingRole;
+      const roleId = existingRole ? existingRole.id : undefined;
       
-      setRoles(
-        roles.map(role =>
-          role.id === editingRole.id ? { 
-            ...role, 
-            name: data.name, 
-            description: data.description 
-          } : role
-        )
-      );
+      if(isPresent && roleId) {
+        // Update existing role
+        await updateRole(roleId, {
+          id: roleId,
+          name: data.name,
+          description: data.description,
+          permissionIds: []
+        });
+        
+        setRoles(
+          roles.map(role =>
+            role.id === editingRole.id ? { 
+              ...role, 
+              name: data.name, 
+              description: data.description 
+            } : role
+          )
+        );
+        
+        toast({
+          title: "Success",
+          description: "Role updated successfully"
+        });
+      } else {
+        // Create new role
+        const newRole = {
+          id: "", // Empty id for new roles
+          name: data.name,
+          description: data.description,
+          permissions: [],
+          permissionIds: []
+        };
+        
+        const res = await createRole(newRole);
+        newRole.id = res.id;
+        setRoles([...roles, newRole]);
+        
+        toast({
+          title: "Success",
+          description: "Role created successfully"
+        });
+      }
+      
+      roleForm.reset();
+      setIsRoleDialogOpen(false);
+    } catch (error: any) {
+      // Enhanced error handling
+      console.error("Error saving role:", error);
+      
+      let errorMessage = "Failed to save role. Please try again later.";
+      
+      // Check for specific error types and customize messages
+      if (error.response) {
+        // Server responded with an error status code
+        const status = error.response.status;
+        const serverMessage = error.response.data?.message || error.response.statusText;
+        
+        if (status === 400) {
+          errorMessage = `Validation error: ${serverMessage}`;
+        } else if (status === 401 || status === 403) {
+          errorMessage = "You don't have permission to perform this action.";
+        } else if (status === 409) {
+          errorMessage = "A role with this name already exists.";
+        } else if (status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else {
+          errorMessage = `Error: ${serverMessage}`;
+        }
+      } else if (error.request) {
+        // Request was made but no response
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
       
       toast({
-        title: "Success",
-        description: "Role updated successfully"
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
       });
-    } else {
-      // Create new role
-      const newRole = {
-        id: "", // Empty id for new roles
-        name: data.name,
-        description: data.description,
-        permissions: [],
-        permissionIds: []
-      };
-      
-      const res = await createRole(newRole);
-      newRole.id = res.id;
-      setRoles([...roles, newRole]);
-      
-      toast({
-        title: "Success",
-        description: "Role created successfully"
-      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    roleForm.reset();
-    setIsRoleDialogOpen(false);
   };
 
   // Handle role deletion
@@ -229,13 +280,47 @@ const RolesPermissions = () => {
 
   const confirmDeleteRole = async () => {
     if (!selectedRole) return;
-    await deleteRole(selectedRole.id);
-    setRoles(roles.filter(role => role.id !== selectedRole.id));
-    toast({
-      title: "Success",
-      description: "Role deleted successfully"
-    });
-    setIsRoleDeleteDialogOpen(false);
+    
+    setIsSubmitting(true);
+    
+    try {
+      await deleteRole(selectedRole.id);
+      setRoles(roles.filter(role => role.id !== selectedRole.id));
+      toast({
+        title: "Success",
+        description: "Role deleted successfully"
+      });
+      setIsRoleDeleteDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error deleting role:", error);
+      
+      let errorMessage = "Failed to delete role. Please try again later.";
+      
+      if (error.response) {
+        const status = error.response.status;
+        const serverMessage = error.response.data?.message || error.response.statusText;
+        
+        if (status === 400) {
+          errorMessage = `Error: ${serverMessage}`;
+        } else if (status === 401 || status === 403) {
+          errorMessage = "You don't have permission to delete this role.";
+        } else if (status === 409) {
+          errorMessage = "This role cannot be deleted because it's currently in use.";
+        } else {
+          errorMessage = `Error: ${serverMessage}`;
+        }
+      } else if (error.request) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOpenPermissionDialog = (permission?: Permission) => {
@@ -270,29 +355,52 @@ const RolesPermissions = () => {
 
   const confirmDeletePermission = async () => {
     if (!selectedPermission) return;
+    
+    setIsSubmitting(true);
 
-    const isPermissionInUse = roles.some(role => 
-      role.permissionIds?.includes(selectedPermission.id)
-    );
+    try {
+      const isPermissionInUse = roles.some(role => 
+        role.permissionIds?.includes(selectedPermission.id)
+      );
 
-    if (isPermissionInUse) {
+      if (isPermissionInUse) {
+        toast({
+          title: "Cannot Delete",
+          description: "This permission is assigned to one or more roles. Please remove it from roles first.",
+          variant: "destructive"
+        });
+        setIsPermissionDeleteDialogOpen(false);
+        return;
+      }
+      
+      await deletePermission(selectedPermission.id);
+
+      setPermissions(permissions.filter(p => p.id !== selectedPermission.id));
       toast({
-        title: "Cannot Delete",
-        description: "This permission is assigned to one or more roles. Please remove it from roles first.",
-        variant: "destructive"
+        title: "Success",
+        description: "Permission deleted successfully"
       });
       setIsPermissionDeleteDialogOpen(false);
-      return;
+    } catch (error: any) {
+      console.error("Error deleting permission:", error);
+      
+      let errorMessage = "Failed to delete permission. Please try again later.";
+      
+      if (error.response) {
+        const serverMessage = error.response.data?.message || error.response.statusText;
+        errorMessage = `Error: ${serverMessage}`;
+      } else if (error.request) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    await deletePermission(selectedPermission.id);
-
-    setPermissions(permissions.filter(p => p.id !== selectedPermission.id));
-    toast({
-      title: "Success",
-      description: "Permission deleted successfully"
-    });
-    setIsPermissionDeleteDialogOpen(false);
   };
 
   const handleSavePermission = async () => {
@@ -304,35 +412,58 @@ const RolesPermissions = () => {
       });
       return;
     }
-
-    if (isEditingPermission && selectedPermission) {
-      // Update existing permission
-      const updatedPermissions = permissions.map(p => 
-        p.id === selectedPermission.id 
-          ? { ...p, ...newPermission } 
-          : p
-      );
-      await updatePermission(selectedPermission.id, newPermission);
-      setPermissions(updatedPermissions);
-      toast({
-        title: "Success",
-        description: "Permission updated successfully"
-      });
-    } else {
-      // Create new permission with the selected resource (category)
-      const payloadToSend = {
-        ...newPermission,
-        resource: newPermission.resource // Use the selected resource instead of hardcoding "USER"
-      };
-      const res = await createPermission(payloadToSend);
-      setPermissions([...permissions, { ...newPermission, id: res.id }]);
-      toast({
-        title: "Success",
-        description: "Permission created successfully"
-      });
-    }
     
-    setIsPermissionDialogOpen(false);
+    setIsSubmitting(true);
+
+    try {
+      if (isEditingPermission && selectedPermission) {
+        // Update existing permission
+        const updatedPermissions = permissions.map(p => 
+          p.id === selectedPermission.id 
+            ? { ...p, ...newPermission } 
+            : p
+        );
+        await updatePermission(selectedPermission.id, newPermission);
+        setPermissions(updatedPermissions);
+        toast({
+          title: "Success",
+          description: "Permission updated successfully"
+        });
+      } else {
+        // Create new permission with the selected resource (category)
+        const payloadToSend = {
+          ...newPermission,
+          resource: newPermission.resource // Use the selected resource instead of hardcoding "USER"
+        };
+        const res = await createPermission(payloadToSend);
+        setPermissions([...permissions, { ...newPermission, id: res.id }]);
+        toast({
+          title: "Success",
+          description: "Permission created successfully"
+        });
+      }
+      
+      setIsPermissionDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error saving permission:", error);
+      
+      let errorMessage = "Failed to save permission. Please try again later.";
+      
+      if (error.response) {
+        const serverMessage = error.response.data?.message || error.response.statusText;
+        errorMessage = `Error: ${serverMessage}`;
+      } else if (error.request) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle permission assignment to role - Modified for Fix 1
@@ -369,7 +500,6 @@ const RolesPermissions = () => {
     setIsReadOnlyMode(false);
   };
 
-  // Handle viewing permissions for a role - Modified for Fix 2
   const handleViewPermissions = (role: Role) => {
     // Similar logic to prepare the role data
     const roleWithFullPermissions = { ...role };
@@ -428,42 +558,56 @@ const RolesPermissions = () => {
   const handleSaveAssignedPermissions = async () => {
     if (!selectedRole || !selectedRole.id) return;
     
-    // Update the role with the temporary selections
-    const updatedRole = { ...selectedRole };
-    updatedRole.permissionIds = [...tempSelectedPermissions];
+    setIsSubmitting(true);
     
-    // Find all permission objects for the selected IDs
-    updatedRole.permissions = [];
-    tempSelectedPermissions.forEach(id => {
-      const permObj = permissions.find(p => p.id === id);
-      if (permObj) {
-        updatedRole.permissions.push(permObj);
-      }
-    });
-    
-    // Update the roles state with the updated role
-    setRoles(roles.map(role => 
-      role.id === updatedRole.id ? updatedRole : role
-    ));
-    
-    // Call the API for role permissions mapping
     try {
+      // Update the role with the temporary selections
+      const updatedRole = { ...selectedRole };
+      updatedRole.permissionIds = [...tempSelectedPermissions];
+      
+      // Find all permission objects for the selected IDs
+      updatedRole.permissions = [];
+      tempSelectedPermissions.forEach(id => {
+        const permObj = permissions.find(p => p.id === id);
+        if (permObj) {
+          updatedRole.permissions.push(permObj);
+        }
+      });
+      
+      // Update the roles state with the updated role
+      setRoles(roles.map(role => 
+        role.id === updatedRole.id ? updatedRole : role
+      ));
+      
+      // Call the API for role permissions mapping
       await rolePermissionsMapping(updatedRole.id, updatedRole.permissionIds);
       
       toast({
         title: "Success",
         description: "Permissions assigned successfully"
       });
-    } catch (error) {
+      
+      setIsAssignPermissionsDialogOpen(false);
+    } catch (error: any) {
       console.error("Error saving permissions:", error);
+      
+      let errorMessage = "Failed to save permissions. Please try again later.";
+      
+      if (error.response) {
+        const serverMessage = error.response.data?.message || error.response.statusText;
+        errorMessage = `Error: ${serverMessage}`;
+      } else if (error.request) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save permissions",
+        description: errorMessage,
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsAssignPermissionsDialogOpen(false);
   };
 
   // New function to handle dialog close without saving - Fix 1
@@ -786,14 +930,15 @@ const RolesPermissions = () => {
                     setIsRoleDialogOpen(false);
                     roleForm.reset();
                   }}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
-                  disabled={!roleForm.formState.isValid && roleForm.formState.isSubmitted}
+                  disabled={(!roleForm.formState.isValid && roleForm.formState.isSubmitted) || isSubmitting}
                 >
-                  {editingRole?.id ? "Save Changes" : "Create Role"}
+                  {isSubmitting ? "Saving..." : (editingRole?.id ? "Save Changes" : "Create Role")}
                 </Button>
               </DialogFooter>
             </form>
@@ -816,8 +961,20 @@ const RolesPermissions = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRoleDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmDeleteRole}>Delete</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRoleDeleteDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDeleteRole}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Deleting..." : "Delete"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -895,9 +1052,18 @@ const RolesPermissions = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPermissionDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSavePermission}>
-              {isEditingPermission ? "Save Changes" : "Create Permission"}
+            <Button 
+              variant="outline" 
+              onClick={() => setIsPermissionDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSavePermission}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : (isEditingPermission ? "Save Changes" : "Create Permission")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -905,7 +1071,7 @@ const RolesPermissions = () => {
     );
   };
 
-  // Updated Assign Permissions Dialog with permission-level selection - Modified for Fix 1
+  // Update UI for the assign permissions dialog to show loading state
   const renderAssignPermissionsDialog = () => (
     <Dialog 
       open={isAssignPermissionsDialogOpen} 
@@ -930,58 +1096,56 @@ const RolesPermissions = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-6">
-          {/* Display permissions grouped by resource */}
-          {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
-            <div key={resource} className="border rounded-md p-4 mb-4">
-              <h3 className="text-lg font-medium mb-4">{resource}</h3>
-              
-              <div className="grid grid-cols-1 gap-4">
-                {resourcePermissions.map((permission) => {
-                  // Is this permission selected/assigned to the current role?
-                  const isPSelected = isPermissionSelected(permission.id);
-                  
-                  return (
-                    <div key={permission.id} className="border-b pb-3">
-                      <div className="flex items-center mb-2">
-                        <Checkbox 
-                          id={`permission-${permission.id}`}
-                          checked={isPSelected}
-                          onCheckedChange={() => togglePermissionSelection(permission.id)}
-                          disabled={isReadOnlyMode}
-                        />
-                        <div className="ml-3">
-                          <p className="font-medium">{permission.name}</p>
-                          {permission.description && (
-                            <p className="text-xs text-muted-foreground">{permission.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                        {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
-                          <div key={action} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`permission-${permission.id}-${action}`}
-                              checked={permission.actions?.includes(action) || false}
-                              disabled={true}
-                            />
-                            <Label 
-                              htmlFor={`permission-${permission.id}-${action}`}
-                              className="text-sm cursor-default"
-                            >
-                              {actionLabels[action]}
-                            </Label>
-                          </div>
-                        ))}
+        {/* Display permissions grouped by resource */}
+        {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
+          <div key={resource} className="border rounded-md p-4 mb-4">
+            <h3 className="text-lg font-medium mb-4">{resource}</h3>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {resourcePermissions.map((permission) => {
+                // Is this permission selected/assigned to the current role?
+                const isPSelected = isPermissionSelected(permission.id);
+                
+                return (
+                  <div key={permission.id} className="border-b pb-3">
+                    <div className="flex items-center mb-2">
+                      <Checkbox 
+                        id={`permission-${permission.id}`}
+                        checked={isPSelected}
+                        onCheckedChange={() => togglePermissionSelection(permission.id)}
+                        disabled={isReadOnlyMode}
+                      />
+                      <div className="ml-3">
+                        <p className="font-medium">{permission.name}</p>
+                        {permission.description && (
+                          <p className="text-xs text-muted-foreground">{permission.description}</p>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
+                      {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
+                        <div key={action} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`permission-${permission.id}-${action}`}
+                            checked={permission.actions?.includes(action) || false}
+                            disabled={true}
+                          />
+                          <Label 
+                            htmlFor={`permission-${permission.id}-${action}`}
+                            className="text-sm cursor-default"
+                          >
+                            {actionLabels[action]}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
 
         <DialogFooter>
           {isReadOnlyMode ? (
@@ -995,11 +1159,18 @@ const RolesPermissions = () => {
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={handleCloseAssignDialog}>
+              <Button 
+                variant="outline" 
+                onClick={handleCloseAssignDialog}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSaveAssignedPermissions}>
-                Save Permissions
+              <Button 
+                onClick={handleSaveAssignedPermissions}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Saving..." : "Save Permissions"}
               </Button>
             </>
           )}
@@ -1008,121 +1179,7 @@ const RolesPermissions = () => {
     </Dialog>
   );
 
-  // Updated View Permissions Dialog (Read-only) - Modified for Fix 2
-  const renderViewPermissionsDialog = () => {
-    // First, filter the permissions to only include those assigned to the role
-    const assignedPermissionIds = selectedRole?.permissionIds || selectedRole?.permissions?.map(p => p.id) || [];
-    
-    // Group assigned permissions by resource
-    const assignedPermissionsByResource: Record<string, Permission[]> = {};
-    
-    if (selectedRole?.permissions) {
-      selectedRole.permissions.forEach(permission => {
-        const resource = permission.resource || "Other";
-        if (!assignedPermissionsByResource[resource]) {
-          assignedPermissionsByResource[resource] = [];
-        }
-        assignedPermissionsByResource[resource].push(permission);
-      });
-    } else if (selectedRole?.permissionIds) {
-      // If we only have IDs, find the full permission objects
-      selectedRole.permissionIds.forEach(id => {
-        const permission = permissions.find(p => p.id === id);
-        if (permission) {
-          const resource = permission.resource || "Other";
-          if (!assignedPermissionsByResource[resource]) {
-            assignedPermissionsByResource[resource] = [];
-          }
-          assignedPermissionsByResource[resource].push(permission);
-        }
-      });
-    }
-    
-    return (
-      <Dialog 
-        open={isViewPermissionsDialogOpen} 
-        onOpenChange={setIsViewPermissionsDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Permissions for {selectedRole?.name}</DialogTitle>
-            <DialogDescription>
-              View all permissions assigned to this role
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4 space-y-6">
-            {(!selectedRole?.permissions || selectedRole.permissions.length === 0) && 
-             (!selectedRole?.permissionIds || selectedRole.permissionIds.length === 0) ? (
-              <div className="text-center py-6 text-muted-foreground mx-auto border rounded-md">
-                No permissions assigned to this role.
-              </div>
-            ) : (
-              <div>
-                {Object.entries(assignedPermissionsByResource).map(([resource, resourcePermissions]) => (
-                  <div key={resource} className="border rounded-md p-4 mb-4">
-                    <h3 className="text-lg font-medium mb-4">{resource}</h3>
-                    
-                    <div className="grid grid-cols-1 gap-4">
-                      {resourcePermissions.map((permission) => (
-                        <div key={permission.id} className="border-b pb-3">
-                          <div className="flex items-center mb-2">
-                            <Checkbox 
-                              id={`view-permission-${permission.id}`}
-                              checked={true} // Always checked since we're only showing assigned permissions
-                              disabled={true} // Always disabled in view mode
-                            />
-                            <div className="ml-3">
-                              <p className="font-medium">{permission.name}</p>
-                              {permission.description && (
-                                <p className="text-xs text-muted-foreground">{permission.description}</p>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                            {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
-                              <div key={action} className="flex items-center space-x-2">
-                                <Checkbox 
-                                  id={`view-permission-${permission.id}-${action}`}
-                                  checked={permission.actions?.includes(action) || false}
-                                  disabled={true} // Always disabled in view mode
-                                />
-                                <Label 
-                                  htmlFor={`view-permission-${permission.id}-${action}`}
-                                  className="text-sm cursor-default"
-                                >
-                                  {actionLabels[action]}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewPermissionsDialogOpen(false)}>
-              Close
-            </Button>
-            <Button 
-              onClick={() => {
-                setIsViewPermissionsDialogOpen(false);
-                setTimeout(() => handleOpenAssignPermissionsDialog(selectedRole!), 100);
-              }}
-            >
-              Manage Permissions
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  };
+  // ... keep existing code (renderViewPermissionsDialog)
 
   const renderPermissionDialogs = () => (
     <>
@@ -1141,9 +1198,18 @@ const RolesPermissions = () => {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsPermissionDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeletePermission} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogCancel 
+              onClick={() => setIsPermissionDeleteDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeletePermission} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
