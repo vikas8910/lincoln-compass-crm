@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -172,16 +173,10 @@ const RolesPermissions = () => {
     const isPresent = !!existingRole;
     const roleId = existingRole ? existingRole.id : undefined;
     
-    if(isPresent) {
-      const newRole = {
-        name: data.name,
-        description: data.description,
-        permissions: [],
-        permissionIds: []
-      };
-      
+    if(isPresent && roleId) {
+      // Updated this section to correctly include id in the objects
       await updateRole(roleId, {
-        id: roleId, 
+        id: roleId,  // Ensure id is provided here
         name: data.name,
         description: data.description,
         permissionIds: []
@@ -189,7 +184,11 @@ const RolesPermissions = () => {
       
       setRoles(
         roles.map(role =>
-          role.id === editingRole.id ? { ...role, name: data.name, description: data.description } : role
+          role.id === editingRole.id ? { 
+            ...role, 
+            name: data.name, 
+            description: data.description 
+          } : role
         )
       );
       
@@ -200,6 +199,7 @@ const RolesPermissions = () => {
     } else {
       // Create new role
       const newRole = {
+        id: "", // Empty id for new roles
         name: data.name,
         description: data.description,
         permissions: [],
@@ -208,7 +208,7 @@ const RolesPermissions = () => {
       
       const res = await createRole(newRole);
       newRole.id = res.id;
-      setRoles([...roles, newRole as Role]);
+      setRoles([...roles, newRole]);
       
       toast({
         title: "Success",

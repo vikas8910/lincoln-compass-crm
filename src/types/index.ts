@@ -1,3 +1,4 @@
+
 export interface UserResponse {
     id?: string;
     name: string;
@@ -23,4 +24,7 @@ export interface RoleAssignment {
 export interface Role {
     id: string;
     name: string;
+    description?: string;
+    permissionIds?: string[];
+    permissions?: any[];
 }
