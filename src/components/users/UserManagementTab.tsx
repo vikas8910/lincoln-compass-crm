@@ -1,10 +1,8 @@
-
 import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { getUsers, updateUser, deleteUser, searchUsers } from "@/services/user-service/user-service";
 import { UserResponse } from "@/types";
 import usePagination from "@/hooks/usePagination";
@@ -58,7 +56,8 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       updatePaginationState(response.totalElements, response.totalPages);
     } catch (error) {
       console.error("Error searching users:", error);
-      toast.error("Failed to search users");
+      // Toast is now handled in the service layer, so remove duplicate toast here
+      // toast.error("Failed to search users");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +72,8 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       updatePaginationState(response.totalElements, response.totalPages);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users");
+      // Toast is now handled in the service layer, so remove duplicate toast here
+      // toast.error("Failed to fetch users");
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +159,6 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       toast.success(`User ${userToDelete.name} deleted successfully`);
     } catch (error) {
       console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
     }
   };
 
@@ -187,7 +186,6 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       toast.success(`User ${data.name} updated successfully`);
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
     }
   };
 
