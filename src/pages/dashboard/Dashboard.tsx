@@ -131,9 +131,9 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full md:w-auto grid-cols-4 h-auto md:h-10">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+      <Tabs defaultValue="salesOfficers" className="space-y-6">
+        <TabsList className="grid w-full md:w-auto grid-cols-3 h-auto md:h-10">
+          {/* <TabsTrigger value="overview">Overview</TabsTrigger> */}
           <TabsTrigger value="salesOfficers">Sales Officers</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
@@ -196,11 +196,11 @@ const Dashboard = () => {
                     View All Leads
                   </Link>
                 </Button>
-                <Button asChild variant="outline">
+                {/* <Button asChild variant="outline">
                   <Link to="/lead-pipeline">
                     Lead Pipeline
                   </Link>
-                </Button>
+                </Button> */}
                 <Button asChild variant="outline">
                   <Link to="/lead-assignment">
                     Lead Assignment

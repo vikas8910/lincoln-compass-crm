@@ -427,14 +427,14 @@ const RolesPermissions = () => {
   };
 
   const handleSavePermission = async () => {
-    if (!newPermission.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Permission name is required",
-        variant: "destructive"
-      });
-      return;
-    }
+    // if (!newPermission.name.trim()) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Permission name is required",
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
     
     setIsSubmitting(true);
 
@@ -456,7 +456,9 @@ const RolesPermissions = () => {
         // Create new permission with the selected resource (category)
         const payloadToSend = {
           ...newPermission,
-          resource: newPermission.resource // Use the selected resource instead of hardcoding "USER"
+          name: newPermission.resource,
+          resource: newPermission.resource,
+          actions: ["CREATE"]
         };
         const res = await createPermission(payloadToSend);
         setPermissions([...permissions, { ...newPermission, id: res.id }]);
@@ -716,7 +718,7 @@ const RolesPermissions = () => {
     const groups: Record<string, Permission[]> = {};
     
     permissions.forEach(permission => {
-      const resource = permission.resource || "Other";
+      const resource = permission.category || "Other";
       if (!groups[resource]) {
         groups[resource] = [];
       }
@@ -865,7 +867,7 @@ const RolesPermissions = () => {
               ) : (
                 filteredPermissions.map((permission) => (
                   <TableRow key={permission.id}>
-                    <TableCell className="font-medium">{permission.name}</TableCell>
+                    <TableCell className="font-medium">{permission.resource.charAt(0).toUpperCase() + permission.resource.slice(1).toLowerCase()}</TableCell>
                     <TableCell>{permission.description}</TableCell>
                     <TableCell className="text-right">
                       <Button 
@@ -1058,13 +1060,34 @@ const RolesPermissions = () => {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            {/* <div className="grid gap-2">
               <Label htmlFor="permission-name">Permission Name</Label>
               <Input
                 id="permission-name"
                 value={newPermission.name}
                 onChange={(e) => setNewPermission({...newPermission, name: e.target.value})}
               />
+            </div> */}
+            <div className="grid gap-2">
+              <Label htmlFor="permission-resource">Permission Name</Label>
+              <Select
+                value={newPermission.resource}
+                onValueChange={(value) => setNewPermission({...newPermission, resource: value})}
+              >
+                <SelectTrigger id="permission-resource">
+                  <SelectValue placeholder="Select resource" />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value="LEAD">Lead</SelectItem>
+                  <SelectItem value="ROLE">Role</SelectItem>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="EMAIL">Emails</SelectItem>
+                  <SelectItem value="PERMISSION">Permissions</SelectItem>
+                  {/* <SelectItem value="SALES_ACTIVITIES">
+                    Sales Activities
+                  </SelectItem> */}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="permission-description">Description</Label>
@@ -1084,32 +1107,13 @@ const RolesPermissions = () => {
                   <SelectValue placeholder="Select resource" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Module">Module</SelectItem>
+                  <SelectItem value="Admin Management">Admin Management</SelectItem>
+                  <SelectItem value="Lead Management">Lead Management</SelectItem>
+                  <SelectItem value="Email Management">Email Management</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="permission-resource">Resource</Label>
-              <Select
-                value={newPermission.resource}
-                onValueChange={(value) => setNewPermission({...newPermission, resource: value})}
-              >
-                <SelectTrigger id="permission-resource">
-                  <SelectValue placeholder="Select resource" />
-                </SelectTrigger>
-                <SelectContent>
-                <SelectItem value="LEADS">Leads</SelectItem>
-                  <SelectItem value="ROLE">Role</SelectItem>
-                  <SelectItem value="USER">User</SelectItem>
-                  <SelectItem value="EMAILS">Emails</SelectItem>
-                  <SelectItem value="PERMISSIONS">Permissions</SelectItem>
-                  <SelectItem value="SALES_ACTIVITIES">
-                    Sales Activities
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
+            {/* <div className="grid gap-2">
               <Label>Actions</Label>
               <div className="flex flex-row gap-2 justify-between align-middle">
                 {["CREATE", "UPDATE", "DELETE", "READ"].map(action => (
@@ -1129,7 +1133,7 @@ const RolesPermissions = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
 
           <DialogFooter>
@@ -1190,7 +1194,7 @@ const RolesPermissions = () => {
                   <TableHead className="text-center">Create</TableHead>
                   <TableHead className="text-center">Edit</TableHead>
                   <TableHead className="text-center">Delete</TableHead>
-                  <TableHead className="text-center">Search</TableHead>
+                  {/* <TableHead className="text-center">Search</TableHead> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1278,7 +1282,7 @@ const RolesPermissions = () => {
                       </TableCell>
 
                       {/* Search permission */}
-                      <TableCell className="text-center">
+                      {/* <TableCell className="text-center">
                         <Checkbox 
                           id={`permission-${permission.id}-search`}
                           checked={isPSelected && isActionSelected(permission.id, "search")}
@@ -1290,7 +1294,7 @@ const RolesPermissions = () => {
                           disabled={isReadOnlyMode || !isPSelected}
                           className="mx-auto"
                         />
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   );
                 })}
