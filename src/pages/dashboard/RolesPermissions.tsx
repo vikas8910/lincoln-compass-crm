@@ -49,7 +49,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { createRole, deleteRole, getRoles, rolePermissionsMapping, updateRole } from "@/services/role/role";
-import { createPermission, deletePermission, getPermissions, updatePermission } from "@/services/permission-service/permission-service";
+import { createPermission, deletePermission, getPermissions, getRolePermissionsActions, updatePermission } from "@/services/permission-service/permission-service";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { roleSchema, RoleFormValues } from "@/schemas/role-schemas";
@@ -67,8 +67,9 @@ export interface Permission {
   id: string;
   name: string;
   description?: string;
-  resource?: string;
-  actions?: string[];
+  resource: string;
+  actions: string[];
+  category: string;
 }
 
 export interface Role {
@@ -106,7 +107,9 @@ const RolesPermissions = () => {
     id: "",
     name: "",
     description: "",
-    actions: []
+    actions: [],
+    resource: "",
+    category: ""
   });
   
   // New state to track form submission status
@@ -156,6 +159,21 @@ const RolesPermissions = () => {
       }
     }
     fetchPermissions();
+    
+    const fetchRolePermissionsActions = async () => {
+      try {
+        const rolePermissionsActions = await getRolePermissionsActions();
+        setPermissionActions(rolePermissionsActions);
+      } catch (error) {
+        console.error("Error fetching role permissions actions:", error);
+        toast({
+          title: "Failed to load role permissions actions",
+          description: "Could not retrieve role permissions actions. Please try again later.",
+          variant: "destructive"
+        });
+      }
+    }
+    fetchRolePermissionsActions();
   }, [])
 
   // Handle role creation/editing
@@ -334,7 +352,8 @@ const RolesPermissions = () => {
         name: permission.name,
         description: permission.description || "",
         resource: permission.resource,
-        actions: permission.actions || []
+        actions: permission.actions || [],
+        category: permission.category
       });
       setIsEditingPermission(true);
     } else {
@@ -344,7 +363,8 @@ const RolesPermissions = () => {
         name: "",
         description: "",
         resource: "",
-        actions: []
+        actions: [],
+        category: ""
       });
       setIsEditingPermission(false);
     }
@@ -580,9 +600,7 @@ const RolesPermissions = () => {
       // Create the new payload format
       const permissionMappings = tempSelectedPermissions.map(permissionId => {
         return {
-          mapping_id: "",
-          role_id: selectedRole.id,
-          permission_id: permissionId,
+          permissionId: permissionId,
           actions: permissionActions[permissionId] || []
         };
       });
@@ -609,7 +627,8 @@ const RolesPermissions = () => {
       setRoles(roles.map(role => 
         role.id === updatedRole.id ? updatedRole : role
       ));
-      
+      console.log("Updated Role name:", updatedRole.name);
+      console.log("permissionMappings:", permissionMappings);
       // Call the API with the new payload structure
       await rolePermissionsMapping(updatedRole.id, permissionMappings);
       
@@ -1065,6 +1084,20 @@ const RolesPermissions = () => {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="permission-resource">Category</Label>
+              <Select
+                value={newPermission.category}
+                onValueChange={(value) => setNewPermission({...newPermission, category: value})}
+              >
+                <SelectTrigger id="permission-resource">
+                  <SelectValue placeholder="Select resource" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Module">Module</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="permission-resource">Resource</Label>
               <Select
                 value={newPermission.resource}
@@ -1166,6 +1199,7 @@ const RolesPermissions = () => {
                   <TableHead className="text-center">Create</TableHead>
                   <TableHead className="text-center">Edit</TableHead>
                   <TableHead className="text-center">Delete</TableHead>
+                  <TableHead className="text-center">Search</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1245,6 +1279,21 @@ const RolesPermissions = () => {
                           onCheckedChange={() => {
                             if (isPSelected) {
                               togglePermissionAction(permission.id, "delete");
+                            }
+                          }}
+                          disabled={isReadOnlyMode || !isPSelected}
+                          className="mx-auto"
+                        />
+                      </TableCell>
+
+                      {/* Search permission */}
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          id={`permission-${permission.id}-search`}
+                          checked={isPSelected && isActionSelected(permission.id, "search")}
+                          onCheckedChange={() => {
+                            if (isPSelected) {
+                              togglePermissionAction(permission.id, "search");
                             }
                           }}
                           disabled={isReadOnlyMode || !isPSelected}
@@ -1411,9 +1460,9 @@ const RolesPermissions = () => {
             <Button variant="outline" onClick={() => setIsViewPermissionsDialogOpen(false)}>
               Close
             </Button>
-            <Button onClick={handleSwitchToEditMode}>
+            {/* <Button onClick={handleSwitchToEditMode}>
               Manage Permissions
-            </Button>
+            </Button> */}
           </DialogFooter>
         </DialogContent>
       </Dialog>

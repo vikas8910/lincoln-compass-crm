@@ -1,5 +1,5 @@
 
-import { PERMISSION_ENDPOINT } from "@/lib/api-endpoints";
+import { PERMISSION_ENDPOINT, ROLE_PERMISSION_MAPPING } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
 import { Permission } from "@/pages/dashboard/RolesPermissions";
 
@@ -42,3 +42,13 @@ export const deletePermission = async (id: string) => {
         throw error;
     }
 };
+
+export const getRolePermissionsActions = async () => {
+    try {
+        const response = await axiosInstance.get(`${ROLE_PERMISSION_MAPPING}`);
+        console.log("Role Permissions Actions:", response.data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

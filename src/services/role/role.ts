@@ -1,5 +1,5 @@
 
-import { ROLE } from "@/lib/api-endpoints";
+import { ROLE, ROLE_PERMISSION_MAPPING } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
 import { Role } from "@/types";
 
@@ -45,7 +45,7 @@ export const deleteRole = async (id: string) => {
 
 export const rolePermissionsMapping = async (roleId: string, permissionMappings: any[]) => {
     try {
-        const response = await axiosInstance.post(`${ROLE}/${roleId}/permissions`, permissionMappings);
+        const response = await axiosInstance.post(`${ROLE_PERMISSION_MAPPING}/${roleId}`, permissionMappings);
         return response.data;
     } catch (error) {
         console.error("Error mapping role permissions:", error);

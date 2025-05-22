@@ -24,15 +24,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      if (error.response.status === 403) {
-        toast({
-          title: "Something went wrong",
-          description: "Please try again later",
-          variant: "destructive"
-        });
-      }
-    }
     return Promise.reject(error);
   }
 );
