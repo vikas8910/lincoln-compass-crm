@@ -34,10 +34,6 @@ const Login = () => {
       setError("Please enter a valid email address");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
     
     setIsLoading(true);
 
@@ -99,11 +95,11 @@ const Login = () => {
           
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
-              {error && (
+              {/* {error && (
                 <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
                   {error}
                 </div>
-              )}
+              )} */}
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -158,7 +154,7 @@ const Login = () => {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
@@ -175,7 +171,7 @@ const Login = () => {
                   >
                     Forgot password?
                   </Button>
-              </div>
+              </div> */}
             </CardContent>
             
             <CardFooter>

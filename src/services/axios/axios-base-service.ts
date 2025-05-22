@@ -25,11 +25,13 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      toast({
-        title: error.response.status + " " + error.response.statusText,
-        description: error.response.data.message,
-        variant: "destructive"
-      });
+      if (error.response.status === 403) {
+        toast({
+          title: "Something went wrong",
+          description: "Please try again later",
+          variant: "destructive"
+        });
+      }
     }
     return Promise.reject(error);
   }
