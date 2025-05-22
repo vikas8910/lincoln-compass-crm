@@ -1,6 +1,7 @@
 import { USER } from "@/lib/api-endpoints";
 import axiosInstance from "../axios/axios-base-service";
 import { RoleAssignment, UserRequest } from "@/types";
+import { toast } from "sonner"; // Use sonner toast consistently for user service errors
 
 export const getUsers = async (page: number = 0, size: number = 10) => {
     try {
@@ -8,6 +9,8 @@ export const getUsers = async (page: number = 0, size: number = 10) => {
         return response.data;
     } catch (error) {
         console.error("Error fetching users:", error);
+        // Use sonner toast for error notification
+        toast.error("Failed to fetch users. Please try again later.");
         throw error;
     }
 };
@@ -24,6 +27,8 @@ export const searchUsers = async (name: string, page: number = 0, size: number =
         return response.data;
     } catch (error) {
         console.error("Error searching users:", error);
+        // Use sonner toast for error notification
+        toast.error("Failed to search users. Please try again later.");
         throw error;
     }
 };

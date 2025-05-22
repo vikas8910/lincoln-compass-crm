@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
+import { toast } from "sonner"; // Use sonner toast consistently
 import { FiBell, FiSearch, FiSettings, FiUser, FiMenu, FiLogOut } from "react-icons/fi";
 import { logout } from "@/services/auth/auth";
 

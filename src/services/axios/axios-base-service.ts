@@ -1,6 +1,8 @@
+
 import axios, { AxiosRequestConfig } from "axios";
 import { AXIOS_TIMEOUT } from "@/lib/constants";
-import { toast } from "@/hooks/use-toast";
+// Remove the toast import here as it's causing duplicate toasts
+// import { toast } from "@/hooks/use-toast";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8080",
@@ -21,9 +23,11 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Remove toast handling from the interceptor to avoid duplicates
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // We'll handle all error toasts in the service layer
     return Promise.reject(error);
   }
 );

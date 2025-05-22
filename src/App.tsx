@@ -33,8 +33,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
+        <Toaster /> {/* From @/components/ui/toaster - radix-ui toast */}
+        <Sonner /> {/* From @/components/ui/sonner - sonner toast */}
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
