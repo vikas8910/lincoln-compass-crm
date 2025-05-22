@@ -50,6 +50,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createRole, deleteRole, getRoles, rolePermissionsMapping, updateRole } from "@/services/role/role";
 import { createPermission, deletePermission, getPermissions, updatePermission } from "@/services/permission-service/permission-service";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { roleSchema, RoleFormValues } from "@/schemas/role-schemas";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 // Define types
 export interface Permission {
@@ -99,6 +110,16 @@ const RolesPermissions = () => {
   const [searchRoles, setSearchRoles] = useState("");
   const [searchPermissions, setSearchPermissions] = useState("");
 
+  // Initialize the role form with Zod validation
+  const roleForm = useForm<RoleFormValues>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: {
+      name: "",
+      description: ""
+    },
+    mode: "onBlur"
+  });
+
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -125,6 +146,10 @@ const RolesPermissions = () => {
   const handleOpenRoleDialog = (role?: Role) => {
     if (role) {
       setEditingRole({ ...role });
+      roleForm.reset({
+        name: role.name,
+        description: role.description
+      });
     } else {
       setEditingRole({
         id: "",
@@ -132,40 +157,42 @@ const RolesPermissions = () => {
         description: "",
         permissionIds: []
       });
+      roleForm.reset({
+        name: "",
+        description: ""
+      });
     }
     setIsRoleDialogOpen(true);
   };
 
-  const handleSaveRole = async () => {
-    if (!editingRole || !editingRole.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Role name is required",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSaveRole = async (data: RoleFormValues) => {
+    if (!editingRole) return;
+    
     const existingRole = roles.find(role => role.id === editingRole.id);
     const isPresent = !!existingRole;
     const roleId = existingRole ? existingRole.id : undefined;
+    
     if(isPresent) {
       const newRole = {
-        name: editingRole.name,
-        description: editingRole.description,
+        name: data.name,
+        description: data.description,
         permissions: [],
         permissionIds: []
       };
+      
       await updateRole(roleId, {
         id: roleId, 
-        name: editingRole.name,
-        description: editingRole.description,
+        name: data.name,
+        description: data.description,
         permissionIds: []
       });
+      
       setRoles(
         roles.map(role =>
-          role.id === editingRole.id ? { ...role, name: editingRole.name, description: editingRole.description } : role
+          role.id === editingRole.id ? { ...role, name: data.name, description: data.description } : role
         )
       );
+      
       toast({
         title: "Success",
         description: "Role updated successfully"
@@ -173,18 +200,23 @@ const RolesPermissions = () => {
     } else {
       // Create new role
       const newRole = {
-        ...editingRole
-        , permissions: []
+        name: data.name,
+        description: data.description,
+        permissions: [],
+        permissionIds: []
       };
+      
       const res = await createRole(newRole);
       newRole.id = res.id;
-      setRoles([...roles, newRole]);
+      setRoles([...roles, newRole as Role]);
+      
       toast({
         title: "Success",
         description: "Role created successfully"
       });
     }
     
+    roleForm.reset();
     setIsRoleDialogOpen(false);
   };
 
@@ -696,7 +728,12 @@ const RolesPermissions = () => {
   const renderRoleDialogs = () => (
     <>
       {/* Create/Edit Role Dialog */}
-      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+      <Dialog open={isRoleDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsRoleDialogOpen(false);
+          roleForm.reset();
+        }
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{editingRole?.id ? "Edit Role" : "Create New Role"}</DialogTitle>
@@ -705,29 +742,62 @@ const RolesPermissions = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="role-name">Role Name</Label>
-              <Input
-                id="role-name"
-                value={editingRole?.name || ""}
-                onChange={(e) => setEditingRole(prev => prev ? {...prev, name: e.target.value} : null)}
+          <Form {...roleForm}>
+            <form onSubmit={roleForm.handleSubmit(handleSaveRole)} className="space-y-4 py-4">
+              <FormField
+                control={roleForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Admin"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role-description">Description</Label>
-              <Input
-                id="role-description"
-                value={editingRole?.description || ""}
-                onChange={(e) => setEditingRole(prev => prev ? {...prev, description: e.target.value} : null)}
+              
+              <FormField
+                control={roleForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Role description"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveRole}>{editingRole?.id ? "Save Changes" : "Create Role"}</Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => {
+                    setIsRoleDialogOpen(false);
+                    roleForm.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={!roleForm.formState.isValid && roleForm.formState.isSubmitted}
+                >
+                  {editingRole?.id ? "Save Changes" : "Create Role"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
