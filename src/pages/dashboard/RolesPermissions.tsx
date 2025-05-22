@@ -1153,62 +1153,109 @@ const RolesPermissions = () => {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Display permissions grouped by resource */}
+        {/* New table-based layout for permissions */}
         {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
           <div key={resource} className="border rounded-md p-4 mb-4">
             <h3 className="text-lg font-medium mb-4">{resource}</h3>
             
-            <div className="grid grid-cols-1 gap-4">
-              {resourcePermissions.map((permission) => {
-                // Is this permission selected/assigned to the current role?
-                const isPSelected = isPermissionSelected(permission.id);
-                
-                return (
-                  <div key={permission.id} className="border-b pb-3">
-                    <div className="flex items-center mb-2">
-                      <Checkbox 
-                        id={`permission-${permission.id}`}
-                        checked={isPSelected}
-                        onCheckedChange={() => togglePermissionSelection(permission.id)}
-                        disabled={isReadOnlyMode}
-                      />
-                      <div className="ml-3">
-                        <p className="font-medium">{permission.name}</p>
-                        {permission.description && (
-                          <p className="text-xs text-muted-foreground">{permission.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                      {["CREATE", "READ", "UPDATE", "DELETE"].map((action) => {
-                        const actionLower = action.toLowerCase();
-                        return (
-                          <div key={action} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`permission-${permission.id}-${action}`}
-                              checked={isPSelected && isActionSelected(permission.id, actionLower)}
-                              onCheckedChange={() => {
-                                if (isPSelected) {
-                                  togglePermissionAction(permission.id, actionLower);
-                                }
-                              }}
-                              disabled={isReadOnlyMode || !isPSelected}
-                            />
-                            <Label 
-                              htmlFor={`permission-${permission.id}-${action}`}
-                              className={`text-sm ${isPSelected ? 'cursor-pointer' : 'cursor-not-allowed text-muted-foreground'}`}
-                            >
-                              {actionLabels[action]}
-                            </Label>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-1/3">Permission</TableHead>
+                  <TableHead className="text-center">View</TableHead>
+                  <TableHead className="text-center">Create</TableHead>
+                  <TableHead className="text-center">Edit</TableHead>
+                  <TableHead className="text-center">Delete</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {resourcePermissions.map((permission) => {
+                  // Is this permission selected/assigned to the current role?
+                  const isPSelected = isPermissionSelected(permission.id);
+                  
+                  return (
+                    <TableRow key={permission.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`permission-${permission.id}`}
+                            checked={isPSelected}
+                            onCheckedChange={() => togglePermissionSelection(permission.id)}
+                            disabled={isReadOnlyMode}
+                          />
+                          <Label htmlFor={`permission-${permission.id}`} className="cursor-pointer">
+                            {permission.name}
+                            {permission.description && (
+                              <p className="text-xs text-muted-foreground font-normal">{permission.description}</p>
+                            )}
+                          </Label>
+                        </div>
+                      </TableCell>
+                      
+                      {/* View permission */}
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          id={`permission-${permission.id}-read`}
+                          checked={isPSelected && isActionSelected(permission.id, "read")}
+                          onCheckedChange={() => {
+                            if (isPSelected) {
+                              togglePermissionAction(permission.id, "read");
+                            }
+                          }}
+                          disabled={isReadOnlyMode || !isPSelected}
+                          className="mx-auto"
+                        />
+                      </TableCell>
+                      
+                      {/* Create permission */}
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          id={`permission-${permission.id}-create`}
+                          checked={isPSelected && isActionSelected(permission.id, "create")}
+                          onCheckedChange={() => {
+                            if (isPSelected) {
+                              togglePermissionAction(permission.id, "create");
+                            }
+                          }}
+                          disabled={isReadOnlyMode || !isPSelected}
+                          className="mx-auto"
+                        />
+                      </TableCell>
+                      
+                      {/* Edit/Update permission */}
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          id={`permission-${permission.id}-update`}
+                          checked={isPSelected && isActionSelected(permission.id, "update")}
+                          onCheckedChange={() => {
+                            if (isPSelected) {
+                              togglePermissionAction(permission.id, "update");
+                            }
+                          }}
+                          disabled={isReadOnlyMode || !isPSelected}
+                          className="mx-auto"
+                        />
+                      </TableCell>
+                      
+                      {/* Delete permission */}
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          id={`permission-${permission.id}-delete`}
+                          checked={isPSelected && isActionSelected(permission.id, "delete")}
+                          onCheckedChange={() => {
+                            if (isPSelected) {
+                              togglePermissionAction(permission.id, "delete");
+                            }
+                          }}
+                          disabled={isReadOnlyMode || !isPSelected}
+                          className="mx-auto"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         ))}
 
@@ -1244,6 +1291,7 @@ const RolesPermissions = () => {
     </Dialog>
   );
 
+  // Also update the view permissions dialog to use the same table layout
   const renderViewPermissionsDialog = () => {
     return (
       <Dialog 
@@ -1260,59 +1308,86 @@ const RolesPermissions = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Display permissions grouped by resource */}
+          {/* Display permissions in the same table format */}
           {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
             <div key={resource} className="border rounded-md p-4 mb-4">
               <h3 className="text-lg font-medium mb-4">{resource}</h3>
               
-              <div className="grid grid-cols-1 gap-4">
-                {resourcePermissions.map((permission) => {
-                  // Is this permission selected/assigned to the current role?
-                  const isPSelected = isPermissionSelected(permission.id);
-                  
-                  return (
-                    <div key={permission.id} className="border-b pb-3">
-                      <div className="flex items-center mb-2">
-                        <Checkbox 
-                          id={`view-permission-${permission.id}`}
-                          checked={isPSelected}
-                          disabled={true}
-                        />
-                        <div className="ml-3">
-                          <p className="font-medium">{permission.name}</p>
-                          {permission.description && (
-                            <p className="text-xs text-muted-foreground">{permission.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                        {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => {
-                          const actionLower = action.toLowerCase();
-                          const isSelected = isPermissionSelected(permission.id) && 
-                            permission.actions?.map(a => a.toLowerCase()).includes(actionLower);
-                          
-                          return (
-                            <div key={action} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`view-permission-${permission.id}-${action}`}
-                                checked={isSelected}
-                                disabled={true}
-                              />
-                              <Label 
-                                htmlFor={`view-permission-${permission.id}-${action}`}
-                                className="text-sm cursor-default"
-                              >
-                                {actionLabels[action]}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-1/3">Permission</TableHead>
+                    <TableHead className="text-center">View</TableHead>
+                    <TableHead className="text-center">Create</TableHead>
+                    <TableHead className="text-center">Edit</TableHead>
+                    <TableHead className="text-center">Delete</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {resourcePermissions.map((permission) => {
+                    const isPSelected = isPermissionSelected(permission.id);
+                    return (
+                      <TableRow key={permission.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`view-permission-${permission.id}`}
+                              checked={isPSelected}
+                              disabled={true}
+                            />
+                            <Label htmlFor={`view-permission-${permission.id}`} className="cursor-default">
+                              {permission.name}
+                              {permission.description && (
+                                <p className="text-xs text-muted-foreground font-normal">{permission.description}</p>
+                              )}
+                            </Label>
+                          </div>
+                        </TableCell>
+                        
+                        {/* View permission */}
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            id={`view-permission-${permission.id}-read`}
+                            checked={isPSelected && permission.actions?.map(a => a.toLowerCase()).includes("read")}
+                            disabled={true}
+                            className="mx-auto"
+                          />
+                        </TableCell>
+                        
+                        {/* Create permission */}
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            id={`view-permission-${permission.id}-create`}
+                            checked={isPSelected && permission.actions?.map(a => a.toLowerCase()).includes("create")}
+                            disabled={true}
+                            className="mx-auto"
+                          />
+                        </TableCell>
+                        
+                        {/* Edit/Update permission */}
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            id={`view-permission-${permission.id}-update`}
+                            checked={isPSelected && permission.actions?.map(a => a.toLowerCase()).includes("update")}
+                            disabled={true}
+                            className="mx-auto"
+                          />
+                        </TableCell>
+                        
+                        {/* Delete permission */}
+                        <TableCell className="text-center">
+                          <Checkbox 
+                            id={`view-permission-${permission.id}-delete`}
+                            checked={isPSelected && permission.actions?.map(a => a.toLowerCase()).includes("delete")}
+                            disabled={true}
+                            className="mx-auto"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           ))}
 
