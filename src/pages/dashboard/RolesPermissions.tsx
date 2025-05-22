@@ -489,7 +489,7 @@ const RolesPermissions = () => {
     }
   };
 
-  // Modified function to handle permission action toggling
+  // Modified function to handle permission action toggling - ensure case consistency
   const togglePermissionAction = (permissionId: string, action: string) => {
     if (isReadOnlyMode) return;
     
@@ -499,24 +499,29 @@ const RolesPermissions = () => {
         currentActions[permissionId] = [];
       }
       
-      if (currentActions[permissionId].includes(action)) {
-        // Remove the action
-        currentActions[permissionId] = currentActions[permissionId].filter(a => a !== action);
+      // Convert action to lowercase for consistent comparison
+      const actionLower = action.toLowerCase();
+      
+      if (currentActions[permissionId].includes(actionLower)) {
+        // Remove the action (keeping everything lowercase)
+        currentActions[permissionId] = currentActions[permissionId].filter(a => a !== actionLower);
       } else {
-        // Add the action
-        currentActions[permissionId] = [...currentActions[permissionId], action];
+        // Add the action (ensuring it's lowercase)
+        currentActions[permissionId] = [...currentActions[permissionId], actionLower];
       }
       
       return currentActions;
     });
   };
 
-  // Check if a specific action is selected for a permission
+  // Modified function to check if action is selected - ensure case consistency
   const isActionSelected = (permissionId: string, action: string): boolean => {
-    return permissionActions[permissionId]?.includes(action) || false;
+    // Convert action to lowercase for consistent comparison
+    const actionLower = action.toLowerCase();
+    return permissionActions[permissionId]?.includes(actionLower) || false;
   };
 
-  // Modified function to initialize permission actions when opening dialog
+  // Modified function to initialize permission actions when opening dialog - ensure case consistency
   const handleOpenAssignPermissionsDialog = (role: Role) => {
     // When opening the dialog, make sure we have complete permission information
     const roleWithFullPermissions = { ...role };
@@ -544,10 +549,11 @@ const RolesPermissions = () => {
                                roleWithFullPermissions.permissions?.map(p => p.id) || 
                                [];
     
-    // Initialize permission actions based on existing data
+    // Initialize permission actions based on existing data - ensure all actions are lowercase
     const initialPermissionActions: Record<string, string[]> = {};
     permissions.forEach(permission => {
       if (currentPermissionIds.includes(permission.id)) {
+        // Make sure all actions are stored in lowercase form
         initialPermissionActions[permission.id] = permission.actions?.map(a => a.toLowerCase()) || [];
       }
     });
@@ -1412,7 +1418,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-read`}
-                              checked={permission.actions?.map(a => a.toLowerCase()).includes("read")}
+                              checked={permission.actions?.some(a => a.toLowerCase() === "read")}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1422,7 +1428,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-create`}
-                              checked={permission.actions?.map(a => a.toLowerCase()).includes("create")}
+                              checked={permission.actions?.some(a => a.toLowerCase() === "create")}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1432,7 +1438,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-update`}
-                              checked={permission.actions?.map(a => a.toLowerCase()).includes("update")}
+                              checked={permission.actions?.some(a => a.toLowerCase() === "update")}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1442,7 +1448,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-delete`}
-                              checked={permission.actions?.map(a => a.toLowerCase()).includes("delete")}
+                              checked={permission.actions?.some(a => a.toLowerCase() === "delete")}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1460,9 +1466,6 @@ const RolesPermissions = () => {
             <Button variant="outline" onClick={() => setIsViewPermissionsDialogOpen(false)}>
               Close
             </Button>
-            {/* <Button onClick={handleSwitchToEditMode}>
-              Manage Permissions
-            </Button> */}
           </DialogFooter>
         </DialogContent>
       </Dialog>
