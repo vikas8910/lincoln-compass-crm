@@ -1010,21 +1010,23 @@ const RolesPermissions = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="permission-resource">Categories</Label>
+              <Label htmlFor="permission-resource">Resource</Label>
               <Select
                 value={newPermission.resource}
                 onValueChange={(value) => setNewPermission({...newPermission, resource: value})}
               >
                 <SelectTrigger id="permission-resource">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select resource" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
+                <SelectItem value="LEADS">Leads</SelectItem>
                   <SelectItem value="ROLE">Role</SelectItem>
-                  <SelectItem value="MODULES">Modules</SelectItem>
-                  <SelectItem value="SALES_ACTIVITIES">Sales Activities</SelectItem>
+                  <SelectItem value="USER">User</SelectItem>
                   <SelectItem value="EMAILS">Emails</SelectItem>
-                  <SelectItem value="ACTIONS">Actions</SelectItem>
+                  <SelectItem value="PERMISSIONS">Permissions</SelectItem>
+                  <SelectItem value="SALES_ACTIVITIES">
+                    Sales Activities
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
