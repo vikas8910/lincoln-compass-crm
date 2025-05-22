@@ -1258,6 +1258,43 @@ const RolesPermissions = () => {
     );
   };
 
+  // Add the missing renderPermissionDialogs function
+  const renderPermissionDialogs = () => (
+    <>
+      {/* Delete Permission Confirmation */}
+      <AlertDialog open={isPermissionDeleteDialogOpen} onOpenChange={setIsPermissionDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Permission</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this permission? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="py-3">
+            You are about to delete the permission: <span className="font-semibold">{selectedPermission?.name}</span>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setIsPermissionDeleteDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeletePermission} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
