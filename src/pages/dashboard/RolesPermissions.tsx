@@ -1179,43 +1179,84 @@ const RolesPermissions = () => {
     </Dialog>
   );
 
-  // ... keep existing code (renderViewPermissionsDialog)
+  const renderViewPermissionsDialog = () => {
+    return (
+      <Dialog 
+        open={isViewPermissionsDialogOpen} 
+        onOpenChange={setIsViewPermissionsDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Permissions for {selectedRole?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Review permissions assigned to this role.
+            </DialogDescription>
+          </DialogHeader>
 
-  const renderPermissionDialogs = () => (
-    <>
-      {/* Delete Permission Confirmation */}
-      <AlertDialog open={isPermissionDeleteDialogOpen} onOpenChange={setIsPermissionDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Permission</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this permission? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+          {/* Display permissions grouped by resource */}
+          {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
+            <div key={resource} className="border rounded-md p-4 mb-4">
+              <h3 className="text-lg font-medium mb-4">{resource}</h3>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {resourcePermissions.map((permission) => {
+                  // Is this permission selected/assigned to the current role?
+                  const isPSelected = isPermissionSelected(permission.id);
+                  
+                  return (
+                    <div key={permission.id} className="border-b pb-3">
+                      <div className="flex items-center mb-2">
+                        <Checkbox 
+                          id={`view-permission-${permission.id}`}
+                          checked={isPSelected}
+                          disabled={true}
+                        />
+                        <div className="ml-3">
+                          <p className="font-medium">{permission.name}</p>
+                          {permission.description && (
+                            <p className="text-xs text-muted-foreground">{permission.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
+                        {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
+                          <div key={action} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`view-permission-${permission.id}-${action}`}
+                              checked={permission.actions?.includes(action) || false}
+                              disabled={true}
+                            />
+                            <Label 
+                              htmlFor={`view-permission-${permission.id}-${action}`}
+                              className="text-sm cursor-default"
+                            >
+                              {actionLabels[action]}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
-          <div className="py-3">
-            You are about to delete the permission: <span className="font-semibold">{selectedPermission?.name}</span>
-          </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => setIsPermissionDeleteDialogOpen(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeletePermission} 
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewPermissionsDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={handleSwitchToEditMode}>
+              Manage Permissions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return (
     <MainLayout>
