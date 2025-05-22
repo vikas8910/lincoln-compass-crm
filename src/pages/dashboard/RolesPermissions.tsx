@@ -99,6 +99,9 @@ const RolesPermissions = () => {
   // New state to track temporary selections separately from actual saved permissions
   const [tempSelectedPermissions, setTempSelectedPermissions] = useState<string[]>([]);
   
+  // New state to track permission actions for each permission
+  const [permissionActions, setPermissionActions] = useState<Record<string, string[]>>({});
+  
   const [newPermission, setNewPermission] = useState<Permission>({
     id: "",
     name: "",
@@ -466,7 +469,34 @@ const RolesPermissions = () => {
     }
   };
 
-  // Handle permission assignment to role - Modified for Fix 1
+  // Modified function to handle permission action toggling
+  const togglePermissionAction = (permissionId: string, action: string) => {
+    if (isReadOnlyMode) return;
+    
+    setPermissionActions((prevActions) => {
+      const currentActions = {...prevActions};
+      if (!currentActions[permissionId]) {
+        currentActions[permissionId] = [];
+      }
+      
+      if (currentActions[permissionId].includes(action)) {
+        // Remove the action
+        currentActions[permissionId] = currentActions[permissionId].filter(a => a !== action);
+      } else {
+        // Add the action
+        currentActions[permissionId] = [...currentActions[permissionId], action];
+      }
+      
+      return currentActions;
+    });
+  };
+
+  // Check if a specific action is selected for a permission
+  const isActionSelected = (permissionId: string, action: string): boolean => {
+    return permissionActions[permissionId]?.includes(action) || false;
+  };
+
+  // Modified function to initialize permission actions when opening dialog
   const handleOpenAssignPermissionsDialog = (role: Role) => {
     // When opening the dialog, make sure we have complete permission information
     const roleWithFullPermissions = { ...role };
@@ -491,40 +521,25 @@ const RolesPermissions = () => {
     
     // Initialize temporary selections with the current saved permissions
     const currentPermissionIds = roleWithFullPermissions.permissionIds || 
-                                roleWithFullPermissions.permissions?.map(p => p.id) || 
-                                [];
+                               roleWithFullPermissions.permissions?.map(p => p.id) || 
+                               [];
     
+    // Initialize permission actions based on existing data
+    const initialPermissionActions: Record<string, string[]> = {};
+    permissions.forEach(permission => {
+      if (currentPermissionIds.includes(permission.id)) {
+        initialPermissionActions[permission.id] = permission.actions?.map(a => a.toLowerCase()) || [];
+      }
+    });
+    
+    setPermissionActions(initialPermissionActions);
     setTempSelectedPermissions([...currentPermissionIds]);
     setSelectedRole(roleWithFullPermissions);
     setIsAssignPermissionsDialogOpen(true);
     setIsReadOnlyMode(false);
   };
 
-  const handleViewPermissions = (role: Role) => {
-    // Similar logic to prepare the role data
-    const roleWithFullPermissions = { ...role };
-    
-    if (!roleWithFullPermissions.permissionIds) {
-      roleWithFullPermissions.permissionIds = roleWithFullPermissions.permissions?.map(p => p.id) || [];
-    }
-    
-    if (!roleWithFullPermissions.permissions) {
-      roleWithFullPermissions.permissions = [];
-      if (roleWithFullPermissions.permissionIds && roleWithFullPermissions.permissionIds.length > 0) {
-        roleWithFullPermissions.permissionIds.forEach(id => {
-          const permObj = permissions.find(p => p.id === id);
-          if (permObj) {
-            roleWithFullPermissions.permissions?.push(permObj);
-          }
-        });
-      }
-    }
-    
-    setSelectedRole(roleWithFullPermissions);
-    setIsViewPermissionsDialogOpen(true);
-  };
-
-  // Toggle permission selection (entire permission) - Modified for Fix 1
+  // Handle permission assignment to role - Modified for Fix 1
   const togglePermissionSelection = (permissionId: string) => {
     if (!selectedRole || isReadOnlyMode) return;
     
@@ -555,12 +570,23 @@ const RolesPermissions = () => {
     return tempSelectedPermissions.includes(permissionId);
   };
 
+  // Modified function to save assigned permissions with the new payload structure
   const handleSaveAssignedPermissions = async () => {
     if (!selectedRole || !selectedRole.id) return;
     
     setIsSubmitting(true);
     
     try {
+      // Create the new payload format
+      const permissionMappings = tempSelectedPermissions.map(permissionId => {
+        return {
+          mapping_id: "",
+          role_id: selectedRole.id,
+          permission_id: permissionId,
+          actions: permissionActions[permissionId] || []
+        };
+      });
+      
       // Update the role with the temporary selections
       const updatedRole = { ...selectedRole };
       updatedRole.permissionIds = [...tempSelectedPermissions];
@@ -570,7 +596,12 @@ const RolesPermissions = () => {
       tempSelectedPermissions.forEach(id => {
         const permObj = permissions.find(p => p.id === id);
         if (permObj) {
-          updatedRole.permissions.push(permObj);
+          // Clone the permission but update its actions based on user selections
+          const updatedPermObj = {
+            ...permObj,
+            actions: permissionActions[id] || []
+          };
+          updatedRole.permissions.push(updatedPermObj);
         }
       });
       
@@ -579,8 +610,8 @@ const RolesPermissions = () => {
         role.id === updatedRole.id ? updatedRole : role
       ));
       
-      // Call the API for role permissions mapping
-      await rolePermissionsMapping(updatedRole.id, updatedRole.permissionIds);
+      // Call the API with the new payload structure
+      await rolePermissionsMapping(updatedRole.id, permissionMappings);
       
       toast({
         title: "Success",
@@ -616,6 +647,30 @@ const RolesPermissions = () => {
     setIsAssignPermissionsDialogOpen(false);
     // Reset temporary selections
     setTempSelectedPermissions([]);
+  };
+
+  const handleViewPermissions = (role: Role) => {
+    // Similar logic to prepare the role data
+    const roleWithFullPermissions = { ...role };
+    
+    if (!roleWithFullPermissions.permissionIds) {
+      roleWithFullPermissions.permissionIds = roleWithFullPermissions.permissions?.map(p => p.id) || [];
+    }
+    
+    if (!roleWithFullPermissions.permissions) {
+      roleWithFullPermissions.permissions = [];
+      if (roleWithFullPermissions.permissionIds && roleWithFullPermissions.permissionIds.length > 0) {
+        roleWithFullPermissions.permissionIds.forEach(id => {
+          const permObj = permissions.find(p => p.id === id);
+          if (permObj) {
+            roleWithFullPermissions.permissions?.push(permObj);
+          }
+        });
+      }
+    }
+    
+    setSelectedRole(roleWithFullPermissions);
+    setIsViewPermissionsDialogOpen(true);
   };
 
   // Function to switch from view-only to edit mode
@@ -1073,7 +1128,7 @@ const RolesPermissions = () => {
     );
   };
 
-  // Update UI for the assign permissions dialog to show loading state
+  // Updated renderAssignPermissionsDialog function to enable action checkboxes
   const renderAssignPermissionsDialog = () => (
     <Dialog 
       open={isAssignPermissionsDialogOpen} 
@@ -1126,21 +1181,29 @@ const RolesPermissions = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                      {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
-                        <div key={action} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`permission-${permission.id}-${action}`}
-                            checked={permission.actions?.includes(action) || false}
-                            disabled={true}
-                          />
-                          <Label 
-                            htmlFor={`permission-${permission.id}-${action}`}
-                            className="text-sm cursor-default"
-                          >
-                            {actionLabels[action]}
-                          </Label>
-                        </div>
-                      ))}
+                      {["CREATE", "READ", "UPDATE", "DELETE"].map((action) => {
+                        const actionLower = action.toLowerCase();
+                        return (
+                          <div key={action} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`permission-${permission.id}-${action}`}
+                              checked={isPSelected && isActionSelected(permission.id, actionLower)}
+                              onCheckedChange={() => {
+                                if (isPSelected) {
+                                  togglePermissionAction(permission.id, actionLower);
+                                }
+                              }}
+                              disabled={isReadOnlyMode || !isPSelected}
+                            />
+                            <Label 
+                              htmlFor={`permission-${permission.id}-${action}`}
+                              className={`text-sm ${isPSelected ? 'cursor-pointer' : 'cursor-not-allowed text-muted-foreground'}`}
+                            >
+                              {actionLabels[action]}
+                            </Label>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -1224,21 +1287,27 @@ const RolesPermissions = () => {
                       </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pl-7">
-                        {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => (
-                          <div key={action} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`view-permission-${permission.id}-${action}`}
-                              checked={permission.actions?.includes(action) || false}
-                              disabled={true}
-                            />
-                            <Label 
-                              htmlFor={`view-permission-${permission.id}-${action}`}
-                              className="text-sm cursor-default"
-                            >
-                              {actionLabels[action]}
-                            </Label>
-                          </div>
-                        ))}
+                        {["CREATE", "UPDATE", "DELETE", "READ"].map((action) => {
+                          const actionLower = action.toLowerCase();
+                          const isSelected = isPermissionSelected(permission.id) && 
+                            permission.actions?.map(a => a.toLowerCase()).includes(actionLower);
+                          
+                          return (
+                            <div key={action} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`view-permission-${permission.id}-${action}`}
+                                checked={isSelected}
+                                disabled={true}
+                              />
+                              <Label 
+                                htmlFor={`view-permission-${permission.id}-${action}`}
+                                className="text-sm cursor-default"
+                              >
+                                {actionLabels[action]}
+                              </Label>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -1260,7 +1329,7 @@ const RolesPermissions = () => {
     );
   };
 
-  // Add the missing renderPermissionDialogs function
+  // Add the renderPermissionDialogs function
   const renderPermissionDialogs = () => (
     <>
       {/* Delete Permission Confirmation */}

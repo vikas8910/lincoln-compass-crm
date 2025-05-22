@@ -43,9 +43,9 @@ export const deleteRole = async (id: string) => {
     }
 }
 
-export const rolePermissionsMapping = async (roleId: string, permissionIds: string[]) => {
+export const rolePermissionsMapping = async (roleId: string, permissionMappings: any[]) => {
     try {
-        const response = await axiosInstance.post(`${ROLE}/${roleId}/permissions`, { permissionIds: permissionIds });
+        const response = await axiosInstance.post(`${ROLE}/${roleId}/permissions`, permissionMappings);
         return response.data;
     } catch (error) {
         console.error("Error mapping role permissions:", error);
