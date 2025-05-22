@@ -1494,6 +1494,43 @@ const RolesPermissions = () => {
     </>
   );
 
+  // Check if a specific permission is selected
+  const isPermissionSelected = (permissionId: string): boolean => {
+    if (!selectedRole) return false;
+    
+    // For read-only view, check against actual role permissions
+    if (isReadOnlyMode) {
+      const inPermissionIds = selectedRole.permissionIds?.includes(permissionId) || false;
+      const inPermissions = selectedRole.permissions?.some(p => p.id === permissionId) || false;
+      return inPermissionIds || inPermissions;
+    }
+    
+    // For edit view, check against temporary selections
+    return tempSelectedPermissions.includes(permissionId);
+  };
+
+  // Handle permission assignment to role
+  const togglePermissionSelection = (permissionId: string) => {
+    if (!selectedRole || isReadOnlyMode) return;
+    
+    // Use temporary selections instead of directly modifying the selectedRole
+    const isSelected = tempSelectedPermissions.includes(permissionId);
+    
+    if (isSelected) {
+      // Remove the permission
+      setTempSelectedPermissions(tempSelectedPermissions.filter(id => id !== permissionId));
+      // Also remove any actions for this permission
+      setPermissionActions(prev => {
+        const newActions = {...prev};
+        delete newActions[permissionId];
+        return newActions;
+      });
+    } else {
+      // Add the permission
+      setTempSelectedPermissions([...tempSelectedPermissions, permissionId]);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
