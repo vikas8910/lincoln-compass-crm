@@ -271,7 +271,7 @@ const RolesPermissions = () => {
         } else if (status === 401 || status === 403) {
           errorMessage = "You don't have permission to perform this action.";
         } else if (status === 409) {
-          errorMessage = "A role with this name already exists.";
+          errorMessage = serverMessage;
         } else if (status === 500) {
           errorMessage = "Server error. Please try again later.";
         } else {
@@ -621,8 +621,6 @@ const RolesPermissions = () => {
       setRoles(roles.map(role => 
         role.id === updatedRole.id ? updatedRole : role
       ));
-      console.log("Updated Role name:", updatedRole.name);
-      console.log("permissionMappings:", permissionMappings);
       // Call the API with the new payload structure
       await rolePermissionsMapping(updatedRole.id, permissionMappings);
       
@@ -717,7 +715,6 @@ const RolesPermissions = () => {
   // Group permissions by resource
   const groupedPermissions = React.useMemo(() => {
     const groups: Record<string, Permission[]> = {};
-    console.log("permissions:", permissions);
     permissions.forEach(permission => {
       const resource = permission.category || "Other";
       if (!groups[resource]) {
@@ -725,7 +722,6 @@ const RolesPermissions = () => {
       }
       groups[resource].push(permission);
     });
-    console.log("groups:", groups);
     return groups;
   }, [permissions]);
 
@@ -1410,7 +1406,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-read`}
-                              checked={isPSelected}
+                              checked={isPSelected && isActionSelected(permission.id, "read")}
                               disabled={true}
                               className="mx-auto"
                             />
