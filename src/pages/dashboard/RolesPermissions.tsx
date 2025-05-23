@@ -271,7 +271,7 @@ const RolesPermissions = () => {
         } else if (status === 401 || status === 403) {
           errorMessage = "You don't have permission to perform this action.";
         } else if (status === 409) {
-          errorMessage = "A role with this name already exists.";
+          errorMessage = serverMessage;
         } else if (status === 500) {
           errorMessage = "Server error. Please try again later.";
         } else {
@@ -516,14 +516,15 @@ const RolesPermissions = () => {
     });
   };
 
+  
   // Modified function to check if action is selected - ensure case consistency
   const isActionSelected = (permissionId: string, action: string): boolean => {
     // Convert action to lowercase for consistent comparison
     const actionLower = action.toLowerCase();
     
     // Check if the permission ID exists in permissionActions and if the action is in the array
-    if (permissionActions[permissionId]) {
-      return permissionActions[permissionId].some(a => a.toLowerCase() === actionLower);
+    if (permissionActions[permissionId] && Array.isArray(permissionActions[permissionId])) {
+      return permissionActions[permissionId]?.some(a => typeof a === 'string' && a.toLowerCase() === actionLower);
     }
     
     return false;
@@ -620,8 +621,6 @@ const RolesPermissions = () => {
       setRoles(roles.map(role => 
         role.id === updatedRole.id ? updatedRole : role
       ));
-      console.log("Updated Role name:", updatedRole.name);
-      console.log("permissionMappings:", permissionMappings);
       // Call the API with the new payload structure
       await rolePermissionsMapping(updatedRole.id, permissionMappings);
       
@@ -716,7 +715,6 @@ const RolesPermissions = () => {
   // Group permissions by resource
   const groupedPermissions = React.useMemo(() => {
     const groups: Record<string, Permission[]> = {};
-    
     permissions.forEach(permission => {
       const resource = permission.category || "Other";
       if (!groups[resource]) {
@@ -724,7 +722,6 @@ const RolesPermissions = () => {
       }
       groups[resource].push(permission);
     });
-    
     return groups;
   }, [permissions]);
 
@@ -1075,17 +1072,18 @@ const RolesPermissions = () => {
                 onValueChange={(value) => setNewPermission({...newPermission, resource: value})}
               >
                 <SelectTrigger id="permission-resource">
-                  <SelectValue placeholder="Select resource" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                 <SelectItem value="LEAD">Lead</SelectItem>
                   <SelectItem value="ROLE">Role</SelectItem>
                   <SelectItem value="USER">User</SelectItem>
-                  <SelectItem value="EMAIL">Emails</SelectItem>
-                  <SelectItem value="PERMISSION">Permissions</SelectItem>
-                  {/* <SelectItem value="SALES_ACTIVITIES">
-                    Sales Activities
-                  </SelectItem> */}
+                  <SelectItem value="EMAIL">Email</SelectItem>
+                  <SelectItem value="PERMISSION">Permission</SelectItem>
+                  <SelectItem value="TASKS">Tasks</SelectItem>
+                  <SelectItem value="MEETINGS">Meetings</SelectItem>
+                  <SelectItem value="CALLS">Calls</SelectItem>
+
                 </SelectContent>
               </Select>
             </div>
@@ -1104,12 +1102,13 @@ const RolesPermissions = () => {
                 onValueChange={(value) => setNewPermission({...newPermission, category: value})}
               >
                 <SelectTrigger id="permission-resource">
-                  <SelectValue placeholder="Select resource" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Admin Management">Admin Management</SelectItem>
                   <SelectItem value="Lead Management">Lead Management</SelectItem>
                   <SelectItem value="Email Management">Email Management</SelectItem>
+                  <SelectItem value="Sales Activities">Sales Activities</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1381,9 +1380,9 @@ const RolesPermissions = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {assignedPermissions.map((permission) => {
+                    {resourcePermissions.map((permission) => {
                       // We already know these permissions are selected because of the filter above
-                      const isPSelected = true;
+                      const isPSelected = isPermissionSelected(permission.id);
                       
                       return (
                         <TableRow key={permission.id}>
@@ -1407,7 +1406,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-read`}
-                              checked={permission.actions?.some(a => a.toLowerCase() === "read")}
+                              checked={isPSelected && isActionSelected(permission.id, "read")}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1417,7 +1416,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-create`}
-                              checked={permission.actions?.some(a => a.toLowerCase() === "create")}
+                              checked={isPSelected}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1427,7 +1426,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-update`}
-                              checked={permission.actions?.some(a => a.toLowerCase() === "update")}
+                              checked={isPSelected}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1437,7 +1436,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-delete`}
-                              checked={permission.actions?.some(a => a.toLowerCase() === "delete")}
+                              checked={isPSelected}
                               disabled={true}
                               className="mx-auto"
                             />

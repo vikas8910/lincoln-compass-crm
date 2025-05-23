@@ -40,19 +40,16 @@ const Login = () => {
     try {
       // This is a mock authentication function
       // In a real app, you would make an API call to your backend
-      await authenticate(email, password);
-      
+      const res = await authenticate(email, password);
       if (rememberMe) {
         localStorage.setItem("crm_email", email);
       } else {
         localStorage.removeItem("crm_email");
       }
-
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      setError((err as Error).message);
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(err.response.data.message);
     } finally {
       setIsLoading(false);
     }

@@ -11,7 +11,7 @@ import UserFormDialog from "./UserFormDialog";
 import ConfirmationDialog from "../ui/ConfirmationDialog";
 import DynamicTable, { Column } from "../table/DynamicTable";
 import { EditUserFormValues, NewUserFormValues } from "@/schemas/user-schemas";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 interface UserManagementTabProps {
   onAddUser: (data: NewUserFormValues) => Promise<void>;
@@ -156,10 +156,18 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       
       setIsDeleteUserDialogOpen(false);
       setUserToDelete(null);
-      
-      toast.success(`User ${userToDelete.name} deleted successfully`);
+      toast({
+        title: "Success",
+        description: `User ${userToDelete.name} deleted successfully`,
+        variant: "default"
+      })
     } catch (error) {
       console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again later.",
+        variant: "destructive"
+      })
     }
   };
 
@@ -183,8 +191,11 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       
       setIsEditUserDialogOpen(false);
       setEditingUser(null);
-      
-      toast.success(`User ${data.name} updated successfully`);
+      toast({
+        title: "Success",
+        description: `User ${data.name} updated successfully`,
+        variant: "default"
+      })
     } catch (error) {
       console.error("Error updating user:", error);
     }

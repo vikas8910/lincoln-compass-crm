@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { createUser } from "@/services/user-service/user-service";
 import { UserRequest } from "@/types";
 import { NewUserFormValues } from "@/schemas/user-schemas";
@@ -33,7 +33,11 @@ const SalesOfficerRoles = () => {
     
     try {
       await createUser(userToAdd);
-      toast.success(`User ${data.name} added successfully`);
+      toast({
+        title: "Success",
+        description: `User ${data.name} added successfully`,
+        variant: "default"
+      });
       
       // Refresh the user list after successful user addition
       if (activeTab === "user-management" && userManagementRef.current) {
@@ -45,7 +49,11 @@ const SalesOfficerRoles = () => {
       return Promise.resolve();
     } catch (error) {
       console.error("Error creating user:", error);
-      toast.error("Failed to create user");
+      toast({
+        title: "Error",
+        description: error.response.data.message,
+        variant: "destructive"
+      });
       return Promise.reject(error);
     }
   };
@@ -64,7 +72,7 @@ const SalesOfficerRoles = () => {
       <Tabs defaultValue={activeTab} className="space-y-6" onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="user-management">User Management</TabsTrigger>
-          <TabsTrigger value="role-management">Assign Roles</TabsTrigger>
+          <TabsTrigger value="role-management">Assign Role</TabsTrigger>
         </TabsList>
         
         {/* Tab 1: Role Management */}

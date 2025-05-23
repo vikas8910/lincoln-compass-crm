@@ -316,7 +316,6 @@ const SalesOfficers = () => {
 
   const handleSave = (officer: SalesOfficer) => {
     // In a real app, you would make an API call to save the officer
-    console.log("Saving officer:", officer);
     
     if (selectedOfficer) {
       // Update existing officer
