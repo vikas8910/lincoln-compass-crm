@@ -13,19 +13,17 @@ export type LeadStatus =
 
 // Define the Lead type
 export interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  status: LeadStatus;
-  source: string;
-  assignedTo: string;
-  date: string;
-  tags: string[];
-  createdAt: string;
-  lastActivity?: {
-    type: string;
-    date: string;
-  };
+    id: string,
+    name:string,
+    createdAt:string,
+    firstName:string,
+    lastName:string,
+    mobile:string,
+    email:string,
+    source:string,
+    course:string,
+    leadType: string,
+    updatedAt: string,
+    recentNote: string,
+    message:string,
 }

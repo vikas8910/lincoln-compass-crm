@@ -68,167 +68,253 @@ const Leads = () => {
   });
   
   const [leads, setLeads] = useState<Lead[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "123-456-7890",
-      company: "Acme Inc",
-      status: "New",
-      source: "Website",
-      assignedTo: "Jane Smith",
-      date: "2023-05-01",
-      tags: [],
-      createdAt: "2023-05-01T00:00:00"
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      phone: "123-456-7891",
-      company: "Globex Corp",
-      status: "In Contact",
-      source: "Referral",
-      assignedTo: "John Smith",
-      date: "2023-04-28",
-      tags: [],
-      createdAt: "2023-04-28T00:00:00"
-    },
-    {
-      id: "3",
-      name: "Michael Johnson",
-      email: "michael@example.com",
-      phone: "123-456-7892",
-      company: "Initech",
-      status: "Follow up",
-      source: "Trade Show",
-      assignedTo: "Robert Johnson",
-      date: "2023-04-25",
-      tags: [],
-      createdAt: "2023-04-25T00:00:00"
-    },
-    {
-      id: "4",
-      name: "Emily Williams",
-      email: "emily@example.com",
-      phone: "123-456-7893",
-      company: "Massive Dynamic",
-      status: "Set Meeting",
-      source: "Cold Call",
-      assignedTo: "Emily Williams",
-      date: "2023-04-20",
-      tags: [],
-      createdAt: "2023-04-20T00:00:00"
-    },
-    {
-      id: "5",
-      name: "Robert Brown",
-      email: "robert@example.com",
-      phone: "123-456-7894",
-      company: "Soylent Corp",
-      status: "Enrolled",
-      source: "Email Campaign",
-      assignedTo: "Michael Brown",
-      date: "2023-04-15",
-      tags: [],
-      createdAt: "2023-04-15T00:00:00"
-    },
-    {
-      id: "6",
-      name: "William Clark",
-      email: "william@example.com",
-      phone: "123-456-7895",
-      company: "Tech Innovations",
-      status: "New",
-      source: "Website",
-      assignedTo: "Jane Smith",
-      date: "2023-05-05",
-      tags: [],
-      createdAt: "2023-05-05T00:00:00"
-    },
-    {
-      id: "7",
-      name: "Sarah Miller",
-      email: "sarah@example.com",
-      phone: "123-456-7896",
-      company: "Future Systems",
-      status: "In Contact",
-      source: "Cold Call",
-      assignedTo: "John Smith",
-      date: "2023-05-03",
-      tags: [],
-      createdAt: "2023-05-03T00:00:00"
-    },
-    {
-      id: "8",
-      name: "Thomas Wilson",
-      email: "thomas@example.com",
-      phone: "123-456-7897",
-      company: "Global Solutions",
-      status: "Follow up",
-      source: "Referral",
-      assignedTo: "Robert Johnson",
-      date: "2023-04-29",
-      tags: [],
-      createdAt: "2023-04-29T00:00:00"
-    },
-    {
-      id: "9",
-      name: "Jennifer Moore",
-      email: "jennifer@example.com",
-      phone: "123-456-7898",
-      company: "Bright Ideas Inc",
-      status: "Set Meeting",
-      source: "Website",
-      assignedTo: "Emily Williams",
-      date: "2023-04-22",
-      tags: [],
-      createdAt: "2023-04-22T00:00:00"
-    },
-    {
-      id: "10",
-      name: "Kevin Taylor",
-      email: "kevin@example.com",
-      phone: "123-456-7899",
-      company: "Peak Performance",
-      status: "Junk/Lost",
-      source: "Trade Show",
-      assignedTo: "Michael Brown",
-      date: "2023-04-18",
-      tags: [],
-      createdAt: "2023-04-18T00:00:00"
-    },
-    {
-      id: "11",
-      name: "Amanda Lewis",
-      email: "amanda@example.com",
-      phone: "123-456-7900",
-      company: "Smart Solutions",
-      status: "Customer",
-      source: "Email Campaign",
-      assignedTo: "Jane Smith",
-      date: "2023-04-12",
-      tags: [],
-      createdAt: "2023-04-12T00:00:00"
-    },
-    {
-      id: "12",
-      name: "Andrew Roberts",
-      email: "andrew@example.com",
-      phone: "123-456-7901",
-      company: "Tech Giants",
-      status: "New",
-      source: "Cold Call",
-      assignedTo: "John Smith",
-      date: "2023-05-07",
-      tags: [],
-      createdAt: "2023-05-07T00:00:00"
-    },
-  ]);
+  {
+    "id": "1",
+    "name": "Alice Johnson",
+    "createdAt": "2025-04-10T14:20:00Z",
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "mobile": "9876543210",
+    "email": "alice.johnson@example.com",
+    "source": "Website",
+    "course": "Web Development",
+    "leadType": "cold",
+    "updatedAt": "2025-05-20T10:15:00Z",
+    "recentNote": "Requested brochure",
+    "message": "Looking for weekend batches."
+  },
+  {
+    "id": "2",
+    "name": "Brian Smith",
+    "createdAt": "2025-03-18T09:45:00Z",
+    "firstName": "Brian",
+    "lastName": "Smith",
+    "mobile": "9876543211",
+    "email": "brian.smith@example.com",
+    "source": "Facebook",
+    "course": "Graphic Design",
+    "leadType": "neutral",
+    "updatedAt": "2025-04-25T11:10:00Z",
+    "recentNote": "Asked for syllabus",
+    "message": "Please share course duration."
+  },
+  {
+    "id": "3",
+    "name": "Cathy Lee",
+    "createdAt": "2025-05-01T12:00:00Z",
+    "firstName": "Cathy",
+    "lastName": "Lee",
+    "mobile": "9876543212",
+    "email": "cathy.lee@example.com",
+    "source": "Google Ads",
+    "course": "Digital Marketing",
+    "leadType": "cold",
+    "updatedAt": "2025-05-21T09:00:00Z",
+    "recentNote": "Followed up on call",
+    "message": "Will decide next week."
+  },
+  {
+    "id": "4",
+    "name": "David Wong",
+    "createdAt": "2025-02-20T15:30:00Z",
+    "firstName": "David",
+    "lastName": "Wong",
+    "mobile": "9876543213",
+    "email": "david.wong@example.com",
+    "source": "Referral",
+    "course": "Data Science",
+    "leadType": "not interested",
+    "updatedAt": "2025-03-10T13:20:00Z",
+    "recentNote": "Not interested for now",
+    "message": "Too busy with work."
+  },
+  {
+    "id": "5",
+    "name": "Emma Davis",
+    "createdAt": "2025-04-01T08:30:00Z",
+    "firstName": "Emma",
+    "lastName": "Davis",
+    "mobile": "9876543214",
+    "email": "emma.davis@example.com",
+    "source": "Instagram",
+    "course": "UI/UX Design",
+    "leadType": "neutral",
+    "updatedAt": "2025-04-30T17:00:00Z",
+    "recentNote": "Sent email with details",
+    "message": "Will get back next month."
+  },
+  {
+    "id": "6",
+    "name": "Frank Harris",
+    "createdAt": "2025-01-15T10:00:00Z",
+    "firstName": "Frank",
+    "lastName": "Harris",
+    "mobile": "9876543215",
+    "email": "frank.harris@example.com",
+    "source": "Email Campaign",
+    "course": "Cybersecurity",
+    "leadType": "cold",
+    "updatedAt": "2025-02-05T14:30:00Z",
+    "recentNote": "Opened email, no reply",
+    "message": "Just browsing options."
+  },
+  {
+    "id": "7",
+    "name": "Grace Miller",
+    "createdAt": "2025-04-12T11:00:00Z",
+    "firstName": "Grace",
+    "lastName": "Miller",
+    "mobile": "9876543216",
+    "email": "grace.miller@example.com",
+    "source": "Website",
+    "course": "AI & ML",
+    "leadType": "neutral",
+    "updatedAt": "2025-05-10T13:00:00Z",
+    "recentNote": "Needs EMI options",
+    "message": "Course seems expensive."
+  },
+  {
+    "id": "8",
+    "name": "Henry Scott",
+    "createdAt": "2025-03-05T07:45:00Z",
+    "firstName": "Henry",
+    "lastName": "Scott",
+    "mobile": "9876543217",
+    "email": "henry.scott@example.com",
+    "source": "LinkedIn",
+    "course": "Cloud Computing",
+    "leadType": "not interested",
+    "updatedAt": "2025-04-01T16:45:00Z",
+    "recentNote": "Not in market",
+    "message": "Looking next year."
+  },
+  {
+    "id": "9",
+    "name": "Isla Moore",
+    "createdAt": "2025-05-10T14:10:00Z",
+    "firstName": "Isla",
+    "lastName": "Moore",
+    "mobile": "9876543218",
+    "email": "isla.moore@example.com",
+    "source": "Twitter",
+    "course": "Blockchain",
+    "leadType": "cold",
+    "updatedAt": "2025-05-22T08:00:00Z",
+    "recentNote": "Asked for demo class",
+    "message": "What are class timings?"
+  },
+  {
+    "id": "10",
+    "name": "Jack Brown",
+    "createdAt": "2025-02-28T11:25:00Z",
+    "firstName": "Jack",
+    "lastName": "Brown",
+    "mobile": "9876543219",
+    "email": "jack.brown@example.com",
+    "source": "Website",
+    "course": "Mobile App Development",
+    "leadType": "neutral",
+    "updatedAt": "2025-03-15T12:15:00Z",
+    "recentNote": "Needs career advice",
+    "message": "Which course has best jobs?"
+  },
+  {
+    "id": "11",
+    "name": "Kelly Adams",
+    "createdAt": "2025-04-19T13:45:00Z",
+    "firstName": "Kelly",
+    "lastName": "Adams",
+    "mobile": "9876543220",
+    "email": "kelly.adams@example.com",
+    "source": "Referral",
+    "course": "Business Analytics",
+    "leadType": "cold",
+    "updatedAt": "2025-05-05T15:50:00Z",
+    "recentNote": "Send comparison of courses",
+    "message": "Want to compare 2 courses."
+  },
+  {
+    "id": "12",
+    "name": "Liam Turner",
+    "createdAt": "2025-01-10T10:10:00Z",
+    "firstName": "Liam",
+    "lastName": "Turner",
+    "mobile": "9876543221",
+    "email": "liam.turner@example.com",
+    "source": "Instagram",
+    "course": "AI & ML",
+    "leadType": "not interested",
+    "updatedAt": "2025-01-25T10:00:00Z",
+    "recentNote": "Wants in-person class only",
+    "message": "Is this online or offline?"
+  },
+  {
+    "id": "13",
+    "name": "Mia Young",
+    "createdAt": "2025-05-02T11:30:00Z",
+    "firstName": "Mia",
+    "lastName": "Young",
+    "mobile": "9876543222",
+    "email": "mia.young@example.com",
+    "source": "Facebook",
+    "course": "Project Management",
+    "leadType": "neutral",
+    "updatedAt": "2025-05-18T17:45:00Z",
+    "recentNote": "Interested in certification",
+    "message": "Is PMI certification included?"
+  },
+  {
+    "id": "14",
+    "name": "Noah Allen",
+    "createdAt": "2025-03-14T09:30:00Z",
+    "firstName": "Noah",
+    "lastName": "Allen",
+    "mobile": "9876543223",
+    "email": "noah.allen@example.com",
+    "source": "Email Campaign",
+    "course": "Full Stack Development",
+    "leadType": "cold",
+    "updatedAt": "2025-04-10T10:25:00Z",
+    "recentNote": "Needs weekend batch",
+    "message": "Are weekend classes available?"
+  },
+  {
+    "id": "15",
+    "name": "Olivia Walker",
+    "createdAt": "2025-02-22T13:00:00Z",
+    "firstName": "Olivia",
+    "lastName": "Walker",
+    "mobile": "9876543224",
+    "email": "olivia.walker@example.com",
+    "source": "Google Ads",
+    "course": "Machine Learning",
+    "leadType": "neutral",
+    "updatedAt": "2025-03-01T11:00:00Z",
+    "recentNote": "Sent scholarship info",
+    "message": "Is financial aid available?"
+  },
+  {
+    "id": "16",
+    "name": "Paul Hall",
+    "createdAt": "2025-04-07T10:00:00Z",
+    "firstName": "Paul",
+    "lastName": "Hall",
+    "mobile": "9876543225",
+    "email": "paul.hall@example.com",
+    "source": "LinkedIn",
+    "course": "Big Data",
+    "leadType": "not interested",
+    "updatedAt": "2025-04-20T12:00:00Z",
+    "recentNote": "Not ready to enroll",
+    "message": "Thinking about later this year."
+  }
+  // Add IDs 17-20 in similar format if needed
+]
+);
   
   // Get unique sources and assigned users for filtering
   const uniqueSources = Array.from(new Set(leads.map(lead => lead.source)));
-  const uniqueAssignedTo = Array.from(new Set(leads.map(lead => lead.assignedTo)));
+  // const uniqueAssignedTo = Array.from(new Set(leads.map(lead => lead.assignedTo)));
   
   // Apply filters
   const applyFilters = (items: Lead[]) => {
@@ -237,25 +323,24 @@ const Leads = () => {
       const searchMatch = 
         searchTerm === "" ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.company.toLowerCase().includes(searchTerm.toLowerCase());
+        item.email.toLowerCase().includes(searchTerm.toLowerCase());
+        // item.company.toLowerCase().includes(searchTerm.toLowerCase());
       
       // Apply status filter
-      const statusMatch = 
-        filterConfig.status.length === 0 ||
-        filterConfig.status.includes(item.status);
+      // const statusMatch = 
+      //   filterConfig.status.length === 0 ||
+      //   filterConfig.status.includes(item.status);
       
       // Apply source filter
-      const sourceMatch = 
-        filterConfig.source.length === 0 ||
+      const sourceMatch = filterConfig.source.length === 0 ||
         filterConfig.source.includes(item.source);
       
       // Apply assigned to filter
       const assignedToMatch = 
-        filterConfig.assignedTo.length === 0 ||
-        filterConfig.assignedTo.includes(item.assignedTo);
+        filterConfig.assignedTo.length === 0
+        // filterConfig.assignedTo.includes(item.assignedTo);
       
-      return searchMatch && statusMatch && sourceMatch && assignedToMatch;
+      return searchMatch &&  sourceMatch && assignedToMatch;
     });
   };
 
@@ -374,7 +459,7 @@ const Leads = () => {
     const editLead = {
       ...lead,
       source: lead.source || "None",
-      assignedTo: lead.assignedTo || "Unassigned"
+      // assignedTo: lead.assignedTo || "Unassigned"
     };
     setSelectedLead(editLead);
     setShowDialog(true);
@@ -500,21 +585,21 @@ const Leads = () => {
     </div>
   );
   
-  const AssignedToFilterContent = (
-    <div className="p-2">
-      <DropdownMenuLabel>Filter by Assigned To</DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      {uniqueAssignedTo.map(assignedTo => (
-        <DropdownMenuCheckboxItem
-          key={assignedTo}
-          checked={filterConfig.assignedTo.includes(assignedTo)}
-          onCheckedChange={() => handleAssignedToFilterChange(assignedTo)}
-        >
-          {assignedTo}
-        </DropdownMenuCheckboxItem>
-      ))}
-    </div>
-  );
+  // const AssignedToFilterContent = (
+  //   <div className="p-2">
+  //     <DropdownMenuLabel>Filter by Assigned To</DropdownMenuLabel>
+  //     <DropdownMenuSeparator />
+  //     {uniqueAssignedTo.map(assignedTo => (
+  //       <DropdownMenuCheckboxItem
+  //         key={assignedTo}
+  //         checked={filterConfig.assignedTo.includes(assignedTo)}
+  //         onCheckedChange={() => handleAssignedToFilterChange(assignedTo)}
+  //       >
+  //         {assignedTo}
+  //       </DropdownMenuCheckboxItem>
+  //     ))}
+  //   </div>
+  // );
 
   return (
     <MainLayout>
@@ -549,7 +634,7 @@ const Leads = () => {
                 <DropdownMenuSeparator />
                 {SourceFilterContent}
                 <DropdownMenuSeparator />
-                {AssignedToFilterContent}
+                {/* {AssignedToFilterContent} */}
               </DropdownMenuContent>
             </DropdownMenu>
             
@@ -595,42 +680,110 @@ const Leads = () => {
                     sortDirection={sortConfig.key === "name" ? sortConfig.direction : null}
                     onSort={() => handleSort("name")}
                   >
-                    Name / Company
+                    Name
                   </TableHeaderWithSort>
                   <TableHeaderWithSort
                     sortable
-                    sortDirection={sortConfig.key === "status" ? sortConfig.direction : null}
-                    onSort={() => handleSort("status")}
+                    sortDirection={sortConfig.key === "createdAt" ? sortConfig.direction : null}
+                    onSort={() => handleSort("createdAt")}
                     filterable
                     filterContent={StatusFilterContent}
                   >
-                    Status
+                    Created At
                   </TableHeaderWithSort>
                   <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "firstName" ? sortConfig.direction : null}
+                    onSort={() => handleSort("firstName")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    First Name
+                  </TableHeaderWithSort>
+                  <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "lastName" ? sortConfig.direction : null}
+                    onSort={() => handleSort("lastName")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    Last Name
+                  </TableHeaderWithSort>
+                    <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "mobile" ? sortConfig.direction : null}
+                    onSort={() => handleSort("mobile")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    Mobile
+                  </TableHeaderWithSort>
+                    <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "email" ? sortConfig.direction : null}
+                    onSort={() => handleSort("email")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    Email
+                  </TableHeaderWithSort>
+                    <TableHeaderWithSort
                     sortable
                     sortDirection={sortConfig.key === "source" ? sortConfig.direction : null}
                     onSort={() => handleSort("source")}
                     filterable
-                    filterContent={SourceFilterContent}
+                    filterContent={StatusFilterContent}
                   >
                     Source
                   </TableHeaderWithSort>
                   <TableHeaderWithSort
                     sortable
-                    sortDirection={sortConfig.key === "assignedTo" ? sortConfig.direction : null}
-                    onSort={() => handleSort("assignedTo")}
+                    sortDirection={sortConfig.key === "course" ? sortConfig.direction : null}
+                    onSort={() => handleSort("course")}
                     filterable
-                    filterContent={AssignedToFilterContent}
+                    filterContent={StatusFilterContent}
                   >
-                    Assigned To
+                    Course
+                  </TableHeaderWithSort>
+
+                  <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "leadType" ? sortConfig.direction : null}
+                    onSort={() => handleSort("leadType")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    Lead Type
                   </TableHeaderWithSort>
                   <TableHeaderWithSort
                     sortable
-                    sortDirection={sortConfig.key === "date" ? sortConfig.direction : null}
-                    onSort={() => handleSort("date")}
+                    sortDirection={sortConfig.key === "updatedAt" ? sortConfig.direction : null}
+                    onSort={() => handleSort("updatedAt")}
+                    filterable
+                    filterContent={StatusFilterContent}
                   >
-                    Date Added
+                    Updated At
                   </TableHeaderWithSort>
+
+                  <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "recentNote" ? sortConfig.direction : null}
+                    onSort={() => handleSort("recentNote")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    Recent Note
+                  </TableHeaderWithSort>
+                  <TableHeaderWithSort
+                    sortable
+                    sortDirection={sortConfig.key === "message" ? sortConfig.direction : null}
+                    onSort={() => handleSort("message")}
+                    filterable
+                    filterContent={StatusFilterContent}
+                  >
+                    Message
+                  </TableHeaderWithSort>
+
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -651,14 +804,20 @@ const Leads = () => {
                         onClick={() => handleViewDetails(lead.id)}
                       >
                         <div className="font-medium">{lead.name}</div>
-                        <div className="text-sm text-muted-foreground">{lead.company}</div>
-                        <div className="text-xs text-muted-foreground">{lead.email}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{renderStatusBadge(lead.status)}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.createdAt}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.firstName}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.lastName}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.mobile}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.email}</TableCell>
                     <TableCell>{lead.source === "None" ? "None" : lead.source}</TableCell>
-                    <TableCell>{lead.assignedTo === "Unassigned" ? "Unassigned" : lead.assignedTo}</TableCell>
-                    <TableCell>{new Date(lead.date).toLocaleDateString()}</TableCell>
+
+                    <TableCell>{lead.source === "None" ? "None" : lead.course}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.leadType}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.updatedAt}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.recentNote}</TableCell>
+                    <TableCell>{lead.source === "None" ? "None" : lead.message}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

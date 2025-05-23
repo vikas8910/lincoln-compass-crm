@@ -13,9 +13,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <MainSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col border overflow-hidden">
           <Header />
-          <main className="flex-1 p-6 bg-muted/20 overflow-auto">
+          <main className="flex-1 p-6 bg-muted/20 overflow-hidden">
             {children}
           </main>
         </div>
