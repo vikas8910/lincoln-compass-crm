@@ -64,7 +64,7 @@ const SalesOfficerRoles = () => {
       <Tabs defaultValue={activeTab} className="space-y-6" onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="user-management">User Management</TabsTrigger>
-          <TabsTrigger value="role-management">Assign Roles</TabsTrigger>
+          <TabsTrigger value="role-management">Assign Role</TabsTrigger>
         </TabsList>
         
         {/* Tab 1: Role Management */}

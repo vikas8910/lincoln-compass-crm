@@ -46,7 +46,6 @@ export const deletePermission = async (id: string) => {
 export const getRolePermissionsActions = async () => {
     try {
         const response = await axiosInstance.get(`${ROLE_PERMISSION_MAPPING}`);
-        console.log("Role Permissions Actions:", response.data);
         return response.data;
     } catch (error) {
         throw error;

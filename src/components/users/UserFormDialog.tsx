@@ -111,7 +111,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="John Smith"
+                      placeholder="Enter Name"
                       className={form.formState.errors.name ? "border-red-500" : ""}
                       {...field}
                     />
@@ -130,7 +130,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="john.smith@example.com"
+                      placeholder="Enter email"
                       className={form.formState.errors.email ? "border-red-500" : ""}
                       {...field}
                     />
@@ -188,7 +188,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                       <FormLabel>Mobile</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="1234567890"
+                          placeholder="Enter phone number"
                           className={addUserForm.formState.errors.mobile ? "border-red-500" : ""}
                           {...field}
                         />
