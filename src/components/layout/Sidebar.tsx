@@ -1,5 +1,4 @@
 
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -18,6 +17,7 @@ import {
   ClipboardList,
   Shield,
   UserCog,
+  KeyRound
 } from "lucide-react";
 
 const MainSidebar = () => {
@@ -27,33 +27,33 @@ const MainSidebar = () => {
     {
       title: "Dashboard",
       icon: LayoutDashboard,
-      href: "/dashboard",
+      href: ["/dashboard"],
     },
     {
       title: "Sales Officers",
       icon: UserRound,
-      href: "/sales-officers",
+      href: ["/sales-officers"],
     },
     {
       title: "Leads",
       icon: Users,
-      href: "/leads",
+      href: ["/leads"],
     },
     {
       title: "Leads Mapping",
       icon: ClipboardList,
-      href: "/leads-mapping",
+      href: ["/leads-mapping"],
     },
     {
       title: "User Management",
       icon: UserCog,
-      href: "/sales-officer-roles",
+      href: ["/sales-officer-roles"],
     },
     {
       title: "Roles & Permissions",
       icon: Shield,
-      href: "/roles-permissions",
-    },
+      href: ["/roles", "/permissions"],
+    }
   ];
 
   return (
@@ -66,10 +66,12 @@ const MainSidebar = () => {
               {menuItems.map((item) => {
                 // Fix the highlighting logic to correctly handle the leads-mapping route
                 const isActive = 
-                  location.pathname === item.href || 
-                  (location.pathname.startsWith(item.href) && 
-                   item.href !== '/dashboard' && 
-                   item.href !== '/leads');
+                  item.href.some((href) => 
+                    location.pathname === href || 
+                    (location.pathname.startsWith(href) && 
+                     href !== '/dashboard' && 
+                     href !== '/leads')
+                  );
                 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -79,7 +81,7 @@ const MainSidebar = () => {
                       tooltip={item.title}
                       className={isActive ? "bg-blue-700 text-white" : "text-gray-300 hover:text-white hover:bg-blue-800/50"}
                     >
-                      <Link to={item.href} className="flex items-center gap-2">
+                      <Link to={item.href[0]} className="flex items-center gap-2">
                         <item.icon className="h-5 w-5" />
                         <span>{item.title}</span>
                       </Link>

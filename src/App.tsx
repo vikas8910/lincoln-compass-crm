@@ -16,6 +16,7 @@ import RolesPermissions from "./pages/dashboard/RolesPermissions";
 import RolesUsers from "./pages/dashboard/RolesUsers";
 import LeadAssignment from "./pages/dashboard/LeadAssignment";
 import SalesOfficerRoles from "./pages/dashboard/SalesOfficerRoles";
+import Permissions from "./pages/dashboard/Permissions";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +46,8 @@ const App = () => {
             <Route path="/leads" element={<ProtectedRoute element={<Leads />} />} />
             <Route path="/leads/:leadId" element={<ProtectedRoute element={<LeadDetailsEnhanced />} />} />
             <Route path="/lead-pipeline" element={<ProtectedRoute element={<LeadPipeline />} />} />
-            <Route path="/roles-permissions" element={<ProtectedRoute element={<RolesPermissions />} />} />
+            <Route path="/roles" element={<ProtectedRoute element={<RolesPermissions />} />} />
+            <Route path="/permissions" element={<ProtectedRoute element={<Permissions />} />} />
             <Route path="/roles-users" element={<ProtectedRoute element={<RolesUsers />} />} />
             <Route path="/leads-mapping" element={<ProtectedRoute element={<LeadAssignment />} />} />
             <Route path="/sales-mapping" element={<ProtectedRoute element={<Navigate to="/leads-mapping" replace />} />} />
