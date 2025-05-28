@@ -79,6 +79,7 @@ const getAllUsersFn = async ({
     page: res.data.page.number,
     total: res.data.page.totalElements,
     total_filtered: 11,
+    appliedFilters: res.data.appliedFilters || {}, // Add applied filters from API response
   };
 
   return data;
@@ -165,5 +166,6 @@ export const useGetLeads = ({
     isAllUsersDataLoading,
     error,
     refetch,
+    appliedFilters: allUsersData?.appliedFilters || {}, // Return applied filters
   };
 };

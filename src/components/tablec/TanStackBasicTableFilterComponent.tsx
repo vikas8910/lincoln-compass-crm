@@ -17,18 +17,22 @@ export default function TanStackBasicTableFilterComponent<TData>({
           header.column.getCanFilter() && (
             <div key={header.id} className="flex flex-col gap-1">
               <Label className="block font-semibold text-sm">
-                {`${flexRender(
-                  header.column.columnDef.header,
-                  header.getContext()
-                )}`}
+                {header.column.columnDef.meta?.filterLabel ||
+                  `${flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )}`}
                 :
               </Label>
               <Input
                 className="w-full"
-                placeholder={`Filter ${flexRender(
-                  header.column.columnDef.header,
-                  header.getContext()
-                )} ...`}
+                placeholder={
+                  header.column.columnDef.meta?.filterPlaceholder ||
+                  `Filter ${flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )} ...`
+                }
                 value={(header.column.getFilterValue() as string) || ""}
                 onChange={(e) => {
                   header.column?.setFilterValue(e.target.value);

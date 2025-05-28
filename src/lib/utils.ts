@@ -143,7 +143,7 @@ export const getAvatarColors = (letter: string) => {
     Z: { bg: "bg-[#a7f3d0]", text: "text-[#065f46]" }, // Light teal bg, dark teal text
   };
 
-  const upperLetter = letter.toUpperCase();
+  const upperLetter = letter?.toUpperCase();
   return (
     colorMap[upperLetter] || { bg: "bg-[#f3f4f6]", text: "text-[#374151]" }
   );

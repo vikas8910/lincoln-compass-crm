@@ -8,13 +8,18 @@ import {
 } from "@radix-ui/react-popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { commonValidationSchemas } from "@/schemas/common";
 
 // Validation schemas
 const validationSchemas = {
-  text: z.string().min(1, "This field is required").max(100, "Too long"),
-  email: z.string().email("Invalid email format"),
-  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  text: commonValidationSchemas.text,
+  email: commonValidationSchemas.email,
+  phone: commonValidationSchemas.phone,
   required: z.string().min(1, "This field is required"),
+  textOnly: commonValidationSchemas.textOnly,
+  course: commonValidationSchemas.course,
+  countryCode: commonValidationSchemas.countryCode,
+  leadScore: commonValidationSchemas.leadScore,
 } as const;
 
 interface EditableCellProps {
@@ -114,11 +119,14 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   return (
     <span
-      className={`whitespace-nowrap font-bold text-gray-600 flex items-center justify-between gap-10 ${className}`}
+      className={`font-bold text-gray-600 flex items-center gap-2 min-w-0 ${className}`}
       onMouseOver={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <span className={`text-sm font-medium ${textColor}`}>
+      <span
+        className={`text-sm font-medium ${textColor} truncate flex-1 min-w-0`}
+        title={value || placeholder}
+      >
         {value || placeholder}
       </span>
 
@@ -127,7 +135,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
           <button
             onClick={handleOpen}
             disabled={disabled}
-            className={`p-1 rounded hover:bg-gray-100 transition-colors ${
+            className={`p-1 rounded hover:bg-gray-100 transition-colors flex-shrink-0 ${
               isHovered ? "visible" : "invisible"
             } ${disabled ? "invisible" : "visible cursor-pointer"}`}
             aria-label="Edit value"

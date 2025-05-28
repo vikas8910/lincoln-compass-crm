@@ -17,6 +17,7 @@ export interface UseLeadsResponse {
   total: number;
   total_filtered: number;
   data: Lead[];
+  appliedFilters?: Record<string, string>; // Add this line
 }
 
 export interface EditableField {
@@ -32,6 +33,7 @@ export interface InfoCardProps {
   fieldKey: string;
   isEditable?: boolean;
   onSave?: (key: string, value: string) => void;
+  disabled?: boolean;
 }
 
 export interface SidebarItemProps {
@@ -39,6 +41,7 @@ export interface SidebarItemProps {
   label: string;
   isActive: boolean;
   onClick: (id: string) => void;
+  Icon?: LucideIcon;
 }
 
 export interface Lead {
@@ -58,6 +61,60 @@ export interface Lead {
   leadScore: number;
   createdAt: string;
   updatedAt: string;
+
+  mobileBackup?: string;
+  workPhone?: string;
+  officeMobile?: string;
+  otherPhoneNumbers?: string;
+  countryCode?: string;
+  gender?: string;
+  dob?: string;
+  nationality?: string;
+  countryOfResidence?: string;
+  cityPreferred?: string;
+  preferredCity?: string;
+  university?: string;
+  highestEducation?: string;
+  desiredStart?: string;
+  bestTimeToCall?: string;
+  comments?: string;
+  addlComment?: string;
+  message?: string;
+  queries?: string;
+  references?: string;
+  unsubscribeReason?: string;
+  otherUnsubscribeReasons?: string;
+  lostReason?: string;
+  feedback?: string;
+  status?: string;
+  salesOwner?: string;
+  lifecycleStage?: string;
+  subscriptionStatus?: string;
+  subscriptionTypes?: string;
+  smsSubscriptionStatus?: string;
+  whatsappSubscriptionStatus?: string;
+  activeSalesSequences?: string;
+  accounts?: string;
+  lastContactedTime?: string;
+  lastActivityType?: string;
+  lastAssignAt?: string;
+  lastActivityTime?: string;
+
+  originalFirstName?: string;
+  originalLastName?: string;
+  originalEmail?: string;
+  originalMobile?: string;
+  originalSource?: string;
+  originalMedium?: string;
+  originalCampaign?: string;
+  mostRecentSource?: string;
+  mostRecentMedium?: string;
+  mostRecentCampaign?: string;
+  createdFromSource?: string;
+  createdFromMedium?: string;
+  createdThroughCampaign?: string;
+  externalId?: string;
+  submissionDate?: string;
 }
 
 // Define the Lead status type to match the constraint
