@@ -20,7 +20,8 @@ const getAllUsersFn = async ({
     phone = "",
     source = "",
     course = "",
-    leadType = "";
+    leadType = "",
+    assignedTo = "";
 
   for (const filter of columnFilters) {
     const id = filter.id,
@@ -47,6 +48,9 @@ const getAllUsersFn = async ({
       case "leadType":
         leadType = value as string;
         break;
+      case "assignedTo":
+        assignedTo = value as string;
+        break;
     }
   }
 
@@ -61,17 +65,33 @@ const getAllUsersFn = async ({
     }
   }
 
-  const res = await axiosInstance.get(
-    `${LEADS}?${firstName !== "" ? `search=${firstName}&` : ""}${
-      lastName !== "" ? `search=${lastName}&` : ""
-    }${email !== "" ? `search=${email}&` : ""}${
-      phone !== "" ? `search=${phone}&` : ""
-    }${source !== "" ? `source=${source}&` : ""}${
-      course !== "" ? `course=${course}&` : ""
-    }${leadType !== "" ? `leadType=${leadType}&` : ""}${
-      sorting_param !== "" ? `sortBy=${sorting_param}&` : ""
-    }page=${page}&size=${per_page}`
-  );
+  // Build query string
+  const queryParams = new URLSearchParams();
+
+  // Add search parameters
+  if (firstName) queryParams.append("search", firstName);
+  if (lastName) queryParams.append("search", lastName);
+  if (email) queryParams.append("search", email);
+  if (phone) queryParams.append("search", phone);
+
+  // Add filter parameters
+  if (source) queryParams.append("source", source);
+  if (course) queryParams.append("course", course);
+  if (leadType) queryParams.append("leadType", leadType);
+
+  // Add sortedBy parameter for My Leads tab
+  if (assignedTo === "sortedBy") {
+    queryParams.append("sortedBy", "assignedTo");
+  }
+
+  // Add sorting parameter
+  if (sorting_param) queryParams.append("sortBy", sorting_param);
+
+  // Add pagination parameters
+  queryParams.append("page", page.toString());
+  queryParams.append("size", per_page.toString());
+
+  const res = await axiosInstance.get(`${LEADS}?${queryParams.toString()}`);
 
   const data = {
     data: res.data.content,

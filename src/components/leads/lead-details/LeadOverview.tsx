@@ -38,6 +38,7 @@ export const LeadOverview: React.FC<{
         validationType="email"
         fieldKey="email"
         onSave={onSave}
+        textColor="text-[#2c5cc5]"
       />
       <InfoCard
         title="Mobile"
@@ -45,6 +46,7 @@ export const LeadOverview: React.FC<{
         validationType="phone"
         fieldKey="mobile"
         onSave={onSave}
+        textColor="text-[#2c5cc5]"
       />
     </Card>
 

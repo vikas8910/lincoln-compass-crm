@@ -9,6 +9,7 @@ export const InfoCard: React.FC<InfoCardProps> = ({
   isEditable = true,
   disabled = false,
   onSave,
+  textColor = "text-black",
 }) => (
   <div className="flex flex-col gap-1 text-sm font-medium">
     <span className="text-gray-500">{title}</span>
@@ -18,7 +19,7 @@ export const InfoCard: React.FC<InfoCardProps> = ({
         onSave={(value) => onSave(fieldKey, value)}
         validationType={validationType || "text"}
         placeholder={`${disabled ? "--" : "Click to add"}`}
-        textColor="text-black"
+        textColor={textColor}
         disabled={disabled}
       />
     ) : (

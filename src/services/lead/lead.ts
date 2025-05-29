@@ -58,3 +58,19 @@ export const updateLeadFullDetails = async (
     throw error;
   }
 };
+
+export const assignLeadToOfficer = async (id: string, salesOwnerId: string) => {
+  try {
+    const response = await axiosInstance.post(
+      `${LEADS}/${id}/assign?salesOwnerId=${salesOwnerId}`,
+      {
+        id,
+        salesOwnerId,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating role:", error);
+    throw error;
+  }
+};

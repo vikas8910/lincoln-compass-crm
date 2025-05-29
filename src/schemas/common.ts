@@ -27,4 +27,8 @@ export const commonValidationSchemas = {
     .string()
     .min(1, "Score is required")
     .regex(/^([1-9]?[0-9]|100)$/, "Score must be a number between 1 and 100"),
+  numberOnly: z
+    .string()
+    .min(1, "This field is required")
+    .regex(/^\d+$/, "Only numbers are allowed"),
 } as const;

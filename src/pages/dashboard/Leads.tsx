@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Filter, TrashIcon, X } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import { FiUserPlus } from "react-icons/fi";
 import type {
   ColumnDef,
@@ -29,12 +29,33 @@ import { Lead } from "@/types/lead";
 // Utils
 import { formatDateTime, getAvatarColors } from "@/lib/utils";
 import { EditableCell } from "@/components/tablec/EditableCell";
-import { createLead, updateLeadFullDetails } from "@/services/lead/lead";
+import {
+  assignLeadToOfficer,
+  createLead,
+  updateLeadFullDetails,
+} from "@/services/lead/lead";
 import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { DEBOUNCE_DELAY, INITIAL_PAGINATION } from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { createLeadFormValues } from "@/schemas/lead";
+import { getUsers } from "@/services/user-service/user-service";
+
+// Define tab types
+type TabType = "all" | "my" | "new";
+
+interface Tab {
+  id: TabType;
+  label: string;
+  count?: number;
+}
+
+// User interface for typing
+interface User {
+  id: string;
+  name: string;
+  // Add other user properties as needed
+}
 
 const Leads = () => {
   // Table state management
@@ -42,6 +63,10 @@ const Leads = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] =
     useState<PaginationState>(INITIAL_PAGINATION);
+
+  // Tab state management
+  const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [users, setUsers] = useState<User[]>([]);
 
   // UI state management
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
@@ -55,6 +80,30 @@ const Leads = () => {
     DEBOUNCE_DELAY
   );
 
+  // Create modified column filters based on active tab
+  const getModifiedColumnFilters = () => {
+    let modifiedFilters = [...debouncedColumnFilters];
+
+    if (activeTab === "my") {
+      // Add sortedBy=assignedTo filter for My Leads
+      const existingAssignedToFilter = modifiedFilters.find(
+        (filter) => filter.id === "assignedTo"
+      );
+      if (!existingAssignedToFilter) {
+        modifiedFilters.push({ id: "assignedTo", value: "sortedBy" });
+      }
+    } else if (activeTab === "new") {
+      // Add any specific filters for New Leads if needed
+      // For now, keeping it same as All Leads
+    }
+
+    return modifiedFilters;
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   // API data fetching
   const {
     allUsersData,
@@ -64,12 +113,42 @@ const Leads = () => {
     appliedFilters,
   } = useGetLeads({
     sorting,
-    columnFilters: debouncedColumnFilters,
+    columnFilters: getModifiedColumnFilters(),
     pagination,
   });
 
+  const fetchUsers = async () => {
+    try {
+      const response = await getUsers(0, 10);
+      setUsers(response.content || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  console.log("Users => ", users);
+
+  // Define tabs with dynamic counts
+  const tabs: Tab[] = [
+    { id: "all", label: "All Leads", count: allUsersData?.total },
+    { id: "my", label: "My Leads", count: undefined }, // You can add count from API if available
+    // { id: "new", label: "New Leads", count: undefined }, // You can add count from API if available
+  ];
+
   const getAppliedFiltersCount = () => {
-    return Object.keys(appliedFilters).length;
+    // Don't count the assignedTo filter for My Leads tab as it's automatically applied
+    const filtersToCount =
+      activeTab === "my"
+        ? Object.keys(appliedFilters).filter((key) => key !== "assignedTo")
+        : Object.keys(appliedFilters);
+    return filtersToCount.length;
+  };
+
+  // Tab change handler
+  const handleTabChange = (tabId: TabType) => {
+    setActiveTab(tabId);
+    // Reset pagination when switching tabs
+    setPagination(INITIAL_PAGINATION);
   };
 
   // Add this handler for resetting filters
@@ -89,7 +168,7 @@ const Leads = () => {
     value: string
   ) => {
     try {
-      await updateLeadFullDetails(leadId, key, value);
+      const data = await updateLeadFullDetails(leadId, key, value);
       refetch();
       toast.success("Lead details updated successfully");
     } catch (error) {
@@ -107,6 +186,38 @@ const Leads = () => {
       toast.error("Failed to add lead details");
       throw error;
     }
+  };
+
+  // Handle assign to change
+  const handleAssignToChange = async (leadId: string, userId: string) => {
+    try {
+      await assignLeadToOfficer(leadId, userId);
+      refetch();
+      toast.success("Lead Assigned Successfully");
+    } catch (error) {
+      toast.error("Failed to assign lead");
+      throw error;
+    }
+  };
+
+  // Assign To Dropdown Component
+  const AssignToDropdown = ({ lead }: { lead: Lead }) => {
+    const selectedUserId = lead?.assignedTo || "";
+
+    return (
+      <select
+        value={selectedUserId}
+        onChange={(e) => handleAssignToChange(String(lead.id), e.target.value)}
+        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+      >
+        <option value="">Select Officer</option>
+        {users.map((user) => (
+          <option key={user.id} value={user.id}>
+            {user.name}
+          </option>
+        ))}
+      </select>
+    );
   };
 
   // Column definitions
@@ -280,20 +391,16 @@ const Leads = () => {
       ),
       enableColumnFilter: false,
     },
-    // {
-    //   header: "Action",
-    //   id: "action",
-    //   enableColumnFilter: false,
-    //   enableSorting: false,
-    //   cell: ({ row }) => (
-    //     <Button
-    //       className="bg-red-500 text-white font-bold"
-    //       onClick={() => setIsDeleteUserDialogOpen(true)}
-    //     >
-    //       <TrashIcon />
-    //     </Button>
-    //   ),
-    // },
+    {
+      header: "Assigned To",
+      accessorKey: "salesOfficerId",
+      cell: ({ row }) => (
+        <div className="min-w-[160px]">
+          <AssignToDropdown lead={row.original} />
+        </div>
+      ),
+      enableColumnFilter: false,
+    },
   ];
 
   // Error state
@@ -365,6 +472,38 @@ const Leads = () => {
         </div>
       </div>
 
+      {/* Tabs Section */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span
+                    className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+                      activeTab === tab.id
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
       {/* Main Table */}
       <TanStackBasicTable
         isTableDataLoading={isAllUsersDataLoading}
@@ -399,7 +538,7 @@ const Leads = () => {
 
           {/* Apply Filters Button */}
           <div className="flex justify-end pt-4 border-t">
-            <Button onClick={handleApplyFilters}>Show Results</Button>
+            <Button onClick={handleApplyFilters}>Close</Button>
           </div>
         </div>
       </Offcanvas>
@@ -416,7 +555,7 @@ const Leads = () => {
         description="Are you sure you want to delete this lead ?"
         confirmLabel="Delete"
         destructive
-      ></ConfirmationDialog>
+      />
 
       <CreateLeadDialog
         isOpen={isCreateLeadDialogOpen}

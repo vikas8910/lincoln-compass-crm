@@ -110,6 +110,46 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
 
             <FormField
               control={form.control}
+              name="source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Source</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter source"
+                      className={
+                        form.formState.errors.source ? "border-red-500" : ""
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="course"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Course</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter course"
+                      className={
+                        form.formState.errors.course ? "border-red-500" : ""
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
@@ -120,6 +160,26 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                       placeholder="Enter email"
                       className={
                         form.formState.errors.email ? "border-red-500" : ""
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="leadType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lead Type</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter lead type"
+                      className={
+                        form.formState.errors.leadType ? "border-red-500" : "" // Fixed: was checking 'course' instead of 'leadType'
                       }
                       {...field}
                     />
@@ -178,55 +238,15 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
 
             <FormField
               control={form.control}
-              name="source"
+              name="externalId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source</FormLabel>
+                  <FormLabel>External Id</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter source"
+                      placeholder="Enter external id"
                       className={
-                        form.formState.errors.source ? "border-red-500" : ""
-                      }
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="course"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Course</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter course"
-                      className={
-                        form.formState.errors.course ? "border-red-500" : ""
-                      }
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="leadType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lead Type</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter lead type"
-                      className={
-                        form.formState.errors.leadType ? "border-red-500" : "" // Fixed: was checking 'course' instead of 'leadType'
+                        form.formState.errors.externalId ? "border-red-500" : "" // Fixed: was checking 'course' instead of 'leadType'
                       }
                       {...field}
                     />

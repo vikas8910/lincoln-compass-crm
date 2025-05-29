@@ -22,6 +22,8 @@ export const leadSchema = z
     course: commonValidationSchemas.course,
 
     leadType: commonValidationSchemas.textOnly,
+
+    externalId: commonValidationSchemas.numberOnly,
   })
   .refine((data) => data.mobile !== data.backupMobileNumber, {
     message: "Primary and backup mobile numbers must be different",

@@ -34,6 +34,7 @@ export interface InfoCardProps {
   isEditable?: boolean;
   onSave?: (key: string, value: string) => void;
   disabled?: boolean;
+  textColor?: string;
 }
 
 export interface SidebarItemProps {
