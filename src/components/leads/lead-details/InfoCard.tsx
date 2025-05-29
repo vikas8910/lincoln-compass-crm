@@ -14,7 +14,7 @@ export const InfoCard: React.FC<InfoCardProps> = ({
     <span className="text-gray-500">{title}</span>
     {isEditable ? (
       <EditableCell
-        value={value}
+        value={value === "null" && disabled ? "" : value}
         onSave={(value) => onSave(fieldKey, value)}
         validationType={validationType || "text"}
         placeholder={`${disabled ? "--" : "Click to add"}`}

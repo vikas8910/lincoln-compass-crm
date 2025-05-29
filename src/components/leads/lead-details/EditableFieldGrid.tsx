@@ -15,7 +15,11 @@ export const EditableFieldGrid: React.FC<{
         >
           <div className="text-sm text-gray-500 font-medium mb-1">{label}</div>
           <EditableCell
-            value={String(lead?.[key] || "")}
+            value={
+              lead?.[key] === null || lead?.[key] === "null"
+                ? ""
+                : String(lead?.[key] || "")
+            }
             onSave={(value) => onSave(key, value)}
             validationType={validationType || "text"}
             placeholder={`${disabled ? "--" : "Click to add"}`}

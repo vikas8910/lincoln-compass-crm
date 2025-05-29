@@ -159,7 +159,7 @@ const Leads = () => {
       ),
       // Add custom meta for filtering
       meta: {
-        filterLabel: "Search Name/Email/Mobile",
+        filterLabel: "Search First Name/Last Name/Email/Mobile",
         filterPlaceholder: "Search by name, email, or mobile...",
       },
     },
@@ -275,20 +275,20 @@ const Leads = () => {
       ),
       enableColumnFilter: false,
     },
-    {
-      header: "Action",
-      id: "action",
-      enableColumnFilter: false,
-      enableSorting: false,
-      cell: ({ row }) => (
-        <Button
-          className="bg-red-500 text-white font-bold"
-          onClick={() => setIsDeleteUserDialogOpen(true)}
-        >
-          <TrashIcon />
-        </Button>
-      ),
-    },
+    // {
+    //   header: "Action",
+    //   id: "action",
+    //   enableColumnFilter: false,
+    //   enableSorting: false,
+    //   cell: ({ row }) => (
+    //     <Button
+    //       className="bg-red-500 text-white font-bold"
+    //       onClick={() => setIsDeleteUserDialogOpen(true)}
+    //     >
+    //       <TrashIcon />
+    //     </Button>
+    //   ),
+    // },
   ];
 
   // Error state

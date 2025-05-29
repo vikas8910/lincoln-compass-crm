@@ -39,7 +39,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
       firstName: "",
       lastName: "",
     },
-    mode: "onBlur",
+    mode: "onChange", // Changed from "all" to "onChange" for real-time validation
   });
 
   const handleClose = () => {
@@ -152,6 +152,11 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
             <FormField
               control={form.control}
               name="backupMobileNumber"
+              rules={{
+                validate: (value) =>
+                  value !== form.watch("mobile") ||
+                  "Primary and backup mobile numbers must be different",
+              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Mobile number Backup</FormLabel>
@@ -221,7 +226,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                     <Input
                       placeholder="Enter lead type"
                       className={
-                        form.formState.errors.course ? "border-red-500" : ""
+                        form.formState.errors.leadType ? "border-red-500" : "" // Fixed: was checking 'course' instead of 'leadType'
                       }
                       {...field}
                     />
