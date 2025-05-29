@@ -1,5 +1,4 @@
 import { type Table } from "@tanstack/react-table";
-import { useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -11,44 +10,14 @@ import TanStackBasicTablePaginationNavigationComponent from "./TanStackBasicTabl
 
 interface TanStackBasicTablePaginationComponentProps<TData> {
   table: Table<TData>;
-  storageKey?: string; // Optional key for localStorage, defaults to "table-page-size"
 }
 
 export default function TanStackBasicTablePaginationComponent<TData>({
   table,
-  storageKey = "table-page-size",
 }: TanStackBasicTablePaginationComponentProps<TData>) {
   const currentPageSize = table.getState().pagination.pageSize;
   const currentPageIndex = table.getState().pagination.pageIndex;
   const totalPages = table.getPageCount();
-
-  // Load saved page size from localStorage on component mount
-  useEffect(() => {
-    try {
-      const savedPageSize = localStorage.getItem(storageKey);
-      if (savedPageSize) {
-        const parsedPageSize = parseInt(savedPageSize, 10);
-        // Validate that the saved page size is one of the allowed values
-        if ([10, 20, 50, 100].includes(parsedPageSize)) {
-          table.setPageSize(parsedPageSize);
-        }
-      }
-    } catch (error) {
-      console.warn("Failed to load page size from localStorage:", error);
-    }
-  }, [table, storageKey]);
-
-  const handlePageSizeChange = (value: string) => {
-    const newPageSize = Number(value);
-    table.setPageSize(newPageSize);
-
-    // Save to localStorage
-    try {
-      localStorage.setItem(storageKey, value);
-    } catch (error) {
-      console.warn("Failed to save page size to localStorage:", error);
-    }
-  };
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -60,7 +29,9 @@ export default function TanStackBasicTablePaginationComponent<TData>({
 
         <Select
           value={currentPageSize.toString()}
-          onValueChange={handlePageSizeChange}
+          onValueChange={(value) => {
+            table.setPageSize(Number(value));
+          }}
         >
           <SelectTrigger className="w-20 h-8 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500">
             <SelectValue />
