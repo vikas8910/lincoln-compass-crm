@@ -29,7 +29,7 @@ import { Lead } from "@/types/lead";
 // Utils
 import { formatDateTime, getAvatarColors } from "@/lib/utils";
 import { EditableCell } from "@/components/tablec/EditableCell";
-import { createLead, updateLead } from "@/services/lead/lead";
+import { createLead, updateLeadFullDetails } from "@/services/lead/lead";
 import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { DEBOUNCE_DELAY, INITIAL_PAGINATION } from "@/lib/constants";
@@ -83,12 +83,15 @@ const Leads = () => {
   const handleCloseOffcanvas = () => setIsOffcanvasOpen(false);
   const handleApplyFilters = () => setIsOffcanvasOpen(false);
 
-  // Generic save handler for lead updates
-  const handleSaveField = async (updatedLeadDetails) => {
+  const handleSaveField = async (
+    leadId: string,
+    key: string,
+    value: string
+  ) => {
     try {
-      await updateLead(updatedLeadDetails);
+      await updateLeadFullDetails(leadId, key, value);
       refetch();
-      toast.success("Lead Details Updated Successfully");
+      toast.success("Lead details updated successfully");
     } catch (error) {
       toast.error("Failed to update lead details");
       throw error;
@@ -151,7 +154,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.firstName}
           onSave={(value) =>
-            handleSaveField({ ...row.original, firstName: value })
+            handleSaveField(String(row.original.id), "firstName", value)
           }
           validationType="textOnly"
           placeholder="Enter first name"
@@ -170,7 +173,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.lastName}
           onSave={(value) =>
-            handleSaveField({ ...row.original, lastName: value })
+            handleSaveField(String(row.original.id), "lastName", value)
           }
           validationType="textOnly"
           placeholder="Enter last name"
@@ -185,7 +188,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.mobile}
           onSave={(value) =>
-            handleSaveField({ ...row.original, mobile: value })
+            handleSaveField(String(row.original.id), "mobile", value)
           }
           validationType="phone"
           placeholder="Enter mobile number"
@@ -200,7 +203,9 @@ const Leads = () => {
       cell: ({ row }) => (
         <EditableCell
           value={row.original.email}
-          onSave={(value) => handleSaveField({ ...row.original, email: value })}
+          onSave={(value) =>
+            handleSaveField(String(row.original.id), "email", value)
+          }
           validationType="email"
           placeholder="Enter email address"
           textColor="text-[#2c5cc5]"
@@ -215,7 +220,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.source}
           onSave={(value) =>
-            handleSaveField({ ...row.original, source: value })
+            handleSaveField(String(row.original.id), "source", value)
           }
           validationType="textOnly"
           placeholder="Enter source"
@@ -229,7 +234,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.course}
           onSave={(value) =>
-            handleSaveField({ ...row.original, course: value })
+            handleSaveField(String(row.original.id), "course", value)
           }
           validationType="course"
           placeholder="Enter course"
@@ -243,7 +248,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.leadType}
           onSave={(value) =>
-            handleSaveField({ ...row.original, leadType: value })
+            handleSaveField(String(row.original.id), "leadType", value)
           }
           validationType="textOnly"
           placeholder="Enter lead type"
@@ -267,7 +272,7 @@ const Leads = () => {
         <EditableCell
           value={row.original.recentNote}
           onSave={(value) =>
-            handleSaveField({ ...row.original, recentNote: value })
+            handleSaveField(String(row.original.id), "recentNote", value)
           }
           validationType="text"
           placeholder="No notes"
