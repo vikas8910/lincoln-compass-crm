@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Filter, X } from "lucide-react";
 import { FiUserPlus } from "react-icons/fi";
+import { FiMail, FiPhone, FiCheckSquare, FiFileText } from "react-icons/fi";
+import { MdInfoOutline } from "react-icons/md";
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -227,18 +229,29 @@ const Leads = () => {
         const { bg, text } = getAvatarColors(firstLetter);
 
         return (
-          <div className="flex items-center gap-5">
-            <div
-              className={`${bg} ${text} h-8 w-8 rounded-full flex items-center justify-center font-semibold text-sm shrink-0`}
-            >
-              {firstLetter}
+          <div className="flex items-center gap-5 group">
+            <div className="flex items-center gap-5 w-64">
+              <div
+                className={`${bg} ${text} h-8 w-8 rounded-full flex items-center justify-center font-semibold text-sm shrink-0`}
+              >
+                {firstLetter}
+              </div>
+              <Link
+                className="text-[#2c5cc5] font-bold whitespace-nowrap"
+                to={`/lead-details/${user.id}`}
+              >
+                {user.firstName} {user.lastName}
+              </Link>
             </div>
-            <Link
-              className="text-[#2c5cc5] font-bold whitespace-nowrap"
-              to={`/lead-details/${user.id}`}
-            >
-              {user.firstName} {user.lastName}
-            </Link>
+            <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Link to={`/lead-details/${user.id}`}>
+                <MdInfoOutline /> {/* Details */}
+              </Link>
+              <FiMail /> {/* Email */}
+              <FiPhone /> {/* Call */}
+              <FiCheckSquare /> {/* Task */}
+              <FiFileText /> {/* Note */}
+            </div>
           </div>
         );
       },

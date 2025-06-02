@@ -2,6 +2,8 @@ import MainLayout from "@/components/layout/MainLayout";
 import { LeadDetailsSidebar } from "@/components/leads/lead-details/LeadDetailsSidebar";
 import { LeadHeader } from "@/components/leads/lead-details/LeadHeader";
 import { LeadOverview } from "@/components/leads/lead-details/LeadOverview";
+import LeadStaging from "@/components/leads/lead-details/LeadStaging";
+import TagManager from "@/components/leads/lead-details/TagManager";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,62 +11,26 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card } from "@/components/ui/card";
-import {
-  getLeadFullDetails,
-  updateLeadFullDetails,
-} from "@/services/lead/lead";
-import { Lead } from "@/types/lead";
-import { useEffect, useState } from "react";
+import { useLeadDetails } from "@/context/LeadsProvider";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { toast } from "sonner";
 
 const LeadDetails: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
-  const [lead, setLead] = useState<Lead | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"details" | "activities">(
-    "details"
-  );
+  const { lead, isLoading, activeTab, setActiveTab, fetchLead, handleSave } =
+    useLeadDetails();
 
-  // Fetch lead data
+  // Fetch lead data when component mounts or leadId changes
   useEffect(() => {
-    const fetchLead = async () => {
-      if (!leadId) return;
-      try {
-        setIsLoading(true);
-        const lead = await getLeadFullDetails(leadId);
-        setLead({
-          ...lead.editableFields,
-          ...lead.readOnlyFields,
-          createdAt: lead.createdAt,
-          updatedAt: lead.updatedAt,
-        });
-      } catch (error) {
-        toast.error("Failed to load lead details");
-        console.error("Error fetching lead:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLead();
-  }, [leadId]);
-
-  // Handle save operations
-  const handleSave = async (key: string, value: string) => {
-    try {
-      const data = await updateLeadFullDetails(leadId, key, value);
-      setLead({
-        ...data.editableFields,
-        ...data.readOnlyFields,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-      });
-      toast.success("Lead details updated successfully");
-    } catch (error) {
-      toast.error("Failed to update lead details");
-      throw error;
+    if (leadId) {
+      fetchLead(leadId);
     }
+  }, [leadId]); // Remove fetchLead from dependencies since it's memoized
+
+  // Handle save operations with leadId
+  const onSave = async (key: string, value: string) => {
+    if (!leadId) return;
+    await handleSave(leadId, key, value);
   };
 
   if (isLoading) {
@@ -107,16 +73,23 @@ const LeadDetails: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <Card className="p-4 shadow-lg bg-gray-100/5">
-        <LeadHeader lead={lead} />
-        <LeadOverview lead={lead} onSave={handleSave} />
+      <div className="flex flex-col gap-4">
+        <Card className="p-4 shadow-lg bg-[#f3f5f8] flex flex-col gap-4">
+          <LeadHeader lead={lead} />
+          <TagManager />
+          <LeadOverview onSave={onSave} />
+          <div className="mt-8">
+            <LeadStaging />
+          </div>
+        </Card>
+
         <LeadDetailsSidebar
           activeTab={activeTab}
           onTabChange={setActiveTab}
           lead={lead}
-          onSave={handleSave}
+          onSave={onSave}
         />
-      </Card>
+      </div>
     </MainLayout>
   );
 };
