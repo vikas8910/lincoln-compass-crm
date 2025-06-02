@@ -35,6 +35,13 @@ interface UIConfig {
   scope_description?: string;
   show_scope_inline?: boolean;
   numeric_config?: NumericConfig;
+  select_options?: SelectOption[];
+  select_label?: string;
+}
+
+interface SelectOption {
+  label: string;
+  value: string;
 }
 
 interface CurrentPermission {
@@ -51,6 +58,7 @@ interface CurrentPermission {
   createScopeId?: number;
   editScopeId?: number;
   deleteScopeId?: number;
+  selectedValue?: string;
 }
 
 interface Permission {
@@ -617,7 +625,51 @@ const Permissions = () => {
           </div>
         );
       case "CHECKBOX_WITH_SELECT":
-        return <span>checkbox with select</span>;
+        return (
+          <div className="border rounded-lg p-4 mb-4" key={permission.id}>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={currentPerm.isEnabled || false}
+                  onChange={(e) =>
+                    updatePermission(categoryId, permission.id, {
+                      isEnabled: e.target.checked,
+                    })
+                  }
+                  className="mr-3"
+                />
+                <span className="font-medium">{permission.name}</span>
+              </label>
+
+              {/* Alternative: if using different select options */}
+              {currentPerm.isEnabled && uiConfig.select_options && (
+                <div className="flex items-center space-x-2">
+                  {/* <span className="text-sm text-gray-600">
+                    {uiConfig.select_label || "Select:"}
+                  </span> */}
+                  <select
+                    value={currentPerm.applicableModules?.[0] || ""}
+                    onChange={(e) =>
+                      updatePermission(categoryId, permission.id, {
+                        applicableModules: [e.target.value],
+                      })
+                    }
+                    className="px-3 py-1 border rounded text-sm min-w-[120px]"
+                    disabled={!currentPerm.isEnabled}
+                  >
+                    <option value="">Choose option</option>
+                    {uiConfig.select_options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
+        );
       case "CHECKBOX":
       default:
         return (
