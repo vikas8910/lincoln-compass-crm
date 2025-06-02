@@ -5,7 +5,7 @@ import {
   getPermissionsByRoleId,
   updatePermissionsByRoleId,
 } from "@/services/permission-service/permission-service";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 // Type definitions based on API response
@@ -47,6 +47,10 @@ interface CurrentPermission {
   isEnabled?: boolean;
   numericValue?: number;
   applicableModules?: string[] | null;
+  viewScopeId?: number;
+  createScopeId?: number;
+  editScopeId?: number;
+  deleteScopeId?: number;
 }
 
 interface Permission {
@@ -176,17 +180,22 @@ const Permissions = () => {
       canCreate: boolean;
       canEdit: boolean;
       canDelete: boolean;
-      scopeId: number | null;
       isEnabled: boolean;
       numericValue: number;
       applicableModules: string[];
+      viewScopeId: number;
+      createScopeId: number;
+      editScopeId: number;
+      deleteScopeId: number;
     }[] = [];
 
     if (apiData) {
       apiData.categories.forEach((category) => {
         category.permissions.forEach((permission) => {
           const currentPerm = permission.currentPermissions?.[0];
-
+          const uiConfig = permission.uiConfig || {};
+          const defaultScopeId =
+            uiConfig.scope_options?.find((s) => s.name === "Can't")?.id || 3;
           if (currentPerm) {
             permissions.push({
               permissionId: permission.id,
@@ -194,10 +203,13 @@ const Permissions = () => {
               canCreate: currentPerm.canCreate || false,
               canEdit: currentPerm.canEdit || false,
               canDelete: currentPerm.canDelete || false,
-              scopeId: currentPerm.scopeId || null,
               isEnabled: currentPerm.isEnabled || false,
               numericValue: currentPerm.numericValue || 0,
               applicableModules: currentPerm.applicableModules || [],
+              viewScopeId: currentPerm.viewScopeId || defaultScopeId,
+              createScopeId: currentPerm.createScopeId || defaultScopeId,
+              editScopeId: currentPerm.editScopeId || defaultScopeId,
+              deleteScopeId: currentPerm.deleteScopeId || defaultScopeId,
             });
           }
         });
@@ -215,6 +227,44 @@ const Permissions = () => {
     }
   };
 
+  const handleCrudMatrixCheckBox = (
+    categoryId: number,
+    permission: any,
+    e: ChangeEvent<HTMLInputElement>,
+    hasScope: boolean,
+    permissionId: number
+  ) => {
+    if (hasScope) {
+      updatePermission(categoryId, permissionId, {
+        viewScopeId: e.target.checked ? 1 : 3,
+        createScopeId: e.target.checked ? 1 : 3,
+        editScopeId: e.target.checked ? 1 : 3,
+        deleteScopeId: e.target.checked ? 1 : 3,
+        isEnabled: e.target.checked,
+      });
+    } else {
+      if (
+        !permission.canView &&
+        !permission.canCreate &&
+        !permission.canEdit &&
+        !permission.canDelete
+      ) {
+        updatePermission(categoryId, permissionId, {
+          canView: e.target.checked,
+          isEnabled: e.target.checked,
+        });
+      } else {
+        updatePermission(categoryId, permissionId, {
+          canView: false,
+          canCreate: false,
+          canEdit: false,
+          canDelete: false,
+          isEnabled: e.target.checked,
+        });
+      }
+    }
+  };
+
   const renderPermission = (categoryId: number, permission: Permission) => {
     const { uiComponent, uiConfig, currentPermissions } = permission;
     const currentPerm = currentPermissions?.[0] || {};
@@ -227,31 +277,15 @@ const Permissions = () => {
               <div className="flex items-center w-[250px]">
                 <input
                   type="checkbox"
-                  checked={
-                    currentPerm.canView ||
-                    currentPerm.canCreate ||
-                    currentPerm.canEdit ||
-                    currentPerm.canDelete ||
-                    false
-                  }
+                  checked={currentPerm.isEnabled || false}
                   onChange={(e) => {
-                    if (
-                      !currentPerm.canView &&
-                      !currentPerm.canCreate &&
-                      !currentPerm.canEdit &&
-                      !currentPerm.canDelete
-                    ) {
-                      updatePermission(categoryId, permission.id, {
-                        canView: e.target.checked,
-                      });
-                    } else {
-                      updatePermission(categoryId, permission.id, {
-                        canView: false,
-                        canCreate: false,
-                        canEdit: false,
-                        canDelete: false,
-                      });
-                    }
+                    handleCrudMatrixCheckBox(
+                      categoryId,
+                      currentPerm,
+                      e,
+                      uiConfig.has_scope,
+                      permission.id
+                    );
                   }}
                   className="mr-2"
                 />
@@ -264,27 +298,31 @@ const Permissions = () => {
                 <div className="font-medium text-sm">Delete</div>
 
                 <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={currentPerm.canView || false}
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        canView: e.target.checked,
-                      })
-                    }
-                    className="mr-2"
-                  />
-                  {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.scopeId || ""}
+                  {!uiConfig.has_scope && (
+                    <input
+                      type="checkbox"
+                      checked={currentPerm.canView || false}
                       onChange={(e) =>
                         updatePermission(categoryId, permission.id, {
-                          scopeId: parseInt(e.target.value),
+                          canView: e.target.checked,
+                        })
+                      }
+                      className="mr-2"
+                      disabled={!currentPerm.isEnabled}
+                    />
+                  )}
+                  {uiConfig.has_scope && uiConfig.scope_options && (
+                    <select
+                      value={currentPerm.viewScopeId || ""}
+                      onChange={(e) =>
+                        updatePermission(categoryId, permission.id, {
+                          viewScopeId: parseInt(e.target.value),
                         })
                       }
                       className="text-sm border rounded px-2 py-1"
+                      disabled={!currentPerm.isEnabled}
                     >
-                      <option value="">Select scope</option>
+                      {/* <option value="">Select</option> */}
                       {uiConfig.scope_options.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.name}
@@ -295,27 +333,31 @@ const Permissions = () => {
                 </label>
 
                 <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={currentPerm.canCreate || false}
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        canCreate: e.target.checked,
-                      })
-                    }
-                    className="mr-2"
-                  />
-                  {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.scopeId || ""}
+                  {!uiConfig.has_scope && (
+                    <input
+                      type="checkbox"
+                      checked={currentPerm.canCreate || false}
                       onChange={(e) =>
                         updatePermission(categoryId, permission.id, {
-                          scopeId: parseInt(e.target.value),
+                          canCreate: e.target.checked,
+                        })
+                      }
+                      className="mr-2"
+                      disabled={!currentPerm.isEnabled}
+                    />
+                  )}
+                  {uiConfig.has_scope && uiConfig.scope_options && (
+                    <select
+                      value={currentPerm.createScopeId || ""}
+                      onChange={(e) =>
+                        updatePermission(categoryId, permission.id, {
+                          createScopeId: parseInt(e.target.value),
                         })
                       }
                       className="ml-2 text-sm border rounded px-2 py-1"
+                      disabled={!currentPerm.isEnabled}
                     >
-                      <option value="">Select scope</option>
+                      {/* <option value="">Select</option> */}
                       {uiConfig.scope_options.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.name}
@@ -326,27 +368,31 @@ const Permissions = () => {
                 </label>
 
                 <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={currentPerm.canEdit || false}
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        canEdit: e.target.checked,
-                      })
-                    }
-                    className="mr-2"
-                  />
-                  {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.scopeId || ""}
+                  {!uiConfig.has_scope && (
+                    <input
+                      type="checkbox"
+                      checked={currentPerm.canEdit || false}
                       onChange={(e) =>
                         updatePermission(categoryId, permission.id, {
-                          scopeId: parseInt(e.target.value),
+                          canEdit: e.target.checked,
+                        })
+                      }
+                      className="mr-2"
+                      disabled={!currentPerm.isEnabled}
+                    />
+                  )}
+                  {uiConfig.has_scope && uiConfig.scope_options && (
+                    <select
+                      value={currentPerm.editScopeId || ""}
+                      onChange={(e) =>
+                        updatePermission(categoryId, permission.id, {
+                          editScopeId: parseInt(e.target.value),
                         })
                       }
                       className="text-sm border rounded px-2 py-1"
+                      disabled={!currentPerm.isEnabled}
                     >
-                      <option value="">Select scope</option>
+                      {/* <option value="">Select</option> */}
                       {uiConfig.scope_options.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.name}
@@ -357,27 +403,31 @@ const Permissions = () => {
                 </label>
 
                 <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={currentPerm.canDelete || false}
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        canDelete: e.target.checked,
-                      })
-                    }
-                    className="mr-2"
-                  />
-                  {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.scopeId || ""}
+                  {!uiConfig.has_scope && (
+                    <input
+                      type="checkbox"
+                      checked={currentPerm.canDelete || false}
                       onChange={(e) =>
                         updatePermission(categoryId, permission.id, {
-                          scopeId: parseInt(e.target.value),
+                          canDelete: e.target.checked,
+                        })
+                      }
+                      className="mr-2"
+                      disabled={!currentPerm.isEnabled}
+                    />
+                  )}
+                  {uiConfig.has_scope && uiConfig.scope_options && (
+                    <select
+                      value={currentPerm.deleteScopeId || ""}
+                      onChange={(e) =>
+                        updatePermission(categoryId, permission.id, {
+                          deleteScopeId: parseInt(e.target.value),
                         })
                       }
                       className="text-sm border rounded px-2 py-1"
+                      disabled={!currentPerm.isEnabled}
                     >
-                      <option value="">Select scope</option>
+                      {/* <option value="">Select</option> */}
                       {uiConfig.scope_options.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.name}
@@ -390,9 +440,6 @@ const Permissions = () => {
             </div>
           </div>
         );
-
-      // Replace the existing CHECKBOX_WITH_MULTISELECT case with this updated version:
-
       case "CHECKBOX_WITH_MULTISELECT":
         return (
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
@@ -569,7 +616,8 @@ const Permissions = () => {
             </div>
           </div>
         );
-
+      case "CHECKBOX_WITH_SELECT":
+        return <span>checkbox with select</span>;
       case "CHECKBOX":
       default:
         return (
