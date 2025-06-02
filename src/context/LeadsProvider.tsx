@@ -66,9 +66,10 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
         createdAt: leadData.createdAt,
         updatedAt: leadData.updatedAt,
         id: leadData.leadId,
-        status: leadData.editableFields?.status
-          ? leadData.editableFields?.status
-          : "1",
+        leadStage: leadData.editableFields?.leadStage || {
+          id: "1",
+          name: "New",
+        },
       };
 
       setLead(formattedLead);

@@ -1,16 +1,40 @@
 import { User, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 
-export const NoteForm = ({ isOpen, setIsOpen, relatedTo }) => {
-  const [noteText, setNoteText] = useState("");
+export const NoteForm = ({
+  isOpen,
+  setIsOpen,
+  relatedTo,
+  editingNote,
+  onSave,
+}) => {
+  const [noteText, setNoteText] = useState(editingNote?.text || "");
+
+  useEffect(() => {
+    if (editingNote) {
+      setNoteText(editingNote.text);
+    } else {
+      setNoteText("");
+    }
+  }, [editingNote, isOpen]);
 
   const handleDone = () => {
-    console.log("Note Data:", {
-      relatedTo: "Asif Mujawar",
-      noteText,
-      timestamp: new Date().toISOString(),
-    });
+    const noteData = {
+      id: editingNote?.id || Date.now(),
+      relatedTo: relatedTo,
+      text: noteText,
+      author: editingNote?.author || "Subramanian Iyer",
+      timestamp: editingNote?.timestamp || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    onSave(noteData, !!editingNote);
+    setIsOpen(false);
+    setNoteText("");
+  };
+
+  const handleClose = () => {
     setIsOpen(false);
     setNoteText("");
   };
@@ -24,9 +48,11 @@ export const NoteForm = ({ isOpen, setIsOpen, relatedTo }) => {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Add note</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          {editingNote ? "Edit note" : "Add note"}
+        </h2>
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
           className="text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X size={20} />

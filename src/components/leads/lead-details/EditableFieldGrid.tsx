@@ -59,6 +59,7 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
           textColor = "text-black",
           dateFormat,
           radioLayout,
+          sendCompleteObject,
         } = field;
 
         // Get value and handle multiselect arrays properly
@@ -128,6 +129,7 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
               dateFormat={dateFormat}
               // Radio specific props
               radioLayout={radioLayout}
+              sendCompleteObject={sendCompleteObject}
             />
           </div>
         );

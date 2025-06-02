@@ -10,17 +10,15 @@ import {
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LeadStagingFormData } from "@/types/lead";
+import { StageOption } from "@/types/lead";
+import { updateLeadFullDetails } from "@/services/lead/lead";
 
 const LeadStaging = () => {
   const { lead, setLead } = useLeadDetails();
-  const handleFormSave = async (formData: LeadStagingFormData) => {
+  const handleFormSave = async (stage: StageOption) => {
     try {
-      const stageById = stageOptions.find(
-        (item) => item.id === formData.statusId
-      );
-
-      setLead({ ...lead, leadStage: stageById });
+      await updateLeadFullDetails(lead.id, "leadStage", stage);
+      setLead({ ...lead, leadStage: stage });
       toast.success("Lead stage updated successfully");
     } catch (e) {
       toast.error("Failed to update Lead stage");

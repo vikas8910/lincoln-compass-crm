@@ -62,6 +62,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   customComponent: CustomComponent,
   customComponentProps = {},
   customDisplayValue,
+  sendCompleteObject = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -273,26 +274,63 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
   const handleSave = async () => {
     let valueToValidate: string | string[] | Date;
+    let valueToSave: any;
 
     switch (type) {
       case "input":
         valueToValidate = inputValue;
+        valueToSave = inputValue;
         break;
       case "dropdown":
+        valueToValidate = selectedValue;
+        if (sendCompleteObject && selectedValue && options.length > 0) {
+          const selectedOption = options.find(
+            (option) =>
+              String(option[fieldMapping.value]) === String(selectedValue)
+          );
+          valueToSave = selectedOption || selectedValue;
+        } else {
+          valueToSave = selectedValue;
+        }
+        break;
       case "radio":
         valueToValidate = selectedValue;
+        if (sendCompleteObject && selectedValue && options.length > 0) {
+          const selectedOption = options.find(
+            (option) =>
+              String(option[fieldMapping.value]) === String(selectedValue)
+          );
+          valueToSave = selectedOption || selectedValue;
+        } else {
+          valueToSave = selectedValue;
+        }
         break;
       case "multiselect":
         valueToValidate = selectedValues;
+        if (
+          sendCompleteObject &&
+          selectedValues.length > 0 &&
+          options.length > 0
+        ) {
+          valueToSave = selectedValues.map((val) => {
+            const selectedOption = options.find(
+              (option) => String(option[fieldMapping.value]) === String(val)
+            );
+            return selectedOption || val;
+          });
+        } else {
+          valueToSave = selectedValues;
+        }
         break;
       case "date":
         valueToValidate = selectedDate || "";
+        valueToSave = selectedDate || "";
         break;
       case "custom":
-        // Custom component handles save directly
         return;
       default:
         valueToValidate = inputValue;
+        valueToSave = inputValue;
     }
 
     if (!validateInput(valueToValidate)) {
@@ -301,7 +339,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
     setIsLoading(true);
     try {
-      await onSave(valueToValidate);
+      await onSave(valueToSave);
       handleClose();
     } catch (err) {
       setError("Failed to save. Please try again.");
@@ -310,7 +348,6 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     }
   };
 
-  // Custom component save handler
   const handleCustomSave = async (customValue: any) => {
     setIsLoading(true);
     try {

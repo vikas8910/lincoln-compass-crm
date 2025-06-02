@@ -24,7 +24,7 @@ interface LeadStagingFormData {
 
 interface LeadStagingFormProps {
   initialStatusId?: string;
-  onSave: (data: LeadStagingFormData) => void;
+  onSave: (data: StageOption) => void;
   stageOptions: StageOption[];
   className?: string;
 }

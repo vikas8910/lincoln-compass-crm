@@ -46,7 +46,7 @@ export const createLead = async (payload: createLeadFormValues) => {
 export const updateLeadFullDetails = async (
   id: string,
   key: string,
-  value: string
+  value: any
 ) => {
   try {
     const response = await axiosInstance.patch(`${LEADS}/${id}/details`, {

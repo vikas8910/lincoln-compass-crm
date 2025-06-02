@@ -204,4 +204,5 @@ export interface EditableCellProps {
   customComponent?: React.ComponentType<CustomComponentProps>;
   customComponentProps?: Record<string, any>; // Additional props to pass to custom component
   customDisplayValue?: (value: any) => string; // Function to determine display value for custom component
+  sendCompleteObject?: boolean;
 }

@@ -59,6 +59,7 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       fieldMapping: { value: "id", label: "name" },
       emptyOptionLabel: "Select Source",
       allowEmpty: true,
+      sendCompleteObject: true,
     },
 
     {
@@ -69,6 +70,7 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       fieldMapping: { value: "courseId", label: "title" },
       emptyOptionLabel: "Select Course",
       allowEmpty: true,
+      sendCompleteObject: true,
     },
     { key: "accounts", label: "Accounts", validationType: "text" },
     { key: "email", label: "Email", validationType: "email" },
