@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FiEye, FiEyeOff, FiLock, FiUser } from "react-icons/fi";
 import { login } from "@/services/auth/auth";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 
 type UserType = "admin" | "sales";
 
@@ -26,7 +26,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const { setAuthoritiesList } = useAuthoritiesList();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -64,6 +64,7 @@ const Login = () => {
   const authenticate = async (email: string, password: string) => {
     const res = await login(email, password);
     localStorage.setItem("accessToken", res.accessToken);
+    setAuthoritiesList(res.authorities);
   };
 
   const handleForgotPassword = () => {
@@ -79,6 +80,9 @@ const Login = () => {
       setRememberMe(true);
     }
   });
+  useEffect(() => {
+    localStorage.removeItem("accessToken");
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/20 p-4">
