@@ -15,6 +15,7 @@ import RolesUsers from "./pages/dashboard/RolesUsers";
 import LeadAssignment from "./pages/dashboard/LeadAssignment";
 import SalesOfficerRoles from "./pages/dashboard/SalesOfficerRoles";
 import LeadDetails from "./pages/lead/LeadDetails";
+import { LeadsProvider } from "./context/LeadsProvider";
 import Permissions from "./pages/dashboard/Permissions";
 
 const queryClient = new QueryClient();
@@ -71,7 +72,15 @@ const App = () => {
             />
             <Route
               path="/lead-details/:leadId"
-              element={<ProtectedRoute element={<LeadDetails />} />}
+              element={
+                <ProtectedRoute
+                  element={
+                    <LeadsProvider initialStatusId="1">
+                      <LeadDetails />
+                    </LeadsProvider>
+                  }
+                />
+              }
             />
 
             <Route

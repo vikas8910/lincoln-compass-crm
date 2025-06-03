@@ -9,9 +9,9 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
 }) => (
   <button
     onClick={() => onClick(id)}
-    className={`w-full text-left flex items-center gap-2 px-4 py-3 text-sm font-medium relative transition-colors ${
+    className={`w-full text-left flex items-center gap-5 px-4 py-3 text-sm font-normal relative transition-colors ${
       isActive
-        ? "text-blue-500 bg-blue-50"
+        ? "text-black bg-white shadow-md"
         : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
     }`}
   >

@@ -46,7 +46,7 @@ export const createLead = async (payload: createLeadFormValues) => {
 export const updateLeadFullDetails = async (
   id: string,
   key: string,
-  value: string
+  value: any
 ) => {
   try {
     const response = await axiosInstance.patch(`${LEADS}/${id}/details`, {
@@ -71,6 +71,46 @@ export const assignLeadToOfficer = async (id: string, salesOwnerId: string) => {
     return response.data;
   } catch (error) {
     console.error("Error updating role:", error);
+    throw error;
+  }
+};
+
+export const getAllTags = async () => {
+  try {
+    const response = await axiosInstance.get(`api/v1/tags`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    throw error;
+  }
+};
+
+export const createNewTag = async (payload: {
+  name: string;
+  description: string;
+  colorName: string;
+}) => {
+  try {
+    const response = await axiosInstance.post(`api/v1/tags`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    throw error;
+  }
+};
+
+export const assignTagsToLeads = async (payload: {
+  leadId: string;
+  tags: number[];
+}) => {
+  try {
+    const response = await axiosInstance.put(
+      `api/v1/leads/${payload.leadId}/tags`,
+      payload.tags
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching roles:", error);
     throw error;
   }
 };

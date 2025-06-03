@@ -148,3 +148,7 @@ export const getAvatarColors = (letter: string) => {
     colorMap[upperLetter] || { bg: "bg-[#f3f4f6]", text: "text-[#374151]" }
   );
 };
+
+export const getNestedValue = (obj, path) => {
+  return path.split(".").reduce((current, key) => current?.[key], obj);
+};

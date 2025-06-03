@@ -1,3 +1,4 @@
+import { Rating } from "@/components/common/Rating";
 import { getAvatarColors } from "@/lib/utils";
 import { Lead } from "@/types/lead";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
@@ -5,8 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   const { bg, text } = getAvatarColors(lead?.firstName?.charAt(0));
   return (
-    <div className="flex gap-3 divide-x-2 mb-4">
-      <div className="flex gap-2 items-center mb-5 pr-6">
+    <div className="flex gap-3">
+      <div className="flex gap-2 items-center pr-6">
         <Avatar className="h-20 w-20 rounded-full overflow-hidden">
           <AvatarImage src="" />
           <AvatarFallback
@@ -22,11 +23,16 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
         </div>
       </div>
 
-      <div className="text-sm flex flex-col gap-0.5 pl-6">
+      <div className="text-sm flex flex-col gap-0.5 pl-6 border border-l-slate-300 border-r-0 border-b-0 border-t-0">
         <span className="text-gray-500 font-medium">Score</span>
         <span className="font-bold text-lg">
           {lead.leadScore ? lead.leadScore : 0}
         </span>
+      </div>
+
+      <div className="text-sm flex flex-col gap-0.5 pl-6">
+        <span className="text-gray-500 font-medium">Customer Fit</span>
+        <Rating rating={(lead.leadScore / 100) * 5} />
       </div>
     </div>
   );

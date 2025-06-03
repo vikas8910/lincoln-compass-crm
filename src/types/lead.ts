@@ -1,9 +1,11 @@
+import { validationSchemas } from "@/components/tablec/EditableCell";
 import type {
   ColumnFiltersState,
   PaginationState,
   SortingState,
 } from "@tanstack/react-table";
 import { LucideIcon } from "lucide-react";
+import { z } from "zod";
 
 export interface UseUsersInput {
   sorting: SortingState;
@@ -32,7 +34,7 @@ export interface InfoCardProps {
   validationType?: string;
   fieldKey: string;
   isEditable?: boolean;
-  onSave?: (key: string, value: string) => void;
+  onSave?: (key: string, value: string | string[] | Date) => void;
   disabled?: boolean;
   textColor?: string;
 }
@@ -46,7 +48,7 @@ export interface SidebarItemProps {
 }
 
 export interface Lead {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -54,7 +56,10 @@ export interface Lead {
   source: string;
   course: string;
   leadType: string;
-  leadStage: string;
+  leadStage: {
+    id: string;
+    name: string;
+  };
   intake: string;
   assignedTo: string | null;
   assignedCounselorName: string | null;
@@ -130,4 +135,74 @@ export type LeadStatus =
   | "On Campus"
   | "Customer";
 
-// Define the Lead type
+export interface StageOption {
+  id: string;
+  name: string;
+  type: "leadStage" | "prospectOutcome";
+}
+
+export interface LeadStagingFormData {
+  lifecycleStage: string;
+  statusId: string;
+  lostReason?: string;
+}
+
+export interface LeadStagingProps {
+  statusId?: string;
+}
+
+export interface Option {
+  [key: string]: any;
+}
+
+// Field mapping configuration for dropdown
+export interface FieldMapping {
+  value: string; // field name to use as value (e.g., 'id', 'userId', 'code')
+  label: string; // field name to use as display label (e.g., 'name', 'title', 'displayName')
+}
+
+// Custom component props interface
+export interface CustomComponentProps {
+  onSave: (value: any) => void;
+  onCancel: () => void;
+  currentValue?: any;
+  [key: string]: any; // Allow additional props
+}
+
+export interface EditableCellProps {
+  value: string | string[] | Date | null | undefined;
+  onSave: (value: string | string[] | Date | any) => void;
+  placeholder?: string;
+  validationType?: keyof typeof validationSchemas;
+  customValidation?: z.ZodSchema<string>;
+  className?: string;
+  disabled?: boolean;
+  textColor?: string;
+
+  // Component type - added 'custom' type
+  type?: "input" | "dropdown" | "multiselect" | "date" | "radio" | "custom";
+  options?: Option[];
+  fieldMapping?: FieldMapping;
+  allowEmpty?: boolean; // Whether to show "Select..." or empty option
+  emptyOptionLabel?: string;
+
+  // Multiselect specific props
+  maxSelections?: number; // Maximum number of selections allowed
+  chipColors?: {
+    background: string;
+    text: string;
+    border?: string;
+  };
+
+  // Date specific props
+  dateFormat?: string;
+
+  // Radio specific props
+  radioLayout?: "horizontal" | "vertical";
+
+  // Custom component props
+  customComponent?: React.ComponentType<CustomComponentProps>;
+  customComponentProps?: Record<string, any>; // Additional props to pass to custom component
+  customDisplayValue?: (value: any) => string; // Function to determine display value for custom component
+  sendCompleteObject?: boolean;
+}
