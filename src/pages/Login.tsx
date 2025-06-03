@@ -1,10 +1,16 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FiEye, FiEyeOff, FiLock, FiUser } from "react-icons/fi";
@@ -24,7 +30,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     // Basic validation
     if (!email || !password) {
       setError("Please enter both email and password");
@@ -34,7 +40,7 @@ const Login = () => {
       setError("Please enter a valid email address");
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
@@ -57,7 +63,7 @@ const Login = () => {
 
   const authenticate = async (email: string, password: string) => {
     const res = await login(email, password);
-    localStorage.setItem("token", res.token);
+    localStorage.setItem("accessToken", res.accessToken);
   };
 
   const handleForgotPassword = () => {
@@ -81,7 +87,7 @@ const Login = () => {
           <h1 className="text-3xl font-bold text-primary">Lincoln CRM</h1>
           <p className="mt-2 text-muted-foreground">Sign in to your account</p>
         </div>
-        
+
         <Card className="border shadow-lg animate-fade-in">
           <CardHeader>
             <CardTitle>Login</CardTitle>
@@ -89,7 +95,7 @@ const Login = () => {
               Enter your credentials to access the CRM system
             </CardDescription>
           </CardHeader>
-          
+
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
               {/* {error && (
@@ -97,7 +103,7 @@ const Login = () => {
                   {error}
                 </div>
               )} */}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -114,11 +120,10 @@ const Login = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                 
                 </div>
                 <div className="relative">
                   <FiLock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -150,7 +155,7 @@ const Login = () => {
                   </Button>
                 </div>
               </div>
-              
+
               {/* <div className="flex items-center space-x-2">
                 <Checkbox
                   id="remember"
@@ -170,13 +175,9 @@ const Login = () => {
                   </Button>
               </div> */}
             </CardContent>
-            
+
             <CardFooter>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </CardFooter>

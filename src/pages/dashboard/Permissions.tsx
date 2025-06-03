@@ -299,9 +299,9 @@ const Permissions = () => {
                 />
                 <h3 className="font-medium m-0 p-0">{permission.name}</h3>
               </div>
-              <div className="grid grid-cols-4 gap-4 items-center w-full">
+              <div className="grid grid-cols-3 gap-4 items-center w-full">
                 <div className="font-medium text-sm">View</div>
-                <div className="font-medium text-sm">Create</div>
+                {/* <div className="font-medium text-sm">Create</div> */}
                 <div className="font-medium text-sm">Edit</div>
                 <div className="font-medium text-sm">Delete</div>
 
@@ -340,7 +340,7 @@ const Permissions = () => {
                   )}
                 </label>
 
-                <label className="flex items-center">
+                {/* <label className="flex items-center">
                   {!uiConfig.has_scope && (
                     <input
                       type="checkbox"
@@ -365,7 +365,6 @@ const Permissions = () => {
                       className="ml-2 text-sm border rounded px-2 py-1"
                       disabled={!currentPerm.isEnabled}
                     >
-                      {/* <option value="">Select</option> */}
                       {uiConfig.scope_options.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.name}
@@ -373,7 +372,7 @@ const Permissions = () => {
                       ))}
                     </select>
                   )}
-                </label>
+                </label> */}
 
                 <label className="flex items-center">
                   {!uiConfig.has_scope && (

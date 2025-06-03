@@ -23,7 +23,7 @@ const queryClient = new QueryClient();
 const App = () => {
   // Check if user is logged in - in a real app, this would use a more robust auth system
   const isLoggedIn = (): boolean => {
-    return localStorage.getItem("token") !== null;
+    return localStorage.getItem("accessToken") !== null;
   };
 
   // Protected route component
@@ -91,7 +91,10 @@ const App = () => {
               path="/roles"
               element={<ProtectedRoute element={<RolesPermissions />} />}
             />
-	    <Route path="/permissions" element={<ProtectedRoute element={<Permissions />} />} />
+            <Route
+              path="/permissions"
+              element={<ProtectedRoute element={<Permissions />} />}
+            />
             <Route
               path="/roles-users"
               element={<ProtectedRoute element={<RolesUsers />} />}
