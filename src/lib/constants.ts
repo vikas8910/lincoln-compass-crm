@@ -666,5 +666,6 @@ export enum PermissionsEnum {
   MANAGE_SALES_TEAMS = "manage_sales_teams",
   LEADS_DELETE = "leads:delete",
   LEADS_VIEW = "leads:view",
-  LEADS_CREATE = "leads:create",
+  LEADS_CREATE = "create_records:leads",
+  LEADS_UPDATE = "leads:edit",
 }
