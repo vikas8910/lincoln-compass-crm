@@ -1,4 +1,5 @@
 import {
+  GET_AUTHORITIES,
   PERMISSION_ENDPOINT,
   ROLE_PERMISSION_MAPPING,
 } from "@/lib/api-endpoints";
@@ -71,6 +72,15 @@ export const updatePermissionsByRoleId = async (
       `api/roles/${roleId}/permissions`,
       payload
     );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAuthorities = async () => {
+  try {
+    const response = await axiosInstance.get(GET_AUTHORITIES);
     return response.data;
   } catch (error) {
     throw error;

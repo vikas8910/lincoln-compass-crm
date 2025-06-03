@@ -9,15 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import {
-  LayoutDashboard,
-  UserRound,
-  Users,
-  ClipboardList,
-  Shield,
-  UserCog,
-  KeyRound,
-} from "lucide-react";
+import { LayoutDashboard, Users, Shield, UserCog } from "lucide-react";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
 

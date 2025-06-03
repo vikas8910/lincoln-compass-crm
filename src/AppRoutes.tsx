@@ -12,8 +12,14 @@ import { useAuthoritiesList } from "./hooks/useAuthoritiesList";
 import { PermissionsEnum } from "./lib/constants";
 import NotHavingPermissions from "./pages/NotHavingPermissions";
 
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+  </div>
+);
+
 const AppRoutes = () => {
-  const { authoritiesList } = useAuthoritiesList();
+  const { authoritiesList, isLoading } = useAuthoritiesList();
   console.log("Authorities List:", authoritiesList);
 
   const isLoggedIn = (): boolean => {
@@ -47,6 +53,11 @@ const AppRoutes = () => {
     // If no specific permissions found, redirect to no-permissions
     return "/no-permissions";
   };
+
+  // Show loading spinner while authorities are being fetched
+  if (isLoading && isLoggedIn()) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <BrowserRouter>
@@ -115,7 +126,6 @@ const AppRoutes = () => {
           />
         )}
 
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
