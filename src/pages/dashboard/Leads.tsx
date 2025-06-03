@@ -418,16 +418,20 @@ const Leads = () => {
       ),
       enableColumnFilter: false,
     },
-    {
-      header: "Assigned To",
-      accessorKey: "salesOfficerId",
-      cell: ({ row }) => (
-        <div className="min-w-[160px]">
-          <AssignToDropdown lead={row.original} />
-        </div>
-      ),
-      enableColumnFilter: false,
-    },
+    ...(authoritiesList.includes(PermissionsEnum.ASSIGN_LEADS)
+      ? [
+          {
+            header: "Assigned To",
+            accessorKey: "salesOfficerId",
+            cell: ({ row }) => (
+              <div className="min-w-[160px]">
+                <AssignToDropdown lead={row.original} />
+              </div>
+            ),
+            enableColumnFilter: false,
+          },
+        ]
+      : []),
   ];
 
   // Error state

@@ -668,4 +668,5 @@ export enum PermissionsEnum {
   LEADS_VIEW = "leads:view",
   LEADS_CREATE = "create_records:leads",
   LEADS_UPDATE = "leads:edit",
+  ASSIGN_LEADS = "assign_records:leads",
 }

@@ -1,4 +1,4 @@
-import MainLayout from "@/components/layout/MainLayout";
+import MainLayout, { useSidebarContext } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -100,6 +100,7 @@ const Permissions = () => {
 
   const location = useLocation();
   const roleData = location.state;
+  const { isExpanded } = useSidebarContext();
 
   useEffect(() => {
     const fetchPermissionsData = async () => {
@@ -761,11 +762,16 @@ const Permissions = () => {
         </pre>
       </div> */}
       </div>
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 border-t flex justify-end">
-        <Button onClick={handleSaveChanges} className="bg-blue-600 text-white">
-          Save Changes
-        </Button>
-      </div>
+      {/* <div
+        className={`fixed bottom-0 right-0 bg-none shadow-lg p-4 border-t flex justify-end transition-all duration-300 z-0`}
+      > */}
+      <Button
+        onClick={handleSaveChanges}
+        className="fixed bottom-0 right-0 bg-blue-600 text-white m-5"
+      >
+        Save Changes
+      </Button>
+      {/* </div> */}
     </MainLayout>
   );
 };
