@@ -10,7 +10,7 @@ import { EditableFieldGrid } from "./EditableFieldGrid";
 import { LEAD_OVERVIEW_FIELDS } from "@/lib/constants";
 
 export const LeadOverview: React.FC<{
-  onSave: (key: string, value: string) => void;
+  onSave: (key: string, value: string | string[] | Date) => Promise<void>;
 }> = ({ onSave }) => {
   const { lead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
@@ -73,6 +73,8 @@ export const LeadOverview: React.FC<{
         isOpen={isOpen}
         setIsOpen={setIsOpen}
         relatedTo={`${lead.firstName} ${lead.lastName}`}
+        editingNote={null}
+        onSave={() => {}}
       />
     </div>
   );
