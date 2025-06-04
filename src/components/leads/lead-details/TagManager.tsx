@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit } from "lucide-react";
+import { Edit, Edit2Icon, Tag } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -56,22 +56,22 @@ const TagManager: React.FC = () => {
   const assignTagsToLead = async (tagIds: number[]): Promise<void> => {
     // Simulate API delay
 
-    // try {
-    //   const assignedTags = await assignTagsToLeads({
-    //     leadId: lead.id,
-    //     tags: tagIds,
-    //   });
-    //   toast.success("Tags assigned successfully");
-    // } catch {
-    //   toast.error("Failed to assign tags to lead");
-    // }
+    try {
+      const assignedTags = await assignTagsToLeads({
+        leadId: lead.id,
+        tags: tagIds,
+      });
+      toast.success("Tags assigned successfully");
+    } catch {
+      toast.error("Failed to assign tags to lead");
+    }
 
     // console.log("New Assigned Tags => ", assignedTags);
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
-    setAssignedTags(newAssignedTags);
+    // const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
+    // setAssignedTags(newAssignedTags);
   };
 
   const createTag = async (tagName: string): Promise<Tag> => {
@@ -185,23 +185,25 @@ const TagManager: React.FC = () => {
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
         <PopoverTrigger asChild>
           <div className="flex items-center space-x-2 cursor-pointer group justify-between w-full py-3 rounded-md hover:bg-gray-300">
-            {/* Display assigned tags as chips */}
-            <div className="flex items-center space-x-2">
-              {assignedTags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getTagColorClass(
-                    tag.color.name
-                  )} group-hover:shadow-sm transition-shadow`}
-                >
-                  {tag.name}
-                </div>
-              ))}
+            <div className="flex items-center gap-2">
+              <Tag />
+              <div className="flex items-center space-x-2">
+                {assignedTags.map((tag) => (
+                  <div
+                    key={tag.id}
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getTagColorClass(
+                      tag.color.name
+                    )} group-hover:shadow-sm transition-shadow`}
+                  >
+                    {tag.name}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Edit icon */}
-            <div className="flex items-center justify-center h-6 w-6 rounded hover:bg-gray-100 transition-colors">
-              <Edit className="h-3 w-3 text-gray-500" />
+            <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
+              <Edit2Icon className=" text-gray-500" />
             </div>
           </div>
         </PopoverTrigger>

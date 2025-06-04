@@ -1,4 +1,4 @@
-import { SIDEBAR_ITEMS } from "@/lib/constants";
+import { LEAD_DETAILS_EDITABLE_FIELDS, SIDEBAR_ITEMS } from "@/lib/constants";
 import { Lead } from "@/types/lead";
 import { SidebarItem } from "./SidebarItem";
 import { Card } from "../../ui/card";
@@ -45,7 +45,11 @@ export const LeadDetailsSidebar: React.FC<{
             <h3 className="text-lg font-semibold text-gray-900 mb-4 bg-gray-200 px-1 py-3 rounded-md">
               Basic Information
             </h3>
-            <EditableFieldGrid onSave={onSave} />
+            <EditableFieldGrid
+              onSave={onSave}
+              LEAD_DETAILS_EDITABLE_FIELDS={LEAD_DETAILS_EDITABLE_FIELDS}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+            />
           </div>
         )}
 

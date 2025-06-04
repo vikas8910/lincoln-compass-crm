@@ -40,12 +40,18 @@ import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import {
   DEBOUNCE_DELAY,
+  DROPDOWN_OPTIONS,
   INITIAL_PAGINATION,
   PermissionsEnum,
 } from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { createLeadFormValues } from "@/schemas/lead";
 import { getUsers } from "@/services/user-service/user-service";
+import {
+  getAllCourses,
+  getAllLeadTypes,
+  getAllSources,
+} from "@/services/dropdowns/dropdown";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { set } from "date-fns";
 
@@ -65,6 +71,34 @@ interface User {
   // Add other user properties as needed
 }
 
+// Option interfaces for dropdowns
+interface SourceOption {
+  id: number;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface CourseOption {
+  id: number;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface LeadTypeOption {
+  id: number;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 const Leads = () => {
   // Table state management
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -75,6 +109,11 @@ const Leads = () => {
   // Tab state management
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [users, setUsers] = useState<User[]>([]);
+
+  // Options for dropdowns - you'll need to fetch these from your APIs
+  const [sourceOptions, setSourceOptions] = useState<SourceOption[]>([]);
+  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
+  const [leadTypeOptions, setLeadTypeOptions] = useState<LeadTypeOption[]>([]);
 
   // UI state management
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
@@ -113,6 +152,24 @@ const Leads = () => {
 
   useEffect(() => {
     fetchUsers();
+    const getAllLeadTypesList = async () => {
+      const { content } = await getAllLeadTypes();
+      setLeadTypeOptions(content);
+    };
+
+    const getAllCoursesList = async () => {
+      const { content } = await getAllCourses();
+      setCourseOptions(content);
+    };
+
+    const getAllSourcesList = async () => {
+      const { content } = await getAllSources();
+      setSourceOptions(content);
+    };
+
+    getAllLeadTypesList();
+    getAllCoursesList();
+    getAllSourcesList();
     authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
       ? setIsEditable(false)
       : setIsEditable(true);
@@ -356,9 +413,14 @@ const Leads = () => {
           onSave={(value) =>
             handleSaveField({ ...row.original, source: value })
           }
-          validationType="textOnly"
-          placeholder="Enter source"
-          disabled={isEditable}
+          type="dropdown"
+          options={sourceOptions}
+          fieldMapping={{ value: "id", label: "name" }}
+          sendCompleteObject={true}
+          placeholder="Select source"
+          emptyOptionLabel="Select source..."
+          allowEmpty={true}
+	  disabled={isEditable}
         />
       ),
     },
@@ -371,9 +433,14 @@ const Leads = () => {
           onSave={(value) =>
             handleSaveField({ ...row.original, course: value })
           }
-          validationType="course"
-          placeholder="Enter course"
-          disabled={isEditable}
+          type="dropdown"
+          options={courseOptions}
+          fieldMapping={{ value: "id", label: "description" }}
+          sendCompleteObject={true}
+          placeholder="Select course"
+          emptyOptionLabel="Select course..."
+          allowEmpty={true}
+	  disabled={isEditable}
         />
       ),
     },
@@ -386,8 +453,13 @@ const Leads = () => {
           onSave={(value) =>
             handleSaveField({ ...row.original, leadType: value })
           }
-          validationType="textOnly"
-          placeholder="Enter lead type"
+          type="dropdown"
+          options={leadTypeOptions}
+          fieldMapping={{ value: "id", label: "name" }}
+          sendCompleteObject={true}
+          placeholder="Select lead type"
+          emptyOptionLabel="Select lead type..."
+          allowEmpty={true}
           disabled={isEditable}
         />
       ),
@@ -594,6 +666,9 @@ const Leads = () => {
         isOpen={isCreateLeadDialogOpen}
         onClose={() => setIsCreateLeadDialogOpen(false)}
         onSubmit={handleAddLead}
+        courseOptions={courseOptions}
+        sourceOptions={sourceOptions}
+        leadTypeOptions={leadTypeOptions}
       />
     </MainLayout>
   );

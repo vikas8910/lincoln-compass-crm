@@ -12,6 +12,14 @@ import {
   updateLeadFullDetails,
 } from "@/services/lead/lead";
 import { Lead } from "@/types/lead";
+import { DROPDOWN_OPTIONS } from "@/lib/constants";
+import {
+  getAllCountries,
+  getAllCourses,
+  getAllLeadTypes,
+  getAllSources,
+  getAllUniversities,
+} from "@/services/dropdowns/dropdown";
 
 // Types
 interface LeadDetailsContextType {
@@ -29,6 +37,7 @@ interface LeadDetailsContextType {
   fetchLead: (leadId: string) => Promise<void>;
   handleSave: (leadId: string, key: string, value: string) => Promise<void>;
   refreshLead: (leadId: string) => Promise<void>;
+  dropdownOptions: any;
 }
 
 interface LeadDetailsProviderProps {
@@ -50,7 +59,7 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
   const [activeTab, setActiveTab] = useState<"details" | "activities">(
     "details"
   );
-  // const [statusId, setStatusId] = useState<string>("");
+  const [dropdownOptions, setDropdownOptions] = useState(DROPDOWN_OPTIONS);
 
   // Fetch lead data
   const fetchLead = useCallback(async (leadId: string) => {
@@ -80,6 +89,39 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const getAllUnivertiesList = async () => {
+      const { content } = await getAllUniversities();
+      setDropdownOptions((prev) => ({ ...prev, university: content }));
+    };
+
+    const getAllLeadTypesList = async () => {
+      const { content } = await getAllLeadTypes();
+      setDropdownOptions((prev) => ({ ...prev, leadType: content }));
+    };
+
+    const getAllCoursesList = async () => {
+      const { content } = await getAllCourses();
+      setDropdownOptions((prev) => ({ ...prev, courses: content }));
+    };
+
+    const getAllSourcesList = async () => {
+      const { content } = await getAllSources();
+      setDropdownOptions((prev) => ({ ...prev, source: content }));
+    };
+
+    const getAllCountriesList = async () => {
+      const { content } = await getAllCountries();
+      setDropdownOptions((prev) => ({ ...prev, countries: content }));
+    };
+
+    getAllUnivertiesList();
+    getAllLeadTypesList();
+    getAllCoursesList();
+    getAllSourcesList();
+    getAllCountriesList();
   }, []);
 
   // Handle save operations
@@ -142,6 +184,7 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     fetchLead,
     handleSave,
     refreshLead,
+    dropdownOptions,
   };
 
   return (

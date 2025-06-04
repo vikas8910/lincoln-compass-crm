@@ -20,26 +20,50 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { createLeadFormValues, leadSchema } from "@/schemas/lead";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Option {
+  id: string;
+  name: string;
+}
 
 interface LeadFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: createLeadFormValues) => void;
+  courseOptions: Option[];
+  sourceOptions: Option[];
+  leadTypeOptions: Option[];
 }
 
 const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  courseOptions,
+  sourceOptions,
+  leadTypeOptions,
 }) => {
-  // Create separate form configurations based on the type
   const form = useForm<createLeadFormValues>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
+      course: undefined,
+      source: undefined,
+      leadType: undefined,
+      email: "",
+      mobile: "",
+      backupMobileNumber: "",
+      externalId: "",
     },
-    mode: "onChange", // Changed from "all" to "onChange" for real-time validation
+    mode: "onChange",
   });
 
   const handleClose = () => {
@@ -68,6 +92,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4 py-4"
           >
+            {/* Text Inputs */}
             <FormField
               control={form.control}
               name="firstName"
@@ -87,7 +112,6 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="lastName"
@@ -108,21 +132,40 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               )}
             />
 
+            {/* Dropdowns - Now Optional */}
             <FormField
               control={form.control}
               name="source"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter source"
-                      className={
-                        form.formState.errors.source ? "border-red-500" : ""
+                  <FormLabel>Source (Optional)</FormLabel>
+                  <Select
+                    onValueChange={(val) => {
+                      if (val === "none") {
+                        field.onChange(undefined);
+                      } else {
+                        const selected = sourceOptions.find(
+                          (opt) => opt.id === val
+                        );
+                        field.onChange(selected);
                       }
-                      {...field}
-                    />
-                  </FormControl>
+                    }}
+                    value={field.value?.id || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {sourceOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          {opt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -133,21 +176,78 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="course"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Course</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter course"
-                      className={
-                        form.formState.errors.course ? "border-red-500" : ""
+                  <FormLabel>Course (Optional)</FormLabel>
+                  <Select
+                    onValueChange={(val) => {
+                      if (val === "none") {
+                        field.onChange(undefined);
+                      } else {
+                        const selected = courseOptions.find(
+                          (opt) => opt.id === val
+                        );
+                        field.onChange(selected);
                       }
-                      {...field}
-                    />
-                  </FormControl>
+                    }}
+                    value={field.value?.id || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select course (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {courseOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          {opt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="leadType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lead Type (Optional)</FormLabel>
+                  <Select
+                    onValueChange={(val) => {
+                      if (val === "none") {
+                        field.onChange(undefined);
+                      } else {
+                        const selected = leadTypeOptions.find(
+                          (opt) => opt.id === val
+                        );
+                        field.onChange(selected);
+                      }
+                    }}
+                    value={field.value?.id || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lead type (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {leadTypeOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          {opt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Remaining Inputs */}
             <FormField
               control={form.control}
               name="email"
@@ -160,26 +260,6 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                       placeholder="Enter email"
                       className={
                         form.formState.errors.email ? "border-red-500" : ""
-                      }
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="leadType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lead Type</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter lead type"
-                      className={
-                        form.formState.errors.leadType ? "border-red-500" : "" // Fixed: was checking 'course' instead of 'leadType'
                       }
                       {...field}
                     />
@@ -212,17 +292,12 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
             <FormField
               control={form.control}
               name="backupMobileNumber"
-              rules={{
-                validate: (value) =>
-                  value !== form.watch("mobile") ||
-                  "Primary and backup mobile numbers must be different",
-              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Mobile number Backup</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter mobile number backup"
+                      placeholder="Enter backup mobile"
                       className={
                         form.formState.errors.backupMobileNumber
                           ? "border-red-500"
@@ -246,7 +321,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                     <Input
                       placeholder="Enter external id"
                       className={
-                        form.formState.errors.externalId ? "border-red-500" : "" // Fixed: was checking 'course' instead of 'leadType'
+                        form.formState.errors.externalId ? "border-red-500" : ""
                       }
                       {...field}
                     />

@@ -15,15 +15,14 @@ export const leadSchema = z
 
     backupMobileNumber: z
       .string()
-      .regex(/^\d{10,15}$/, { message: "Mobile must be 10–15 digits" }),
+      .regex(/^\d{10,15}$/, { message: "Mobile must be 10–15 digits" })
+      .optional(),
 
-    source: commonValidationSchemas.textOnly,
+    source: z.object({ label: z.string(), value: z.string() }).optional(),
+    course: z.object({ label: z.string(), value: z.string() }).optional(),
+    leadType: z.object({ label: z.string(), value: z.string() }).optional(),
 
-    course: commonValidationSchemas.course,
-
-    leadType: commonValidationSchemas.textOnly,
-
-    externalId: commonValidationSchemas.numberOnly,
+    externalId: commonValidationSchemas.numberOnly.optional(),
   })
   .refine((data) => data.mobile !== data.backupMobileNumber, {
     message: "Primary and backup mobile numbers must be different",

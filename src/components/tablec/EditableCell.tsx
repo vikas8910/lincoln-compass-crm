@@ -77,6 +77,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   const schema = customValidation || validationSchemas[validationType];
 
   // Helper function to get display value for different input types
+
   const getDisplayValue = (
     val: string | string[] | Date | null | undefined
   ): string => {
@@ -88,12 +89,39 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
       case "dropdown":
         if (options.length > 0) {
+          let compareValue: string;
+          let displayLabel: string;
+
+          // Handle case where val is an object (when sendCompleteObject is true)
+          if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+            compareValue = String((val as any)[fieldMapping.value]);
+            // Try to get the label from the object first
+            displayLabel = (val as any)[fieldMapping.label];
+            if (displayLabel) {
+              return displayLabel;
+            }
+          }
+          // Handle case where object was stringified to "[object Object]"
+          else if (val === "[object Object]") {
+            // Cannot extract value from stringified object, return placeholder
+            return placeholder;
+          } else {
+            compareValue = String(val);
+          }
+
+          // Fallback: search in options if we don't have a direct label
           const selectedOption = options.find(
-            (option) => String(option[fieldMapping.value]) === String(val)
+            (option) => String(option[fieldMapping.value]) === compareValue
           );
           return selectedOption
             ? selectedOption[fieldMapping.label]
-            : placeholder;
+            : compareValue || placeholder; // Show the raw value if no option found
+        }
+        // Handle object case when no options available
+        if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+          return (
+            (val as any)[fieldMapping.label] || (val as any).name || placeholder
+          );
         }
         return (val as string) || placeholder;
 
@@ -119,12 +147,38 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 
       case "radio":
         if (options.length > 0) {
+          let compareValue: string;
+          let displayLabel: string;
+
+          // Handle case where val is an object
+          if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+            compareValue = String((val as any)[fieldMapping.value]);
+            // Try to get the label from the object first
+            displayLabel = (val as any)[fieldMapping.label];
+            if (displayLabel) {
+              return displayLabel;
+            }
+          }
+          // Handle case where object was stringified to "[object Object]"
+          else if (val === "[object Object]") {
+            return placeholder;
+          } else {
+            compareValue = String(val);
+          }
+
+          // Fallback: search in options if we don't have a direct label
           const selectedOption = options.find(
-            (option) => String(option[fieldMapping.value]) === String(val)
+            (option) => String(option[fieldMapping.value]) === compareValue
           );
           return selectedOption
             ? selectedOption[fieldMapping.label]
-            : placeholder;
+            : compareValue || placeholder; // Show the raw value if no option found
+        }
+        // Handle object case when no options available
+        if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+          return (
+            (val as any)[fieldMapping.label] || (val as any).name || placeholder
+          );
         }
         return (val as string) || placeholder;
 
@@ -135,6 +189,19 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         return (val as string) || placeholder;
 
       default:
+        // Handle object values for default case
+        if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+          // Try to extract a meaningful display value from the object
+          if (fieldMapping && (val as any)[fieldMapping.label]) {
+            return (val as any)[fieldMapping.label];
+          }
+          // Fallback to name property if available
+          if ((val as any).name) {
+            return (val as any).name;
+          }
+          // Last resort: return placeholder instead of trying to render object
+          return placeholder;
+        }
         return (val as string) || placeholder;
     }
   };
@@ -169,7 +236,22 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         setInputValue((value as string) || "");
         break;
       case "dropdown":
-        setSelectedValue((value as string) || "");
+        // Handle object values for dropdown
+        let dropdownValue: string = "";
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          dropdownValue = String((value as any)[fieldMapping.value]);
+        }
+        // Handle stringified object case - cannot extract value, so set empty
+        else if (value === "[object Object]") {
+          dropdownValue = "";
+        } else {
+          dropdownValue = (value as string) || "";
+        }
+        setSelectedValue(dropdownValue);
         break;
       case "multiselect":
         setSelectedValues(Array.isArray(value) ? value : []);
@@ -188,7 +270,22 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         }
         break;
       case "radio":
-        setSelectedValue((value as string) || "");
+        // Handle object values for radio
+        let radioValue: string = "";
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          radioValue = String((value as any)[fieldMapping.value]);
+        }
+        // Handle stringified object case
+        else if (value === "[object Object]") {
+          radioValue = "";
+        } else {
+          radioValue = (value as string) || "";
+        }
+        setSelectedValue(radioValue);
         break;
       case "custom":
         // Custom component handles its own state
