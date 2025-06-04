@@ -31,6 +31,7 @@ import {
 interface Option {
   id: string;
   name: string;
+  description?: string;
 }
 
 interface LeadFormDialogProps {
@@ -40,6 +41,7 @@ interface LeadFormDialogProps {
   courseOptions: Option[];
   sourceOptions: Option[];
   leadTypeOptions: Option[];
+  initialData?: createLeadFormValues; // For editing existing leads
 }
 
 const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
@@ -49,15 +51,16 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
   courseOptions,
   sourceOptions,
   leadTypeOptions,
+  initialData,
 }) => {
   const form = useForm<createLeadFormValues>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
-      course: undefined,
-      source: undefined,
-      leadType: undefined,
+      courseId: undefined,
+      sourceId: undefined,
+      leadTypeId: undefined,
       email: "",
       mobile: "",
       backupMobileNumber: "",
@@ -66,13 +69,47 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
     mode: "onChange",
   });
 
+  // Reset form when initialData changes or dialog opens
+  React.useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    } else {
+      form.reset({
+        firstName: "",
+        lastName: "",
+        courseId: undefined,
+        sourceId: undefined,
+        leadTypeId: undefined,
+        email: "",
+        mobile: "",
+        backupMobileNumber: "",
+        externalId: "",
+      });
+    }
+  }, [initialData, isOpen, form]);
+
   const handleClose = () => {
     form.reset();
     onClose();
   };
 
   const handleSubmit = async (data: createLeadFormValues) => {
-    await onSubmit(data);
+    // Convert IDs back to objects for submission
+    const submissionData = {
+      ...data,
+      // Find the actual objects based on IDs
+      source: data.sourceId
+        ? sourceOptions.find((opt) => String(opt.id) === data.sourceId)
+        : undefined,
+      course: data.courseId
+        ? courseOptions.find((opt) => String(opt.id) === data.courseId)
+        : undefined,
+      leadType: data.leadTypeId
+        ? leadTypeOptions.find((opt) => String(opt.id) === data.leadTypeId)
+        : undefined,
+    };
+
+    await onSubmit(submissionData);
     form.reset();
     onClose();
   };
@@ -98,7 +135,9 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>
+                    First Name <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter Name"
@@ -112,12 +151,15 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel>
+                    Last Name <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter last name"
@@ -132,25 +174,18 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               )}
             />
 
-            {/* Dropdowns - Now Optional */}
+            {/* Dropdowns - Now using IDs */}
             <FormField
               control={form.control}
-              name="source"
+              name="sourceId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Source (Optional)</FormLabel>
                   <Select
                     onValueChange={(val) => {
-                      if (val === "none") {
-                        field.onChange(undefined);
-                      } else {
-                        const selected = sourceOptions.find(
-                          (opt) => opt.id === val
-                        );
-                        field.onChange(selected);
-                      }
+                      field.onChange(val === "none" ? undefined : val);
                     }}
-                    value={field.value?.id || ""}
+                    value={field.value?.toString() || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -160,7 +195,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
                       {sourceOptions.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.id}>
+                        <SelectItem key={opt.id} value={opt.id.toString()}>
                           {opt.name}
                         </SelectItem>
                       ))}
@@ -173,22 +208,15 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
 
             <FormField
               control={form.control}
-              name="course"
+              name="courseId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Course (Optional)</FormLabel>
                   <Select
                     onValueChange={(val) => {
-                      if (val === "none") {
-                        field.onChange(undefined);
-                      } else {
-                        const selected = courseOptions.find(
-                          (opt) => opt.id === val
-                        );
-                        field.onChange(selected);
-                      }
+                      field.onChange(val === "none" ? undefined : val);
                     }}
-                    value={field.value?.id || ""}
+                    value={field.value?.toString() || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -198,8 +226,8 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
                       {courseOptions.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.id}>
-                          {opt.name}
+                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                          {opt.description}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -211,22 +239,15 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
 
             <FormField
               control={form.control}
-              name="leadType"
+              name="leadTypeId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Lead Type (Optional)</FormLabel>
                   <Select
                     onValueChange={(val) => {
-                      if (val === "none") {
-                        field.onChange(undefined);
-                      } else {
-                        const selected = leadTypeOptions.find(
-                          (opt) => opt.id === val
-                        );
-                        field.onChange(selected);
-                      }
+                      field.onChange(val === "none" ? undefined : val);
                     }}
-                    value={field.value?.id || ""}
+                    value={field.value?.toString() || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -236,7 +257,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
                       {leadTypeOptions.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.id}>
+                        <SelectItem key={opt.id} value={opt.id.toString()}>
                           {opt.name}
                         </SelectItem>
                       ))}
@@ -253,7 +274,9 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>
+                    Email <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -274,7 +297,9 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="mobile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mobile</FormLabel>
+                  <FormLabel>
+                    Mobile <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter mobile"
