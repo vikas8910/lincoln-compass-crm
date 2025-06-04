@@ -10,6 +10,44 @@ import AddressFormPopover from "./LeadAddressPopover";
 export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   const { bg, text } = getAvatarColors(lead?.firstName?.charAt(0));
 
+  // Function to format address
+  const formatAddress = () => {
+    const addressParts = [
+      lead.leadAddress,
+      lead.leadAddrCity,
+      lead.leadAddrState,
+      lead.leadAddrZipCode,
+      lead.leadAddrCountry,
+    ].filter(Boolean); // Remove empty/null values
+
+    return addressParts.join(", ");
+  };
+
+  // Check if any address information is available
+  const hasAddressInfo =
+    lead.leadAddrCity || lead.leadAddrState || lead.leadAddrCountry;
+  const formattedAddress = formatAddress();
+
+  // Function to copy address to clipboard
+  const copyAddressToClipboard = async () => {
+    if (formattedAddress) {
+      try {
+        await navigator.clipboard.writeText(formattedAddress);
+      } catch (err) {
+        console.error("Failed to copy address: ", err);
+      }
+    }
+  };
+
+  // Function to handle social media navigation
+  const handleSocialClick = (url: string | undefined, platform: string) => {
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      console.log(`No ${platform} URL available`);
+    }
+  };
+
   return (
     <div className="flex gap-3">
       <div className="flex gap-2 items-start pr-6">
@@ -29,13 +67,43 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                   {lead.firstName} {lead.lastName}
                 </h1>
                 <div className="flex gap-1 text-white">
-                  <div className="bg-blue-600 rounded-full p-1 hover:bg-blue-700 transition">
+                  <div
+                    className={`rounded-full p-1 transition cursor-pointer ${
+                      lead.facebookUrl
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick(lead.facebookUrl, "Facebook");
+                    }}
+                  >
                     <FaFacebook className="h-4 w-4" />
                   </div>
-                  <div className="bg-sky-500 rounded-full p-1 hover:bg-sky-600 transition">
+                  <div
+                    className={`rounded-full p-1 transition cursor-pointer ${
+                      lead.twitterUrl
+                        ? "bg-sky-500 hover:bg-sky-600"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick(lead.twitterUrl, "Twitter");
+                    }}
+                  >
                     <FaTwitter className="h-4 w-4" />
                   </div>
-                  <div className="bg-blue-800 rounded-full p-1 hover:bg-blue-900 transition">
+                  <div
+                    className={`rounded-full p-1 transition cursor-pointer ${
+                      lead.linkedInUrl
+                        ? "bg-blue-800 hover:bg-blue-900"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSocialClick(lead.linkedInUrl, "LinkedIn");
+                    }}
+                  >
                     <FaLinkedin className="h-4 w-4" />
                   </div>
                 </div>
@@ -44,8 +112,20 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
             <AddressFormPopover>
               <div className="flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-200 cursor-pointer p-2">
                 <MapPinIcon className="h-4 w-4" />
-                <span>Location</span>
-                <Copy className="h-3 w-3 text-gray-400" />
+                {hasAddressInfo ? (
+                  <>
+                    <span className="flex-1">{formattedAddress}</span>
+                    <Copy
+                      className="h-3 w-3 text-gray-400 hover:text-gray-600 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent popover from opening
+                        copyAddressToClipboard();
+                      }}
+                    />
+                  </>
+                ) : (
+                  <span className="text-gray-400">Click to add location</span>
+                )}
               </div>
             </AddressFormPopover>
           </div>

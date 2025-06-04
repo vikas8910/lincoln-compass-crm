@@ -32,9 +32,9 @@ const profileSchema = z.object({
     .string()
     .min(1, "Last name is required")
     .regex(/^[a-zA-Z\s\-']+$/, "Last name must contain only letters"),
-  facebookUrl: z.string().optional(),
-  twitterUrl: z.string().optional(),
-  linkedInUrl: z.string().optional(),
+  facebookUrl: z.string().nullable().optional().or(z.literal("")),
+  twitterUrl: z.string().nullable().optional().or(z.literal("")),
+  linkedInUrl: z.string().nullable().optional().or(z.literal("")),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;

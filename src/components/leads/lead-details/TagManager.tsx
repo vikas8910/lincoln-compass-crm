@@ -8,9 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  assignTagsToLeads,
   createNewTag,
   getAllTags,
+  updateLeadFullDetails,
 } from "@/services/lead/lead";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ interface Tag {
 }
 
 const TagManager: React.FC = () => {
-  const { lead } = useLeadDetails();
+  const { lead, setLead } = useLeadDetails();
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [assignedTags, setAssignedTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
@@ -56,22 +56,33 @@ const TagManager: React.FC = () => {
   const assignTagsToLead = async (tagIds: number[]): Promise<void> => {
     // Simulate API delay
 
-    // try {
-    //   const assignedTags = await assignTagsToLeads({
-    //     leadId: lead.id,
-    //     tags: tagIds,
-    //   });
-    //   toast.success("Tags assigned successfully");
-    // } catch {
-    //   toast.error("Failed to assign tags to lead");
-    // }
+    const tagList = allTags.filter((tag) => tagIds.includes(tag.id));
+
+    console.log(tagList);
+
+    try {
+      const updatedData = await updateLeadFullDetails(lead.id, "tags", tagList);
+
+      const updatedLead = {
+        ...updatedData.editableFields,
+        ...updatedData.readOnlyFields,
+        createdAt: updatedData.createdAt,
+        updatedAt: updatedData.updatedAt,
+        id: updatedData.leadId,
+      };
+
+      setLead(updatedLead);
+      toast.success("Tags assigned successfully");
+    } catch {
+      toast.error("Failed to assign tags to lead");
+    }
 
     // console.log("New Assigned Tags => ", assignedTags);
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
-    setAssignedTags(newAssignedTags);
+    // const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
+    // setAssignedTags(newAssignedTags);
   };
 
   const createTag = async (tagName: string): Promise<Tag> => {
