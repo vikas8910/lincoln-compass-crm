@@ -1,4 +1,9 @@
-import { LEAD_DETAILS_EDITABLE_FIELDS, SIDEBAR_ITEMS } from "@/lib/constants";
+import {
+  LEAD_DETAILS_EDITABLE_FIELDS,
+  LEAD_DETAILS_EDITABLE_HIDDEN_FIELDS,
+  LEAD_DETAILS_EDITABLE_LOCATION_HIDDEN_FIELDS,
+  SIDEBAR_ITEMS,
+} from "@/lib/constants";
 import { Lead } from "@/types/lead";
 import { SidebarItem } from "./SidebarItem";
 import { Card } from "../../ui/card";
@@ -50,6 +55,38 @@ export const LeadDetailsSidebar: React.FC<{
               LEAD_DETAILS_EDITABLE_FIELDS={LEAD_DETAILS_EDITABLE_FIELDS}
               className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
             />
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 bg-gray-200 px-1 py-3 rounded-md">
+                Hidden Details
+              </h3>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <button className="bg-gray-200 p-3 rounded-md my-2">
+                    Social Profiles
+                  </button>
+                  <EditableFieldGrid
+                    onSave={onSave}
+                    LEAD_DETAILS_EDITABLE_FIELDS={
+                      LEAD_DETAILS_EDITABLE_HIDDEN_FIELDS
+                    }
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+                  />
+                </div>
+                <div>
+                  <button className="bg-gray-200 p-3 rounded-md my-2">
+                    Location
+                  </button>
+                  <EditableFieldGrid
+                    onSave={onSave}
+                    LEAD_DETAILS_EDITABLE_FIELDS={
+                      LEAD_DETAILS_EDITABLE_LOCATION_HIDDEN_FIELDS
+                    }
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

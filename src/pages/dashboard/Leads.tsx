@@ -38,11 +38,7 @@ import {
 } from "@/services/lead/lead";
 import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
-import {
-  DEBOUNCE_DELAY,
-  DROPDOWN_OPTIONS,
-  INITIAL_PAGINATION,
-} from "@/lib/constants";
+import { DEBOUNCE_DELAY, INITIAL_PAGINATION } from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { createLeadFormValues } from "@/schemas/lead";
 import { getUsers } from "@/services/user-service/user-service";
@@ -51,6 +47,8 @@ import {
   getAllLeadTypes,
   getAllSources,
 } from "@/services/dropdowns/dropdown";
+import { NoteForm } from "@/components/common/NoteForm";
+import { TaskForm } from "@/components/common/TaskForm";
 
 // Define tab types
 type TabType = "all" | "my" | "new";
@@ -117,6 +115,11 @@ const Leads = () => {
   const [tableInstance, setTableInstance] = useState<Table<Lead> | null>(null);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
   const [isCreateLeadDialogOpen, setIsCreateLeadDialogOpen] = useState(false);
+  const [isCreateNoteFormOpen, setIsCreateNoteFormOpen] = useState(false);
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [selectedLeadForNote, setSelectedLeadForNote] = useState<Lead | null>(
+    null
+  );
 
   // Debounced filters for better performance
   const debouncedColumnFilters: ColumnFiltersState = useDebounce(
@@ -241,7 +244,7 @@ const Leads = () => {
       refetch();
       toast.success("Lead Added Successfully");
     } catch (error) {
-      toast.error("Failed to add lead details");
+      toast.error(error?.response?.data?.error || "failed to add lead");
       throw error;
     }
   };
@@ -308,9 +311,15 @@ const Leads = () => {
                 <MdInfoOutline /> {/* Details */}
               </Link>
               <FiMail /> {/* Email */}
-              <FiPhone /> {/* Call */}
-              <FiCheckSquare /> {/* Task */}
-              <FiFileText /> {/* Note */}
+              <FiCheckSquare onClick={() => setIsTaskFormOpen(true)} />{" "}
+              {/* Task */}
+              <FiFileText
+                onClick={() => {
+                  setSelectedLeadForNote(user);
+                  setIsCreateNoteFormOpen(true);
+                }}
+              />
+              {/* Note */}
             </div>
           </div>
         );
@@ -646,7 +655,27 @@ const Leads = () => {
         courseOptions={courseOptions}
         sourceOptions={sourceOptions}
         leadTypeOptions={leadTypeOptions}
+        countryCodeOptions={["+91", "+971", "+1", "+44"]}
       />
+
+      <NoteForm
+        isOpen={isCreateNoteFormOpen}
+        setIsOpen={(isOpen) => {
+          setIsCreateNoteFormOpen(isOpen);
+          if (!isOpen) {
+            setSelectedLeadForNote(null); // Clear selected lead when closing
+          }
+        }}
+        relatedTo={
+          selectedLeadForNote
+            ? `${selectedLeadForNote.firstName} ${selectedLeadForNote.lastName}`
+            : ""
+        }
+        editingNote={null}
+        onSave={() => {}}
+      />
+
+      <TaskForm isOpen={isTaskFormOpen} setIsOpen={setIsTaskFormOpen} />
     </MainLayout>
   );
 };

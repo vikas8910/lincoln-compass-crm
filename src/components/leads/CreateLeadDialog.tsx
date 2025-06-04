@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 
 interface Option {
-  id: string;
+  id: number;
   name: string;
   description?: string;
 }
@@ -41,6 +41,7 @@ interface LeadFormDialogProps {
   courseOptions: Option[];
   sourceOptions: Option[];
   leadTypeOptions: Option[];
+  countryCodeOptions: string[]; // New prop for country codes
   initialData?: createLeadFormValues; // For editing existing leads
 }
 
@@ -51,6 +52,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
   courseOptions,
   sourceOptions,
   leadTypeOptions,
+  countryCodeOptions,
   initialData,
 }) => {
   const form = useForm<createLeadFormValues>({
@@ -65,6 +67,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
       mobile: "",
       backupMobileNumber: "",
       externalId: "",
+      countryCode: "", // New field
     },
     mode: "onChange",
   });
@@ -84,6 +87,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
         mobile: "",
         backupMobileNumber: "",
         externalId: "",
+        countryCode: "", // New field
       });
     }
   }, [initialData, isOpen, form]);
@@ -97,6 +101,8 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
     // Convert IDs back to objects for submission
     const submissionData = {
       ...data,
+      mobile: `${data.countryCode}${data.mobile}`,
+      backupMobileNumber: `${data.countryCode}${data.backupMobileNumber}`,
       // Find the actual objects based on IDs
       source: data.sourceId
         ? sourceOptions.find((opt) => String(opt.id) === data.sourceId)
@@ -180,7 +186,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="sourceId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source (Optional)</FormLabel>
+                  <FormLabel>Source</FormLabel>
                   <Select
                     onValueChange={(val) => {
                       field.onChange(val === "none" ? undefined : val);
@@ -189,7 +195,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select source (optional)" />
+                        <SelectValue placeholder="Select source" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -211,7 +217,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="courseId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Course (Optional)</FormLabel>
+                  <FormLabel>Course</FormLabel>
                   <Select
                     onValueChange={(val) => {
                       field.onChange(val === "none" ? undefined : val);
@@ -220,7 +226,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select course (optional)" />
+                        <SelectValue placeholder="Select course" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -242,7 +248,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="leadTypeId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lead Type (Optional)</FormLabel>
+                  <FormLabel>Lead Type</FormLabel>
                   <Select
                     onValueChange={(val) => {
                       field.onChange(val === "none" ? undefined : val);
@@ -251,7 +257,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select lead type (optional)" />
+                        <SelectValue placeholder="Select lead type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -259,6 +265,40 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                       {leadTypeOptions.map((opt) => (
                         <SelectItem key={opt.id} value={opt.id.toString()}>
                           {opt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Country Code Dropdown - NEW */}
+            <FormField
+              control={form.control}
+              name="countryCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Country Code <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger
+                        className={
+                          form.formState.errors.countryCode
+                            ? "border-red-500"
+                            : ""
+                        }
+                      >
+                        <SelectValue placeholder="Select country code" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {countryCodeOptions.map((code) => (
+                        <SelectItem key={code} value={code}>
+                          {code}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -356,17 +396,22 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               )}
             />
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={!form.formState.isValid && form.formState.isSubmitted}
-              >
-                Add Lead
-              </Button>
-            </DialogFooter>
+            <div className="flex items-center justify-between w-full">
+              <Button>Check For Duplicates</Button>
+              <div>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    !form.formState.isValid && form.formState.isSubmitted
+                  }
+                >
+                  Add Lead
+                </Button>
+              </div>
+            </div>
           </form>
         </Form>
       </DialogContent>

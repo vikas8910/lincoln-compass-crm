@@ -6,12 +6,13 @@ export const leadSchema = z
     // Required fields
     firstName: commonValidationSchemas.textOnly,
     lastName: commonValidationSchemas.textOnly,
+    countryCode: z.string().min(1, { message: "Country code is required" }), // New required field
     mobile: z
       .string()
       .regex(/^\d{10}$/, { message: "Mobile must be exactly 10 digits" }),
-
     email: z.string().email({ message: "Invalid email address" }),
 
+    // Optional fields
     backupMobileNumber: z
       .string()
       .regex(/^\d{10}$/, { message: "Mobile must be exactly 10 digits" })

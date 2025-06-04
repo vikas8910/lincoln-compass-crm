@@ -44,7 +44,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
             <AddressFormPopover>
               <div className="flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-200 cursor-pointer p-2">
                 <MapPinIcon className="h-4 w-4" />
-                <span>9, 5, in</span>
+                <span>Location</span>
                 <Copy className="h-3 w-3 text-gray-400" />
               </div>
             </AddressFormPopover>

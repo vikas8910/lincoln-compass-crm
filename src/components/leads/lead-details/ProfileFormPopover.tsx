@@ -80,10 +80,6 @@ export default function ProfileFormPopover({
 
       setLead(updatedLead);
 
-      // if (key === "status") {
-      //   setStatusId(value);
-      // }
-
       toast.success("Lead details updated successfully");
     } catch (error) {
       toast.error("Failed to update lead details");

@@ -134,6 +134,26 @@ export const stageOptions: StageOption[] = [
   { id: "11", name: "Lost", type: "prospectOutcome" },
 ];
 
+export const LEAD_DETAILS_EDITABLE_HIDDEN_FIELDS = (lead: Lead): any[] => {
+  return [
+    { key: "facebookUrl", label: "Facebook", validationType: "text" },
+    { key: "twitterUrl", label: "Twitter", validationType: "text" },
+    { key: "linkedInUrl", label: "LinkedIn", validationType: "text" },
+  ];
+};
+
+export const LEAD_DETAILS_EDITABLE_LOCATION_HIDDEN_FIELDS = (
+  lead: Lead
+): any[] => {
+  return [
+    { key: "leadAddrCity", label: "City", validationType: "text" },
+    { key: "leadAddrCountry", label: "Country", validationType: "text" },
+    { key: "leadAddrState", label: "State", validationType: "text" },
+    { key: "leadAddrZipCode", label: "Zip Code", validationType: "text" },
+    { key: "leadAddress", label: "Address", validationType: "text" },
+  ];
+};
+
 export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
   return [
     { key: "salesOwner", label: "Sales Owner", disabled: true },
@@ -171,16 +191,16 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       allowEmpty: true,
       sendCompleteObject: true,
     },
-    {
-      key: "countries.code",
-      payloadKey: "countryCode",
-      label: "Country Code",
-      type: "dropdown",
-      optionsKey: "countries",
-      fieldMapping: { value: "code", label: "code" },
-      emptyOptionLabel: "Select Country Code",
-      allowEmpty: true,
-    },
+    // {
+    //   key: "countries.code",
+    //   payloadKey: "countryCode",
+    //   label: "Country Code",
+    //   type: "dropdown",
+    //   optionsKey: "countries",
+    //   fieldMapping: { value: "code", label: "code" },
+    //   emptyOptionLabel: "Select Country Code",
+    //   allowEmpty: true,
+    // },
     { key: "mobile", label: "Mobile", validationType: "phone" },
     { key: "work", label: "Work", validationType: "text" },
 

@@ -56,22 +56,22 @@ const TagManager: React.FC = () => {
   const assignTagsToLead = async (tagIds: number[]): Promise<void> => {
     // Simulate API delay
 
-    try {
-      const assignedTags = await assignTagsToLeads({
-        leadId: lead.id,
-        tags: tagIds,
-      });
-      toast.success("Tags assigned successfully");
-    } catch {
-      toast.error("Failed to assign tags to lead");
-    }
+    // try {
+    //   const assignedTags = await assignTagsToLeads({
+    //     leadId: lead.id,
+    //     tags: tagIds,
+    //   });
+    //   toast.success("Tags assigned successfully");
+    // } catch {
+    //   toast.error("Failed to assign tags to lead");
+    // }
 
     // console.log("New Assigned Tags => ", assignedTags);
 
-    // await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
-    // setAssignedTags(newAssignedTags);
+    const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
+    setAssignedTags(newAssignedTags);
   };
 
   const createTag = async (tagName: string): Promise<Tag> => {
