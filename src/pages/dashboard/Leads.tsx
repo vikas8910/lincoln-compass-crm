@@ -49,6 +49,14 @@ import {
 } from "@/services/dropdowns/dropdown";
 import { NoteForm } from "@/components/common/NoteForm";
 import { TaskForm } from "@/components/common/TaskForm";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define tab types
 type TabType = "all" | "my" | "new";
@@ -265,19 +273,29 @@ const Leads = () => {
   const AssignToDropdown = ({ lead }: { lead: Lead }) => {
     const selectedUserId = lead?.assignedTo || "";
 
+    const handleValueChange = (value: string) => {
+      if (!value) {
+        return;
+      }
+
+      handleAssignToChange(String(lead.id), value);
+    };
+
     return (
-      <select
-        value={selectedUserId}
-        onChange={(e) => handleAssignToChange(String(lead.id), e.target.value)}
-        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-      >
-        <option value="">Select Officer</option>
-        {users.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.name}
-          </option>
-        ))}
-      </select>
+      <Select value={selectedUserId} onValueChange={handleValueChange}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Select Officer" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     );
   };
 
