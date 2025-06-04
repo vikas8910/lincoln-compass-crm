@@ -1,29 +1,35 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Clock, MapPin, Users, Plus, Video } from 'lucide-react';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  Users,
+  Plus,
+  Video,
+} from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export interface LeadMeetingsProps {
   leadId: string;
@@ -35,7 +41,7 @@ interface Meeting {
   date: string;
   startTime: string;
   endTime: string;
-  type: 'in-person' | 'video' | 'phone';
+  type: "in-person" | "video" | "phone";
   location: string;
   description: string;
   attendees: string[];
@@ -44,43 +50,43 @@ interface Meeting {
 const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
   const [meetings, setMeetings] = useState<Meeting[]>([
     {
-      id: '1',
-      title: 'Product Demo',
-      date: '2023-06-10',
-      startTime: '14:00',
-      endTime: '15:00',
-      type: 'video',
-      location: 'Zoom',
-      description: 'Demonstration of our premium features',
-      attendees: ['Jane Smith', 'John Doe', 'Client Team'],
+      id: "1",
+      title: "Product Demo",
+      date: "2023-06-10",
+      startTime: "14:00",
+      endTime: "15:00",
+      type: "video",
+      location: "Zoom",
+      description: "Demonstration of our premium features",
+      attendees: ["Jane Smith", "John Doe", "Client Team"],
     },
     {
-      id: '2',
-      title: 'Pricing Discussion',
-      date: '2023-06-15',
-      startTime: '10:00',
-      endTime: '11:00',
-      type: 'in-person',
-      location: 'Client Office',
-      description: 'Discuss pricing options and contract terms',
-      attendees: ['Jane Smith', 'Sales Director', 'Client Decision Makers'],
+      id: "2",
+      title: "Pricing Discussion",
+      date: "2023-06-15",
+      startTime: "10:00",
+      endTime: "11:00",
+      type: "in-person",
+      location: "Client Office",
+      description: "Discuss pricing options and contract terms",
+      attendees: ["Jane Smith", "Sales Director", "Client Decision Makers"],
     },
   ]);
   const [showForm, setShowForm] = useState(false);
   const [newMeeting, setNewMeeting] = useState<Partial<Meeting>>({
-    title: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    startTime: '09:00',
-    endTime: '10:00',
-    type: 'video',
-    location: '',
-    description: '',
-    attendees: ['Jane Smith'],
+    title: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    startTime: "09:00",
+    endTime: "10:00",
+    type: "video",
+    location: "",
+    description: "",
+    attendees: ["Jane Smith"],
   });
 
   const handleAddMeeting = () => {
     if (!newMeeting.title || !newMeeting.date) {
-      toast.error('Title and date are required');
+      toast.error("Title and date are required");
       return;
     }
 
@@ -90,7 +96,7 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
       date: newMeeting.date!,
       startTime: newMeeting.startTime!,
       endTime: newMeeting.endTime!,
-      type: newMeeting.type as 'in-person' | 'video' | 'phone',
+      type: newMeeting.type as "in-person" | "video" | "phone",
       location: newMeeting.location!,
       description: newMeeting.description!,
       attendees: newMeeting.attendees || [],
@@ -98,26 +104,26 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
 
     setMeetings([...meetings, meeting]);
     setNewMeeting({
-      title: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      startTime: '09:00',
-      endTime: '10:00',
-      type: 'video',
-      location: '',
-      description: '',
-      attendees: ['Jane Smith'],
+      title: "",
+      date: format(new Date(), "yyyy-MM-dd"),
+      startTime: "09:00",
+      endTime: "10:00",
+      type: "video",
+      location: "",
+      description: "",
+      attendees: ["Jane Smith"],
     });
     setShowForm(false);
-    toast.success('Meeting scheduled successfully');
+    toast.success("Meeting scheduled successfully");
   };
 
   const getMeetingTypeIcon = (type: string) => {
-    switch(type) {
-      case 'video':
+    switch (type) {
+      case "video":
         return <Video className="h-3 w-3" />;
-      case 'in-person':
+      case "in-person":
         return <MapPin className="h-3 w-3" />;
-      case 'phone':
+      case "phone":
         return <Clock className="h-3 w-3" />;
       default:
         return <Calendar className="h-3 w-3" />;
@@ -125,15 +131,15 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
   };
 
   const getMeetingTypeColor = (type: string) => {
-    switch(type) {
-      case 'video':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-      case 'in-person':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'phone':
-        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+    switch (type) {
+      case "video":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+      case "in-person":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
+      case "phone":
+        return "bg-purple-100 text-purple-800 hover:bg-purple-200";
       default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
 
@@ -153,14 +159,18 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
         <Card className="mb-4">
           <CardContent className="p-4 space-y-4">
             <div>
-              <label className="text-sm font-medium block mb-1">Meeting Title</label>
-              <Input 
-                placeholder="Enter meeting title" 
+              <label className="text-sm font-medium block mb-1">
+                Meeting Title
+              </label>
+              <Input
+                placeholder="Enter meeting title"
                 value={newMeeting.title}
-                onChange={(e) => setNewMeeting({...newMeeting, title: e.target.value})}
+                onChange={(e) =>
+                  setNewMeeting({ ...newMeeting, title: e.target.value })
+                }
               />
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <label className="text-sm font-medium block mb-1">Date</label>
@@ -171,43 +181,69 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
                       className="w-full justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newMeeting.date ? format(new Date(newMeeting.date), 'PPP') : <span>Pick a date</span>}
+                      {newMeeting.date ? (
+                        format(new Date(newMeeting.date), "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={newMeeting.date ? new Date(newMeeting.date) : undefined}
-                      onSelect={(date) => setNewMeeting({...newMeeting, date: date ? format(date, 'yyyy-MM-dd') : undefined})}
+                      selected={
+                        newMeeting.date ? new Date(newMeeting.date) : undefined
+                      }
+                      onSelect={(date) =>
+                        setNewMeeting({
+                          ...newMeeting,
+                          date: date ? format(date, "yyyy-MM-dd") : undefined,
+                        })
+                      }
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium block mb-1">Start Time</label>
-                <Input 
-                  type="time" 
+                <label className="text-sm font-medium block mb-1">
+                  Start Time
+                </label>
+                <Input
+                  type="time"
                   value={newMeeting.startTime}
-                  onChange={(e) => setNewMeeting({...newMeeting, startTime: e.target.value})}
+                  onChange={(e) =>
+                    setNewMeeting({ ...newMeeting, startTime: e.target.value })
+                  }
                 />
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium block mb-1">End Time</label>
-                <Input 
-                  type="time" 
+                <label className="text-sm font-medium block mb-1">
+                  End Time
+                </label>
+                <Input
+                  type="time"
                   value={newMeeting.endTime}
-                  onChange={(e) => setNewMeeting({...newMeeting, endTime: e.target.value})}
+                  onChange={(e) =>
+                    setNewMeeting({ ...newMeeting, endTime: e.target.value })
+                  }
                 />
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium block mb-1">Meeting Type</label>
-                <Select 
-                  value={newMeeting.type} 
-                  onValueChange={(value) => setNewMeeting({...newMeeting, type: value as 'in-person' | 'video' | 'phone'})}
+                <label className="text-sm font-medium block mb-1">
+                  Meeting Type
+                </label>
+                <Select
+                  value={newMeeting.type}
+                  onValueChange={(value) =>
+                    setNewMeeting({
+                      ...newMeeting,
+                      type: value as "in-person" | "video" | "phone",
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -220,28 +256,38 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
                 </Select>
               </div>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium block mb-1">Location</label>
-              <Input 
-                placeholder="Enter location or meeting link" 
+              <Input
+                placeholder="Enter location or meeting link"
                 value={newMeeting.location}
-                onChange={(e) => setNewMeeting({...newMeeting, location: e.target.value})}
+                onChange={(e) =>
+                  setNewMeeting({ ...newMeeting, location: e.target.value })
+                }
               />
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium block mb-1">Description</label>
-              <Textarea 
-                placeholder="Enter meeting description" 
+              <label className="text-sm font-medium block mb-1">
+                Description
+              </label>
+              <Textarea
+                placeholder="Enter meeting description"
                 value={newMeeting.description}
-                onChange={(e) => setNewMeeting({...newMeeting, description: e.target.value})}
+                onChange={(e) =>
+                  setNewMeeting({ ...newMeeting, description: e.target.value })
+                }
                 className="min-h-[80px]"
               />
             </div>
-            
+
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowForm(false)}
+              >
                 Cancel
               </Button>
               <Button size="sm" onClick={handleAddMeeting}>
@@ -265,19 +311,28 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <h4 className="font-medium">{meeting.title}</h4>
-                  <Badge variant="outline" className={cn("flex items-center gap-1", getMeetingTypeColor(meeting.type))}>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "flex items-center gap-1",
+                      getMeetingTypeColor(meeting.type)
+                    )}
+                  >
                     {getMeetingTypeIcon(meeting.type)}
                     <span>
-                      {meeting.type === 'in-person' ? 'In-Person' : 
-                       meeting.type === 'video' ? 'Video Call' : 'Phone Call'}
+                      {meeting.type === "in-person"
+                        ? "In-Person"
+                        : meeting.type === "video"
+                        ? "Video Call"
+                        : "Phone Call"}
                     </span>
                   </Badge>
                 </div>
-                
+
                 <div className="mt-2 space-y-1 text-sm">
                   <div className="flex items-center text-muted-foreground">
                     <CalendarIcon className="h-3.5 w-3.5 mr-2" />
-                    {format(new Date(meeting.date), 'PPP')}
+                    {format(new Date(meeting.date), "PPP")}
                   </div>
                   <div className="flex items-center text-muted-foreground">
                     <Clock className="h-3.5 w-3.5 mr-2" />
@@ -290,23 +345,29 @@ const LeadMeetings: React.FC<LeadMeetingsProps> = ({ leadId }) => {
                     </div>
                   )}
                 </div>
-                
+
                 {meeting.description && (
                   <>
                     <Separator className="my-3" />
                     <p className="text-sm">{meeting.description}</p>
                   </>
                 )}
-                
+
                 {meeting.attendees && meeting.attendees.length > 0 && (
                   <>
                     <Separator className="my-3" />
                     <div className="flex items-center gap-2">
                       <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Attendees:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Attendees:
+                      </span>
                       <div className="flex flex-wrap gap-1">
                         {meeting.attendees.map((attendee, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
+                          <Badge
+                            key={idx}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {attendee}
                           </Badge>
                         ))}

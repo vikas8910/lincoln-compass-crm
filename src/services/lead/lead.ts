@@ -126,3 +126,13 @@ export const assignTagsToLeads = async (payload: {
     throw error;
   }
 };
+
+export const getLeads = async () => {
+  try {
+    const response = await axiosInstance.get(`api/v1/leads`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+    throw error;
+  }
+};
