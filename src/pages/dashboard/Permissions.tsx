@@ -1,4 +1,4 @@
-import MainLayout, { useSidebarContext } from "@/components/layout/MainLayout";
+import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -100,7 +100,6 @@ const Permissions = () => {
 
   const location = useLocation();
   const roleData = location.state;
-  const { isExpanded } = useSidebarContext();
 
   useEffect(() => {
     const fetchPermissionsData = async () => {
@@ -156,11 +155,6 @@ const Permissions = () => {
     });
   };
 
-  //Remove: before commit
-  useEffect(() => {
-    console.log(apiData);
-  }, [apiData]);
-
   const toggleModule = (
     categoryId: number,
     permissionId: number,
@@ -186,14 +180,12 @@ const Permissions = () => {
     const permissions: {
       permissionId: number;
       canView: boolean;
-      canCreate: boolean;
       canEdit: boolean;
       canDelete: boolean;
       isEnabled: boolean;
       numericValue: number;
       applicableModules: string[];
       viewScopeId: number;
-      createScopeId: number;
       editScopeId: number;
       deleteScopeId: number;
     }[] = [];
@@ -203,20 +195,35 @@ const Permissions = () => {
         category.permissions.forEach((permission) => {
           const currentPerm = permission.currentPermissions?.[0];
           const uiConfig = permission.uiConfig || {};
+          const hasScope = uiConfig.has_scope || false;
           const defaultScopeId =
             uiConfig.scope_options?.find((s) => s.name === "Can't")?.id || 3;
           if (currentPerm) {
             permissions.push({
               permissionId: permission.id,
-              canView: currentPerm.canView || false,
-              canCreate: currentPerm.canCreate || false,
-              canEdit: currentPerm.canEdit || false,
-              canDelete: currentPerm.canDelete || false,
+              canView:
+                currentPerm.viewScopeId === 1 || currentPerm.viewScopeId === 2
+                  ? true
+                  : hasScope
+                  ? false
+                  : currentPerm.canView || false,
+              canEdit:
+                currentPerm.editScopeId === 1 || currentPerm.editScopeId === 2
+                  ? true
+                  : hasScope
+                  ? false
+                  : currentPerm.canEdit || false,
+              canDelete:
+                currentPerm.deleteScopeId === 1 ||
+                currentPerm.deleteScopeId === 2
+                  ? true
+                  : hasScope
+                  ? false
+                  : currentPerm.canDelete || false,
               isEnabled: currentPerm.isEnabled || false,
               numericValue: currentPerm.numericValue || 0,
               applicableModules: currentPerm.applicableModules || [],
               viewScopeId: currentPerm.viewScopeId || defaultScopeId,
-              createScopeId: currentPerm.createScopeId || defaultScopeId,
               editScopeId: currentPerm.editScopeId || defaultScopeId,
               deleteScopeId: currentPerm.deleteScopeId || defaultScopeId,
             });
@@ -246,18 +253,12 @@ const Permissions = () => {
     if (hasScope) {
       updatePermission(categoryId, permissionId, {
         viewScopeId: e.target.checked ? 1 : 3,
-        createScopeId: e.target.checked ? 1 : 3,
         editScopeId: e.target.checked ? 1 : 3,
         deleteScopeId: e.target.checked ? 1 : 3,
         isEnabled: e.target.checked,
       });
     } else {
-      if (
-        !permission.canView &&
-        !permission.canCreate &&
-        !permission.canEdit &&
-        !permission.canDelete
-      ) {
+      if (!permission.canView && !permission.canEdit && !permission.canDelete) {
         updatePermission(categoryId, permissionId, {
           canView: e.target.checked,
           isEnabled: e.target.checked,
@@ -265,7 +266,6 @@ const Permissions = () => {
       } else {
         updatePermission(categoryId, permissionId, {
           canView: false,
-          canCreate: false,
           canEdit: false,
           canDelete: false,
           isEnabled: e.target.checked,
