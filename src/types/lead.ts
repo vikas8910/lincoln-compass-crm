@@ -121,6 +121,9 @@ export interface Lead {
   createdThroughCampaign?: string;
   externalId?: string;
   submissionDate?: string;
+  facebookUrl?: string;
+  twitterUrl?: string;
+  linkedInUrl?: string;
 }
 
 // Define the Lead status type to match the constraint

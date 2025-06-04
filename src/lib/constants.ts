@@ -32,6 +32,94 @@ export const EDITABLE_FIELDS: EditableField[] = [
   { key: "intake", label: "Intake" },
 ];
 
+export const LEAD_OVERVIEW_FIELDS = (lead: Lead): any[] => {
+  return [
+    { key: "salesOwner", label: "Sales Owner", disabled: true },
+    {
+      key: "course",
+      label: "Course",
+      type: "dropdown",
+      optionsKey: "courses",
+      fieldMapping: { value: "id", label: "description" },
+      emptyOptionLabel: "Select Course",
+      allowEmpty: true,
+      sendCompleteObject: true,
+    },
+    {
+      key: "source",
+      label: "Source",
+      type: "dropdown",
+      optionsKey: "source",
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "Select Source",
+      allowEmpty: true,
+      sendCompleteObject: true,
+    },
+    { key: "email", label: "Email", validationType: "email" },
+    { key: "mobile", label: "Mobile", validationType: "phone" },
+    {
+      key: "leadType",
+      label: "Lead Type",
+      type: "dropdown",
+      optionsKey: "leadType",
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "Select Lead Type",
+      allowEmpty: true,
+      sendCompleteObject: true,
+    },
+    { key: "message", label: "Message", validationType: "text" },
+    {
+      key: "lastActivityDate",
+      label: "Last Activity Date",
+      validationType: "text",
+      disabled: true,
+    },
+    {
+      key: "lastAssignedAt",
+      label: "Last Assigned At",
+      validationType: "text",
+      disabled: true,
+    },
+    {
+      key: "lastActivityType",
+      label: "Last Activity Type",
+      validationType: "text",
+      disabled: true,
+    },
+    {
+      key: "updatedBy",
+      label: "Updated By",
+      validationType: "text",
+      disabled: true,
+    },
+    {
+      key: "updatedAt",
+      label: "Updated At",
+      validationType: "text",
+      type: "date",
+      disabled: true,
+    },
+    {
+      key: "lastContactTime",
+      label: "Last Contacted Time",
+      validationType: "text",
+      disabled: true,
+    },
+    {
+      key: "lastContactedMode",
+      label: "Last Contacted Mode",
+      validationType: "text",
+      type: "date",
+      disabled: true,
+    },
+    {
+      key: "comments",
+      label: "Comment",
+      validationType: "text",
+    },
+  ];
+};
+
 export const stageOptions: StageOption[] = [
   { id: "1", name: "New", type: "leadStage" },
   { id: "2", name: "In Contact", type: "leadStage" },
@@ -55,19 +143,18 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       key: "source",
       label: "Source",
       type: "dropdown",
-      optionsKey: "source", // This tells us which options array to use
+      optionsKey: "source",
       fieldMapping: { value: "id", label: "name" },
       emptyOptionLabel: "Select Source",
       allowEmpty: true,
       sendCompleteObject: true,
     },
-
     {
       key: "course",
       label: "Course",
       type: "dropdown",
-      optionsKey: "courses", // This tells us which options array to use
-      fieldMapping: { value: "courseId", label: "title" },
+      optionsKey: "courses",
+      fieldMapping: { value: "id", label: "description" },
       emptyOptionLabel: "Select Course",
       allowEmpty: true,
       sendCompleteObject: true,
@@ -78,45 +165,65 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       key: "leadType",
       label: "Lead Type",
       type: "dropdown",
-      optionsKey: "leadType", // This tells us which options array to use
+      optionsKey: "leadType",
       fieldMapping: { value: "id", label: "name" },
       emptyOptionLabel: "Select Lead Type",
       allowEmpty: true,
+      sendCompleteObject: true,
     },
     {
-      key: "countryCode",
+      key: "countries.code",
+      payloadKey: "countryCode",
       label: "Country Code",
       type: "dropdown",
-      optionsKey: "countryCode", // This tells us which options array to use
-      fieldMapping: { value: "id", label: "name" },
+      optionsKey: "countries",
+      fieldMapping: { value: "code", label: "code" },
       emptyOptionLabel: "Select Country Code",
       allowEmpty: true,
     },
     { key: "mobile", label: "Mobile", validationType: "phone" },
     { key: "work", label: "Work", validationType: "text" },
+
+    // Nationality (Parent field for nationality city)
     {
       key: "nationality",
       label: "Nationality",
       type: "dropdown",
-      optionsKey: "nationality", // This tells us which options array to use
+      optionsKey: "countries",
       fieldMapping: { value: "id", label: "name" },
-      emptyOptionLabel: "Select Nationality",
+      emptyOptionLabel: "Select Country",
       allowEmpty: true,
     },
+
+    // Country Of Residence (Parent field for residence city)
     {
       key: "countryOfResidence",
       label: "Country Of Residence",
       type: "dropdown",
-      optionsKey: "nationality", // This tells us which options array to use
+      optionsKey: "countries",
       fieldMapping: { value: "id", label: "name" },
-      emptyOptionLabel: "Select Country Of Residence",
+      emptyOptionLabel: "Select Country",
       allowEmpty: true,
+      sendCompleteObject: true,
+      cascadeChildren: ["cityOfResidence"], // This field affects city of residence
     },
+    // {
+    //   key: "city",
+    //   label: "City Of Residence",
+    //   type: "dropdown",
+    //   optionsKey: "cities", // Will be populated dynamically
+    //   fieldMapping: { value: "id", label: "name" },
+    //   emptyOptionLabel: "Select City",
+    //   allowEmpty: true,
+    //   sendCompleteObject: true,
+    //   cascadeParent: "countryOfResidence",
+    //   cascadeProperty: "cities",
+    // },
     {
       key: "highestEducation",
       label: "Highest Education",
       type: "dropdown",
-      optionsKey: "education", // This tells us which options array to use
+      optionsKey: "education",
       fieldMapping: { value: "id", label: "name" },
       emptyOptionLabel: "Select Highest Education",
       allowEmpty: true,
@@ -127,12 +234,11 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       type: "date",
       dateFormat: "dd/MM/yyyy",
     },
-    // { key: "dob", label: "DOB", validationType: "text" },
     {
       key: "bestTimeToCall",
       label: "Best Time To Call",
       type: "dropdown",
-      optionsKey: "bestTimeToCall", // This tells us which options array to use
+      optionsKey: "bestTimeToCall",
       fieldMapping: { value: "id", label: "name" },
       emptyOptionLabel: "Best Time To Call",
       allowEmpty: true,
@@ -151,9 +257,22 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       type: "date",
       dateFormat: "dd/MM/yyyy",
     },
-    { key: "preferredCity", label: "City Prefered" },
-    { key: "queries", label: "Queries" },
 
+    // City Of Residence (Child of country of residence)
+    {
+      key: "city",
+      label: "City Of Residence",
+      type: "dropdown",
+      optionsKey: "cities", // Will be populated dynamically
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "Select City",
+      allowEmpty: true,
+      sendCompleteObject: true,
+      cascadeParent: "countryOfResidence",
+      cascadeProperty: "cities",
+    },
+
+    { key: "queries", label: "Queries" },
     { key: "comments", label: "Comments" },
     { key: "references", label: "References" },
     {
@@ -162,12 +281,19 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       validationType: "phone",
     },
     { key: "message", label: "Message" },
-
     { key: "officeMobile", label: "Office Mobile", validationType: "phone" },
-    { key: "university", label: "University" },
+    {
+      key: "university",
+      label: "University",
+      type: "dropdown",
+      optionsKey: "university",
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "Select University",
+      allowEmpty: true,
+      sendCompleteObject: true,
+    },
     { key: "addlComment", label: "Additional Comment" },
     { key: "feedback", label: "Feedback" },
-
     {
       key: "originalFirstName",
       label: "Original First Name (O)",
@@ -190,12 +316,11 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       validationType: "phone",
       disabled: true,
     },
-
     {
       key: "submissionDate",
       label: "Submission Date",
-      validationType: "text",
-      disabled: true,
+      type: "date",
+      dateFormat: "dd/MM/yyyy",
     },
     {
       key: "originalMobile",
@@ -203,14 +328,12 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       validationType: "phone",
       disabled: true,
     },
-    { key: "preferredCity", label: "Prefered City (Lead Field)" },
+    { key: "preferredCity", label: "Preferred City (Lead Field)" },
     {
       key: "leadScore",
       label: "Lead Score (Lead Field)",
-      valudationType: "numberOnly",
+      validationType: "leadScore", // Fixed typo: was "valudationType"
     },
-
-    // { key: "lifecycleStage", label: "Lifecycle Stage" },
     {
       key: "leadStage.id",
       payloadKey: "leadStage",
@@ -223,14 +346,12 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
         className: "flex-shrink-0 pt-8",
       },
       customDisplayValue: (value) => {
-        // Define how to display the current value
-        // You'll need to adapt this based on your stageOptions structure
         const stage = stageOptions?.find((option) => option.id === value);
         return stage ? stage.type : "Select Lead Stage";
       },
       placeholder: "Select Stage",
       textColor: "text-black",
-      disabled: false, // Set to true if you want to disable this field
+      disabled: false,
     },
     {
       key: "leadStage.id",
@@ -244,54 +365,57 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
         className: "flex-shrink-0 pt-8",
       },
       customDisplayValue: (value) => {
-        // Define how to display the current value
-        // You'll need to adapt this based on your stageOptions structure
         const stage = stageOptions?.find((option) => option.id === value);
         return stage ? stage.name : "Select Lead Type";
       },
       placeholder: "Select Stage",
       textColor: "text-black",
-      disabled: false, // Set to true if you want to disable this field
+      disabled: false,
     },
     {
       key: "leadStage.id",
       payloadKey: "leadStage",
       label: "Lost Reason",
       type: "custom",
-      customComponent: LeadStagingForm, // Reference to your component
+      customComponent: LeadStagingForm,
       customComponentProps: {
-        // Add any props that LeadStagingForm expects
-        initialStatusId: String(lead?.leadStage?.id), // This will be overridden by the current value
-        stageOptions: stageOptions, // This should be populated with your actual stage options
+        initialStatusId: String(lead?.leadStage?.id),
+        stageOptions: stageOptions,
         className: "flex-shrink-0 pt-8",
-        // Add any other props your LeadStagingForm component needs
       },
       customDisplayValue: (value) => {
-        // Define how to display the current value
-        // You'll need to adapt this based on your stageOptions structure
-        // const stage = stageOptions?.find((option) => option.id === value);
-        // return stage ? stage?.lostReason : "-";
         return lead?.lostReason ? lead?.lostReason : "--";
       },
       placeholder: "Select Stage",
       textColor: "text-black",
-      disabled: lead?.lostReason ? false : true, // Set to true if you want to disable this field
+      disabled: lead?.lostReason ? false : true,
     },
     { key: "mobileBackup", label: "Backup Mobile", validationType: "phone" },
-
     { key: "subscriptionStatus", label: "Subscription Status" },
     { key: "subscriptionTypes", label: "Subscription Types" },
     { key: "externalId", label: "External ID (O)", disabled: true },
     {
       key: "whatsappSubscriptionStatus",
       label: "WhatsApp Subscription Status",
+      type: "dropdown",
+      optionsKey: "whatsappSubscriptionStatus",
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "Select Subscription status",
+      allowEmpty: true,
     },
-
-    { key: "smsSubscriptionStatus", label: "SMS Subscription Status" },
+    {
+      key: "smsSubscriptionStatus",
+      label: "SMS Subscription Status",
+      type: "dropdown",
+      optionsKey: "whatsappSubscriptionStatus",
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "Select Subscription status",
+      allowEmpty: true,
+    },
+    // { key: "smsSubscriptionStatus", label: "SMS Subscription Status" },
     { key: "originalCampaign", label: "Original Campaign (O)", disabled: true },
     { key: "originalMedium", label: "Original Medium (O)", disabled: true },
     { key: "originalSource", label: "Original Source (O)", disabled: true },
-
     {
       key: "createdThroughCampaign",
       label: "Created Through Campaign (O)",
@@ -312,7 +436,6 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       label: "Most Recent Campaign (O)",
       disabled: true,
     },
-
     {
       key: "mostRecentMedium",
       label: "Most Recent Medium (O)",
@@ -323,9 +446,17 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       label: "Most Recent Source (O)",
       disabled: true,
     },
-    { key: "unsubscribeReason", label: "Unsubscribe Reason" },
+    // { key: "unsubscribeReason", label: "Unsubscribe Reason" },
+    {
+      key: "unsubscribeReason",
+      label: "Unsubscribe Reason",
+      type: "dropdown",
+      optionsKey: "unsubscribeReasons",
+      fieldMapping: { value: "id", label: "name" },
+      emptyOptionLabel: "select unsubscribe reasons",
+      allowEmpty: true,
+    },
     { key: "otherUnsubscribeReasons", label: "Other Unsubscribe Reasons" },
-
     { key: "activeSalesSequences", label: "Active Sales Sequences" },
   ];
 };
@@ -344,28 +475,8 @@ export const DROPDOWN_OPTIONS = {
     { id: "2", name: "Jane Smith" },
     { id: "3", name: "Mike Johnson" },
   ],
-  leadType: [
-    { id: "1", name: "Junk" },
-    { id: "2", name: "Lost" },
-    { id: "3", name: "New" },
-    { id: "4", name: "Contacted" },
-    { id: "5", name: "Qualified" },
-    { id: "6", name: "Unqualified" },
-    { id: "7", name: "Converted" },
-    { id: "8", name: "Recycled" },
-    { id: "9", name: "Follow-up" },
-    { id: "10", name: "In Progress" },
-    { id: "11", name: "Nurturing" },
-    { id: "12", name: "Cold" },
-    { id: "13", name: "Warm" },
-    { id: "14", name: "Hot" },
-    { id: "15", name: "No Response" },
-    { id: "16", name: "Not Interested" },
-    { id: "17", name: "Duplicate" },
-    { id: "18", name: "Bad Data" },
-    { id: "19", name: "Closed - Won" },
-    { id: "20", name: "Closed - Lost" },
-  ],
+  university: [],
+  leadType: [],
   leadStatuses: [
     { key: "new", text: "New Lead" },
     { key: "contacted", text: "Contacted" },
@@ -379,55 +490,8 @@ export const DROPDOWN_OPTIONS = {
     { level: 2, description: "Medium Priority" },
     { level: 3, description: "Low Priority" },
   ],
-  courses: [
-    { courseId: "cs101", title: "Computer Science Basics" },
-    { courseId: "math201", title: "Advanced Mathematics" },
-    { courseId: "eng101", title: "English Literature" },
-    { courseId: "phy101", title: "Physics Fundamentals" },
-    { courseId: "chem101", title: "General Chemistry" },
-    { courseId: "bio101", title: "Introduction to Biology" },
-    { courseId: "hist201", title: "World History" },
-    { courseId: "psy101", title: "Introduction to Psychology" },
-    { courseId: "eco101", title: "Microeconomics" },
-    { courseId: "cs201", title: "Data Structures and Algorithms" },
-    { courseId: "math301", title: "Linear Algebra" },
-    { courseId: "art101", title: "Art Appreciation" },
-    { courseId: "phil101", title: "Introduction to Philosophy" },
-    { courseId: "stat101", title: "Statistics for Beginners" },
-    { courseId: "cs301", title: "Operating Systems" },
-    { courseId: "bus101", title: "Principles of Business" },
-    { courseId: "env101", title: "Environmental Science" },
-    { courseId: "lang101", title: "Introduction to Spanish" },
-    { courseId: "soc101", title: "Sociology Basics" },
-    { courseId: "cs401", title: "Web Development" },
-  ],
-  source: [
-    { id: "1", name: "Web" },
-    { id: "2", name: "Organic Search" },
-    { id: "3", name: "Email" },
-    { id: "4", name: "Phone" },
-    { id: "5", name: "Chat" },
-    { id: "6", name: "Social Media" },
-    { id: "7", name: "Paid Ads" },
-    { id: "8", name: "Referral" },
-    { id: "9", name: "Event" },
-    { id: "10", name: "Webinar" },
-    { id: "11", name: "Landing Page" },
-    { id: "12", name: "Blog" },
-    { id: "13", name: "SMS" },
-    { id: "14", name: "Direct Traffic" },
-    { id: "15", name: "Third-Party Listing" },
-    { id: "16", name: "In-Person Visit" },
-    { id: "17", name: "Customer Support" },
-    { id: "18", name: "Partner" },
-    { id: "19", name: "YouTube" },
-    { id: "20", name: "LinkedIn" },
-    { id: "21", name: "Facebook" },
-    { id: "22", name: "Instagram" },
-    { id: "23", name: "Twitter/X" },
-    { id: "24", name: "Lead Magnet" },
-    { id: "25", name: "CRM Import" },
-  ],
+  courses: [],
+  source: [],
   leadSources: [
     { id: "website", name: "Website" },
     { id: "referral", name: "Referral" },
@@ -657,5 +721,27 @@ export const DROPDOWN_OPTIONS = {
   gender: [
     { id: "1", name: "male" },
     { id: "2", name: "female" },
+  ],
+  whatsappSubscriptionStatus: [
+    {
+      id: 1,
+      name: "Unsubscribed",
+    },
+    {
+      id: 2,
+      name: "Subscribed",
+    },
+    {
+      id: 3,
+      name: "Not Subscribed",
+    },
+  ],
+  countries: [],
+  unsubscribeReasons: [
+    { id: 1, name: "I no longer want to receive emails from you" },
+    { id: 2, name: "I receive too many emails from you" },
+    { id: 3, name: "The emails are inappropriate" },
+    { id: 4, name: "The emails are spam" },
+    { id: 5, name: "Others" },
   ],
 };

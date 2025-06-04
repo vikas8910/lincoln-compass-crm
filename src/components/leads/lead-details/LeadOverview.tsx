@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { EditIcon } from "lucide-react";
 import { NoteForm } from "@/components/common/NoteForm";
 import { useState } from "react";
+import { EditableFieldGrid } from "./EditableFieldGrid";
+import { LEAD_OVERVIEW_FIELDS } from "@/lib/constants";
 
 export const LeadOverview: React.FC<{
   onSave: (key: string, value: string) => void;
@@ -16,115 +18,31 @@ export const LeadOverview: React.FC<{
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {/* Basic Info Card */}
       <Card className="p-3 flex flex-col gap-4 shadow-md">
-        <InfoCard
-          title="Sales Owner"
-          value={lead.salesOwner}
-          validationType="text"
-          fieldKey="firstName"
+        <EditableFieldGrid
           onSave={onSave}
-          disabled={true}
-        />
-        <InfoCard
-          title="Course"
-          value={lead.course}
-          validationType="text"
-          fieldKey="course"
-          onSave={onSave}
-        />
-        <InfoCard
-          title="Source"
-          value={lead.source}
-          validationType="text"
-          fieldKey="source"
-          onSave={onSave}
-        />
-        <InfoCard
-          title="Email"
-          value={lead.email}
-          validationType="email"
-          fieldKey="email"
-          onSave={onSave}
-          textColor="text-[#2c5cc5]"
-        />
-        <InfoCard
-          title="Mobile"
-          value={lead.mobile}
-          validationType="phone"
-          fieldKey="mobile"
-          onSave={onSave}
-          textColor="text-[#2c5cc5]"
+          LEAD_DETAILS_EDITABLE_FIELDS={() =>
+            LEAD_OVERVIEW_FIELDS(lead).slice(0, 5)
+          }
         />
       </Card>
 
       {/* Contact & Type Info Card */}
       <Card className="p-3 flex flex-col gap-4 shadow-md">
-        <InfoCard
-          title="Lead Type"
-          value={lead.leadType}
-          validationType="text"
-          fieldKey="leadType"
+        <EditableFieldGrid
           onSave={onSave}
-        />
-        <InfoCard
-          title="Message"
-          value={lead.message}
-          validationType="text"
-          fieldKey="message"
-          onSave={onSave}
-        />
-        <InfoCard
-          title="Last Activity Date"
-          value={lead.lastActivityTime}
-          fieldKey="lastActivityTime"
-          onSave={onSave}
-          disabled
-        />
-        <InfoCard
-          title="Last Assign At"
-          value={lead.lastAssignAt}
-          fieldKey="lastAssignAt"
-          onSave={onSave}
-          disabled
-        />
-        <InfoCard
-          title="Last Activity Type"
-          value={lead.lastActivityType}
-          fieldKey="lastActivityType"
-          onSave={onSave}
-          disabled
+          LEAD_DETAILS_EDITABLE_FIELDS={() =>
+            LEAD_OVERVIEW_FIELDS(lead).slice(5, 10)
+          }
         />
       </Card>
 
       {/* Timestamps Card */}
       <Card className="p-3 flex flex-col gap-4 shadow-md">
-        <InfoCard
-          title="Last Contacted Time"
-          value={formatDateTime(lead.lastContactedTime)}
-          isEditable={false}
-          fieldKey="lastContactedTime"
+        <EditableFieldGrid
           onSave={onSave}
-          disabled
-        />
-        <InfoCard
-          title="Created At"
-          value={formatDateTime(lead.createdAt)}
-          isEditable={false}
-          fieldKey="createdAt"
-          onSave={onSave}
-        />
-        <InfoCard
-          title="Updated At"
-          value={formatDateTime(lead.updatedAt)}
-          isEditable={false}
-          fieldKey="updatedAt"
-          onSave={onSave}
-        />
-        <InfoCard
-          title="Comments"
-          value={lead.comments}
-          validationType="text"
-          fieldKey="comments"
-          onSave={onSave}
+          LEAD_DETAILS_EDITABLE_FIELDS={() =>
+            LEAD_OVERVIEW_FIELDS(lead).slice(10, 15)
+          }
         />
       </Card>
 
