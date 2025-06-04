@@ -1,60 +1,41 @@
-import EmptyState from "@/components/common/EmptyState";
 import { NoteForm } from "@/components/common/NoteForm";
 import { Button } from "@/components/ui/button";
 import { useLeadDetails } from "@/context/LeadsProvider";
-import { Edit, Notebook, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useUser } from "@/context/UserProvider";
+import {
+  createNote,
+  deleteNote,
+  getNotes,
+  updateNote,
+} from "@/services/activities/notes";
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+
+export interface NoteData {
+  id: number;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  updatedBy: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  active: boolean;
+}
 
 export const Notes = () => {
   const { lead } = useLeadDetails();
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState(null);
+  const [editingNote, setEditingNote] = useState<NoteData | null>(null);
+  const { user } = useUser();
 
-  // Mock data based on the screenshot
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      text: "not interested",
-      author: "Subramanian Iyer",
-      timestamp: "2022-11-30T12:19:00Z",
-      relatedTo: `${lead.firstName} ${lead.lastName}`,
-    },
-    {
-      id: 2,
-      text: "Said havent decided yet will get back to us",
-      author: "Shirin Shaikh(Deleted)",
-      timestamp: "2022-01-06T02:20:00Z",
-      relatedTo: `${lead.firstName} ${lead.lastName}`,
-    },
-    {
-      id: 3,
-      text: "will nt join nay course thsi year",
-      author: "Shirin Shaikh(Deleted)",
-      timestamp: "2021-10-20T04:40:00Z",
-      relatedTo: `${lead.firstName} ${lead.lastName}`,
-    },
-    {
-      id: 4,
-      text: "ringing",
-      author: "Shirin Shaikh(Deleted)",
-      timestamp: "2021-10-19T03:05:00Z",
-      relatedTo: `${lead.firstName} ${lead.lastName}`,
-    },
-    {
-      id: 5,
-      text: "In touch, Claled rnr",
-      author: "Adnan Shaikh - Lincoln University of Business Management",
-      timestamp: "2021-10-10T10:57:00Z",
-      relatedTo: `${lead.firstName} ${lead.lastName}`,
-    },
-    {
-      id: 6,
-      text: "In touch following up",
-      author: "Adnan Shaikh - Lincoln University of Business Management",
-      timestamp: "2020-12-12T02:12:00Z",
-      relatedTo: `${lead.firstName} ${lead.lastName}`,
-    },
-  ]);
+  const [notes, setNotes] = useState<NoteData[]>([]);
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
@@ -70,29 +51,48 @@ export const Notes = () => {
     return date.toLocaleDateString("en-US", options).replace(",", "");
   };
 
+  useEffect(() => {
+    const fetchNotesData = async () => {
+      const res = await getNotes(lead.id);
+      setNotes(res.content);
+    };
+    fetchNotesData();
+  }, []);
+
   const handleAddNote = () => {
     setEditingNote(null);
     setIsFormOpen(true);
   };
 
-  const handleEditNote = (note) => {
+  const handleEditNote = (note: NoteData) => {
     setEditingNote(note);
     setIsFormOpen(true);
   };
 
-  const handleDeleteNote = (noteId) => {
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      setNotes(notes.filter((note) => note.id !== noteId));
-    }
+  const handleDeleteNote = async (noteId: number) => {
+    await deleteNote(noteId, user.id);
+    setNotes(
+      notes.map((note) =>
+        note.id === noteId ? { ...note, active: false } : note
+      )
+    );
   };
 
-  const handleSaveNote = (noteData, isEdit) => {
+  const handleSaveNote = async (noteData: NoteData, isEdit: boolean) => {
     if (isEdit) {
+      await updateNote(noteData.id, user.id, {
+        description: noteData.description,
+        leadId: lead.id,
+      });
       setNotes(
         notes.map((note) => (note.id === noteData.id ? noteData : note))
       );
     } else {
-      setNotes([noteData, ...notes]);
+      const data = await createNote(user.id, {
+        description: noteData.description,
+        leadId: lead.id,
+      });
+      setNotes([data, ...notes]);
     }
   };
 
@@ -116,14 +116,14 @@ export const Notes = () => {
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <p className="text-gray-900 mb-2">{note.text}</p>
+                <p className="text-gray-900 mb-2">{note.description}</p>
                 <div className="flex items-center text-sm text-gray-600 space-x-4">
                   <span className="flex items-center">
                     <Edit size={14} className="mr-1" />
-                    {note.author}
+                    {note.updatedBy.name} {!note.active && `(Deleted)`}
                   </span>
                   <span>•</span>
-                  <span>{formatDate(note.timestamp)}</span>
+                  <span>{formatDate(note.createdAt)}</span>
                 </div>
               </div>
 

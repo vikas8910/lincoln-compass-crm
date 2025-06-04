@@ -9,11 +9,11 @@ export const NoteForm = ({
   editingNote,
   onSave,
 }) => {
-  const [noteText, setNoteText] = useState(editingNote?.text || "");
+  const [noteText, setNoteText] = useState(editingNote?.description || "");
 
   useEffect(() => {
     if (editingNote) {
-      setNoteText(editingNote.text);
+      setNoteText(editingNote.description);
     } else {
       setNoteText("");
     }
@@ -21,12 +21,13 @@ export const NoteForm = ({
 
   const handleDone = () => {
     const noteData = {
-      id: editingNote?.id || Date.now(),
-      relatedTo: relatedTo,
-      text: noteText,
-      author: editingNote?.author || "Subramanian Iyer",
-      timestamp: editingNote?.timestamp || new Date().toISOString(),
+      id: editingNote?.id || 0,
+      description: noteText,
+      createdAt: editingNote?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      createdBy: editingNote?.createdBy || { id: 0, name: "", email: "" },
+      updatedBy: editingNote?.createdBy || { id: 0, name: "", email: "" },
+      active: true,
     };
 
     onSave(noteData, !!editingNote);
