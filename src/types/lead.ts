@@ -124,6 +124,12 @@ export interface Lead {
   facebookUrl?: string;
   twitterUrl?: string;
   linkedInUrl?: string;
+
+  leadAddress?: string;
+  leadAddrCity?: string;
+  leadAddrState?: string;
+  leadAddrCountry?: string;
+  leadAddrZipCode?: string;
 }
 
 // Define the Lead status type to match the constraint

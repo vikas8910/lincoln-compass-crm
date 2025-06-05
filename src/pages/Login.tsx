@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FiEye, FiEyeOff, FiLock, FiUser } from "react-icons/fi";
 import { login } from "@/services/auth/auth";
+import { useUser } from "@/context/UserProvider";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 
 type UserType = "admin" | "sales";
@@ -26,11 +28,11 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUser } = useUser();
   const { setAuthoritiesList } = useAuthoritiesList();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     // Basic validation
     if (!email || !password) {
       setError("Please enter both email and password");
@@ -40,7 +42,6 @@ const Login = () => {
       setError("Please enter a valid email address");
       return;
     }
-
     setIsLoading(true);
 
     try {
@@ -65,6 +66,7 @@ const Login = () => {
     const res = await login(email, password);
     localStorage.setItem("accessToken", res.accessToken);
     setAuthoritiesList(res.authorities);
+    setUser(res.user);
   };
 
   const handleForgotPassword = () => {
@@ -179,9 +181,12 @@ const Login = () => {
                   </Button>
               </div> */}
             </CardContent>
-
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </CardFooter>

@@ -16,8 +16,8 @@ export const Activities = () => {
 
   const tabs = [
     { id: "timeline", label: "Activity timeline", component: ActivityTimeline },
-    { id: "notes", label: "Notes", count: 7, component: Notes },
-    { id: "tasks", label: "Tasks", count: 1, component: Tasks },
+    { id: "notes", label: "Notes", component: Notes },
+    { id: "tasks", label: "Tasks", component: Tasks },
     { id: "meetings", label: "Meetings", component: Meetings },
   ];
 
@@ -40,7 +40,7 @@ export const Activities = () => {
               }`}
             >
               {tab.label}
-              {tab.count && (
+              {/* {tab.count && (
                 <span
                   className={`ml-1 ${
                     activeTab === tab.id ? "text-blue-600" : "text-gray-400"
@@ -48,7 +48,7 @@ export const Activities = () => {
                 >
                   ({tab.count})
                 </span>
-              )}
+              )} */}
             </button>
           ))}
         </nav>

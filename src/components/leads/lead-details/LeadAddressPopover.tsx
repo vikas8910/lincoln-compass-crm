@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Edit2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -8,6 +7,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLeadDetails } from "@/context/LeadsProvider";
+import { updateLeadFullDetails } from "@/services/lead/lead";
+import { toast } from "sonner";
 
 interface AddressFormData {
   address: string;
@@ -24,14 +26,29 @@ interface AddressFormPopoverProps {
 export default function AddressFormPopover({
   children,
 }: AddressFormPopoverProps) {
+  const { lead, setLead } = useLeadDetails();
+  console.log("Lead details updated => ", lead);
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<AddressFormData>({
-    address: "",
-    city: "9",
-    state: "5",
-    country: "in",
-    zipcode: "41103355555",
+    address: lead?.leadAddress,
+    city: lead?.leadAddrCity,
+    state: lead?.leadAddrState,
+    country: lead?.leadAddrCountry,
+    zipcode: lead?.leadAddrZipCode,
   });
+
+  // Sync formData when lead changes
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        address: lead.leadAddress || "",
+        city: lead.leadAddrCity || "",
+        state: lead.leadAddrState || "",
+        country: lead.leadAddrCountry || "",
+        zipcode: lead.leadAddrZipCode || "",
+      });
+    }
+  }, [lead]);
 
   const handleInputChange = (field: keyof AddressFormData, value: string) => {
     setFormData((prev) => ({
@@ -40,8 +57,32 @@ export default function AddressFormPopover({
     }));
   };
 
-  const handleSave = () => {
-    console.log("Form Values:", formData);
+  const handleSave = async () => {
+    const addressDetails = {
+      leadAddress: formData.address,
+      leadAddrCity: formData.city,
+      leadAddrState: formData.state,
+      leadAddrCountry: formData.country,
+      leadAddrZipCode: formData.zipcode,
+    };
+    try {
+      const updatedData = await updateLeadFullDetails(lead.id, addressDetails);
+
+      const updatedLead = {
+        ...updatedData.editableFields,
+        ...updatedData.readOnlyFields,
+        createdAt: updatedData.createdAt,
+        updatedAt: updatedData.updatedAt,
+        id: updatedData.leadId,
+      };
+
+      setLead(updatedLead);
+
+      toast.success("Lead details updated successfully");
+    } catch (error) {
+      toast.error("Failed to update lead details");
+      throw error;
+    }
     setIsOpen(false);
     // Here you can call your API with the formData
   };

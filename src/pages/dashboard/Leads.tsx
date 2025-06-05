@@ -52,6 +52,16 @@ import {
   getAllLeadTypes,
   getAllSources,
 } from "@/services/dropdowns/dropdown";
+import { NoteForm } from "@/components/common/NoteForm";
+import { TaskForm } from "@/components/common/TaskForm";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { set } from "date-fns";
 
@@ -120,6 +130,11 @@ const Leads = () => {
   const [tableInstance, setTableInstance] = useState<Table<Lead> | null>(null);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
   const [isCreateLeadDialogOpen, setIsCreateLeadDialogOpen] = useState(false);
+  const [isCreateNoteFormOpen, setIsCreateNoteFormOpen] = useState(false);
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [selectedLeadForNote, setSelectedLeadForNote] = useState<Lead | null>(
+    null
+  );
   const [isEditable, setIsEditable] = useState(false);
 
   // Debounced filters for better performance
@@ -250,7 +265,7 @@ const Leads = () => {
       refetch();
       toast.success("Lead Added Successfully");
     } catch (error) {
-      toast.error("Failed to add lead details");
+      toast.error(error?.response?.data?.error || "failed to add lead");
       throw error;
     }
   };
@@ -271,19 +286,29 @@ const Leads = () => {
   const AssignToDropdown = ({ lead }: { lead: Lead }) => {
     const selectedUserId = lead?.assignedTo || "";
 
+    const handleValueChange = (value: string) => {
+      if (!value) {
+        return;
+      }
+
+      handleAssignToChange(String(lead.id), value);
+    };
+
     return (
-      <select
-        value={selectedUserId}
-        onChange={(e) => handleAssignToChange(String(lead.id), e.target.value)}
-        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-      >
-        <option value="">Select Officer</option>
-        {users.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.name}
-          </option>
-        ))}
-      </select>
+      <Select value={selectedUserId} onValueChange={handleValueChange}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Select Officer" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     );
   };
 
@@ -317,9 +342,15 @@ const Leads = () => {
                 <MdInfoOutline /> {/* Details */}
               </Link>
               <FiMail /> {/* Email */}
-              <FiPhone /> {/* Call */}
-              <FiCheckSquare /> {/* Task */}
-              <FiFileText /> {/* Note */}
+              <FiCheckSquare onClick={() => setIsTaskFormOpen(true)} />{" "}
+              {/* Task */}
+              <FiFileText
+                onClick={() => {
+                  setSelectedLeadForNote(user);
+                  setIsCreateNoteFormOpen(true);
+                }}
+              />
+              {/* Note */}
             </div>
           </div>
         );
@@ -669,7 +700,27 @@ const Leads = () => {
         courseOptions={courseOptions}
         sourceOptions={sourceOptions}
         leadTypeOptions={leadTypeOptions}
+        countryCodeOptions={["+91", "+971", "+1", "+44"]}
       />
+
+      <NoteForm
+        isOpen={isCreateNoteFormOpen}
+        setIsOpen={(isOpen) => {
+          setIsCreateNoteFormOpen(isOpen);
+          if (!isOpen) {
+            setSelectedLeadForNote(null); // Clear selected lead when closing
+          }
+        }}
+        relatedTo={
+          selectedLeadForNote
+            ? `${selectedLeadForNote.firstName} ${selectedLeadForNote.lastName}`
+            : ""
+        }
+        editingNote={null}
+        onSave={() => {}}
+      />
+
+      <TaskForm isOpen={isTaskFormOpen} setIsOpen={setIsTaskFormOpen} />
     </MainLayout>
   );
 };

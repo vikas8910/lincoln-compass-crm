@@ -11,7 +11,7 @@ interface EditableFieldGridProps {
     [key: string]: Array<{ [key: string]: any }>;
   };
   LEAD_DETAILS_EDITABLE_FIELDS: (lead: Lead) => any[];
-  className: string;
+  className?: string;
 }
 
 export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({

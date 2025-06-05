@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,6 +22,10 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { MeetingFormData, meetingFormSchema } from "@/schemas/meeting-schema";
+import { getMeetings, saveMeeting } from "@/services/activities/meetings";
+import { getLeads } from "@/services/lead/lead";
+import { Lead } from "@/types/lead";
+import { getUsers } from "@/services/user-service/user-service";
 
 const Textarea = ({ className = "", ...props }) => (
   <textarea
@@ -29,69 +33,6 @@ const Textarea = ({ className = "", ...props }) => (
     {...props}
   />
 );
-
-// Mock data
-const relatedToOptions = [
-  {
-    id: 1,
-    name: "Sumaiya shaikh",
-    email: "sumaiya@company.com",
-    avatar: "S",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    id: 2,
-    name: "Edvin Segundo Galdod",
-    email: "jhadezkee@gmail.com",
-    avatar: "E",
-    color: "bg-purple-100 text-purple-800",
-  },
-  {
-    id: 3,
-    name: "Ali Dabran",
-    email: "ali.jhanan909@gmail.com",
-    avatar: "A",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    id: 4,
-    name: "Satya Jha",
-    email: "satya.jha.jnk@gmail.com",
-    avatar: "S",
-    color: "bg-green-100 text-green-800",
-  },
-];
-
-const attendeeOptions = [
-  {
-    id: 1,
-    name: "Subramanian Iyer",
-    email: "subramanian@company.com",
-    avatar: "S",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    email: "john.doe@company.com",
-    avatar: "J",
-    color: "bg-green-100 text-green-800",
-  },
-  {
-    id: 3,
-    name: "Jane Smith",
-    email: "jane.smith@company.com",
-    avatar: "J",
-    color: "bg-purple-100 text-purple-800",
-  },
-  {
-    id: 4,
-    name: "Mike Johnson",
-    email: "mike.johnson@company.com",
-    avatar: "M",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-];
 
 const timeZoneOptions = [
   "(GMT+04:00) Abu Dhabi",
@@ -109,6 +50,8 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
   const [selectedAttendees, setSelectedAttendees] = useState([]);
   const [showOutcome, setShowOutcome] = useState(false);
   const [showMeetingNotes, setShowMeetingNotes] = useState(false);
+  const [relatedToOptions, setRelatedToOptions] = useState([]);
+  const [attendeeOptions, setAttendeeOptions] = useState([]);
 
   const form = useForm<MeetingFormData>({
     resolver: zodResolver(meetingFormSchema),
@@ -129,6 +72,50 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
     },
     mode: "onChange",
   });
+
+  //TODO: Get the leads data and users data
+  useEffect(() => {
+    //Call the API to get leads data and assign to selectedRelatedTo and selectedAttendees
+    const fetchLeadsData = async () => {
+      try {
+        const leadsData = await getLeads();
+        setRelatedToOptions(
+          leadsData.content.map((lead: Lead) => ({
+            id: lead.id,
+            name: lead.firstName + " " + lead.lastName,
+            email: lead.email,
+            avatar: lead.firstName.charAt(0).toUpperCase(),
+            color: "bg-yellow-100 text-yellow-800",
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching leads data:", error);
+      }
+    };
+    fetchLeadsData();
+    //Call the API to get users data and assign to attendeeOptions
+    const fetchUsersData = async () => {
+      try {
+        const usersData = await getUsers();
+        setAttendeeOptions(
+          usersData.content.map((user: any) => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.name.charAt(0).toUpperCase(),
+            color: "bg-yellow-100 text-yellow-800",
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching users data:", error);
+      }
+    };
+    fetchUsersData();
+  }, []);
+
+  useEffect(() => {
+    setAttendeeOptions((prevOptions) => [...prevOptions, ...relatedToOptions]);
+  }, [relatedToOptions]);
 
   const handleRelatedToAdd = (person) => {
     if (!selectedRelatedTo.find((p) => p.id === person.id)) {
@@ -160,8 +147,8 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
     form.setValue("attendees", updatedAttendees);
   };
 
-  const handleSubmit = (data: MeetingFormData) => {
-    console.log("Meeting Data:", data);
+  const handleSubmit = async (data: MeetingFormData) => {
+    await saveMeeting(data);
     setIsOpen(false);
     form.reset();
     setSelectedRelatedTo([]);

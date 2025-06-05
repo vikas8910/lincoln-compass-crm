@@ -70,44 +70,45 @@ export const LEAD_OVERVIEW_FIELDS = (lead: Lead): any[] => {
     { key: "message", label: "Message", validationType: "text" },
     {
       key: "lastActivityDate",
-      label: "Last Activity Date",
+      label: "Last activity date",
       validationType: "text",
       disabled: true,
     },
     {
       key: "lastAssignedAt",
-      label: "Last Assigned At",
+      label: "Last assigned at",
       validationType: "text",
       disabled: true,
     },
     {
       key: "lastActivityType",
-      label: "Last Activity Type",
+      label: "Last activity type",
       validationType: "text",
       disabled: true,
     },
     {
       key: "updatedBy",
-      label: "Updated By",
+      label: "Updated by",
       validationType: "text",
       disabled: true,
     },
     {
       key: "updatedAt",
-      label: "Updated At",
+      label: "Updated at",
       validationType: "text",
       type: "date",
+      dateFormat: "EEE dd MMM, yyyy hh:mm a",
       disabled: true,
     },
     {
       key: "lastContactTime",
-      label: "Last Contacted Time",
+      label: "Last contacted time",
       validationType: "text",
       disabled: true,
     },
     {
       key: "lastContactedMode",
-      label: "Last Contacted Mode",
+      label: "Last contacted mode",
       validationType: "text",
       type: "date",
       disabled: true,
@@ -133,6 +134,26 @@ export const stageOptions: StageOption[] = [
   { id: "10", name: "Customer", type: "prospectOutcome" },
   { id: "11", name: "Lost", type: "prospectOutcome" },
 ];
+
+export const LEAD_DETAILS_EDITABLE_HIDDEN_FIELDS = (lead: Lead): any[] => {
+  return [
+    { key: "facebookUrl", label: "Facebook", validationType: "text" },
+    { key: "twitterUrl", label: "Twitter", validationType: "text" },
+    { key: "linkedInUrl", label: "LinkedIn", validationType: "text" },
+  ];
+};
+
+export const LEAD_DETAILS_EDITABLE_LOCATION_HIDDEN_FIELDS = (
+  lead: Lead
+): any[] => {
+  return [
+    { key: "leadAddrCity", label: "City", validationType: "text" },
+    { key: "leadAddrCountry", label: "Country", validationType: "text" },
+    { key: "leadAddrState", label: "State", validationType: "text" },
+    { key: "leadAddrZipCode", label: "Zip Code", validationType: "text" },
+    { key: "leadAddress", label: "Address", validationType: "text" },
+  ];
+};
 
 export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
   return [
@@ -171,16 +192,16 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       allowEmpty: true,
       sendCompleteObject: true,
     },
-    {
-      key: "countries.code",
-      payloadKey: "countryCode",
-      label: "Country Code",
-      type: "dropdown",
-      optionsKey: "countries",
-      fieldMapping: { value: "code", label: "code" },
-      emptyOptionLabel: "Select Country Code",
-      allowEmpty: true,
-    },
+    // {
+    //   key: "countries.code",
+    //   payloadKey: "countryCode",
+    //   label: "Country Code",
+    //   type: "dropdown",
+    //   optionsKey: "countries",
+    //   fieldMapping: { value: "code", label: "code" },
+    //   emptyOptionLabel: "Select Country Code",
+    //   allowEmpty: true,
+    // },
     { key: "mobile", label: "Mobile", validationType: "phone" },
     { key: "work", label: "Work", validationType: "text" },
 
