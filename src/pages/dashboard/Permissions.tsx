@@ -603,12 +603,12 @@ const Permissions = () => {
                                     permission.id,
                                     option.value
                                   );
-                                  const dropdownId = `dropdown-${categoryId}-${permission.id}`;
-                                  const dropdown =
-                                    document.getElementById(dropdownId);
-                                  if (dropdown) {
-                                    dropdown.style.display = "none";
-                                  }
+                                  // const dropdownId = `dropdown-${categoryId}-${permission.id}`;
+                                  // const dropdown =
+                                  //   document.getElementById(dropdownId);
+                                  // if (dropdown) {
+                                  //   dropdown.style.display = "none";
+                                  // }
                                 }}
                                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b last:border-b-0"
                               >
@@ -707,7 +707,7 @@ const Permissions = () => {
                   }
                   disabled={!currentPerm.isEnabled}
                 >
-                  <SelectTrigger className="min-w-[120px]">
+                  <SelectTrigger className="w-48">
                     <SelectValue placeholder="Choose option" />
                   </SelectTrigger>
                   <SelectContent>
