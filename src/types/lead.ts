@@ -57,8 +57,9 @@ export interface Lead {
   course: string;
   leadType: string;
   leadStage: {
-    id: string;
+    id: number;
     name: string;
+    sequenceOrder: number;
   };
   intake: string;
   assignedTo: string | null;
@@ -145,9 +146,10 @@ export type LeadStatus =
   | "Customer";
 
 export interface StageOption {
-  id: string;
+  id: number;
   name: string;
   type: "leadStage" | "prospectOutcome";
+  sequenceOrder: number;
 }
 
 export interface LeadStagingFormData {

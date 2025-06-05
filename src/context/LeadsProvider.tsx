@@ -9,9 +9,10 @@ import React, {
 import { toast } from "sonner";
 import {
   getLeadFullDetails,
+  getLeadStages,
   updateLeadFullDetails,
 } from "@/services/lead/lead";
-import { Lead } from "@/types/lead";
+import { Lead, StageOption } from "@/types/lead";
 import { DROPDOWN_OPTIONS } from "@/lib/constants";
 import {
   getAllCountries,
@@ -38,6 +39,7 @@ interface LeadDetailsContextType {
   handleSave: (leadId: string, key: string, value: string) => Promise<void>;
   refreshLead: (leadId: string) => Promise<void>;
   dropdownOptions: any;
+  stageOptions: StageOption[];
 }
 
 interface LeadDetailsProviderProps {
@@ -60,6 +62,7 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     "details"
   );
   const [dropdownOptions, setDropdownOptions] = useState(DROPDOWN_OPTIONS);
+  const [stageOptions, setStageOptions] = useState<StageOption[]>([]);
 
   // Fetch lead data
   const fetchLead = useCallback(async (leadId: string) => {
@@ -117,11 +120,17 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
       setDropdownOptions((prev) => ({ ...prev, countries: content }));
     };
 
+    const getAllStagesList = async () => {
+      const content = await getLeadStages();
+      setStageOptions(content);
+    };
+
     getAllUnivertiesList();
     getAllLeadTypesList();
     getAllCoursesList();
     getAllSourcesList();
     getAllCountriesList();
+    getAllStagesList();
   }, []);
 
   // Handle save operations
@@ -185,6 +194,7 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     handleSave,
     refreshLead,
     dropdownOptions,
+    stageOptions,
   };
 
   return (

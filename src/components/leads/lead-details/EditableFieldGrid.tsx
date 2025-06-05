@@ -2,15 +2,18 @@
 import { EditableCell } from "../../tablec/EditableCell";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { getNestedValue } from "@/lib/utils";
-import { Lead } from "@/types/lead";
-import { useState, useEffect, useMemo } from "react";
+import { Lead, StageOption } from "@/types/lead";
+import { useState, useEffect } from "react";
 
 interface EditableFieldGridProps {
   onSave: (key: string, value: string | string[] | Date) => Promise<void>;
   dynamicOptions?: {
     [key: string]: Array<{ [key: string]: any }>;
   };
-  LEAD_DETAILS_EDITABLE_FIELDS: (lead: Lead) => any[];
+  LEAD_DETAILS_EDITABLE_FIELDS: (
+    lead: Lead,
+    stageOptions: StageOption[]
+  ) => any[];
   className?: string;
 }
 
@@ -20,7 +23,11 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
   LEAD_DETAILS_EDITABLE_FIELDS,
   className,
 }) => {
-  const { lead, dropdownOptions: DROPDOWN_OPTIONS } = useLeadDetails();
+  const {
+    lead,
+    dropdownOptions: DROPDOWN_OPTIONS,
+    stageOptions,
+  } = useLeadDetails();
 
   // State to track dependent field values for cascading
   const [dependentValues, setDependentValues] = useState<{
@@ -31,7 +38,7 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
   useEffect(() => {
     const initialDependentValues: { [key: string]: any } = {};
 
-    LEAD_DETAILS_EDITABLE_FIELDS(lead)?.forEach((field) => {
+    LEAD_DETAILS_EDITABLE_FIELDS(lead, stageOptions)?.forEach((field) => {
       if (field.cascadeParent) {
         const parentValue = getNestedValue(lead, field.cascadeParent);
         if (parentValue) {
@@ -60,9 +67,10 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
       if (!parentValue) return [];
 
       // Find the parent object - Fix: Look in the correct options array
-      const parentOptionsKey = LEAD_DETAILS_EDITABLE_FIELDS(lead)?.find(
-        (f) => f.key === field.cascadeParent
-      )?.optionsKey;
+      const parentOptionsKey = LEAD_DETAILS_EDITABLE_FIELDS(
+        lead,
+        stageOptions
+      )?.find((f) => f.key === field.cascadeParent)?.optionsKey;
 
       const parentOptions =
         dynamicOptions[parentOptionsKey] ||
@@ -115,9 +123,10 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
 
       // Save cleared dependent fields
       for (const childKey of field.cascadeChildren) {
-        const childField = LEAD_DETAILS_EDITABLE_FIELDS(lead)?.find(
-          (f) => f.key === childKey
-        );
+        const childField = LEAD_DETAILS_EDITABLE_FIELDS(
+          lead,
+          stageOptions
+        )?.find((f) => f.key === childKey);
         const childKeyToSave = childField?.payloadKey || childKey;
         await onSave(childKeyToSave, "");
       }
@@ -128,7 +137,7 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
 
   return (
     <div className={className}>
-      {LEAD_DETAILS_EDITABLE_FIELDS(lead)?.map((field) => {
+      {LEAD_DETAILS_EDITABLE_FIELDS(lead, stageOptions)?.map((field) => {
         const {
           key,
           label,

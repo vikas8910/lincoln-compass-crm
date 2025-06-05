@@ -121,20 +121,6 @@ export const LEAD_OVERVIEW_FIELDS = (lead: Lead): any[] => {
   ];
 };
 
-export const stageOptions: StageOption[] = [
-  { id: "1", name: "New", type: "leadStage" },
-  { id: "2", name: "In Contact", type: "leadStage" },
-  { id: "3", name: "Follow up", type: "leadStage" },
-  { id: "4", name: "Set Meeting/Webinar", type: "leadStage" },
-  { id: "5", name: "Negotiation", type: "leadStage" },
-  { id: "6", name: "Enrolled", type: "leadStage" },
-  { id: "7", name: "Not Reachable", type: "leadStage" },
-  { id: "8", name: "Junk/Lost", type: "leadStage" },
-  { id: "9", name: "On Campus/F2F", type: "prospectOutcome" },
-  { id: "10", name: "Customer", type: "prospectOutcome" },
-  { id: "11", name: "Lost", type: "prospectOutcome" },
-];
-
 export const LEAD_DETAILS_EDITABLE_HIDDEN_FIELDS = (lead: Lead): any[] => {
   return [
     { key: "facebookUrl", label: "Facebook", validationType: "text" },
@@ -155,7 +141,10 @@ export const LEAD_DETAILS_EDITABLE_LOCATION_HIDDEN_FIELDS = (
   ];
 };
 
-export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
+export const LEAD_DETAILS_EDITABLE_FIELDS = (
+  lead: Lead,
+  stageOptions: StageOption[]
+): any[] => {
   return [
     { key: "salesOwner", label: "Sales Owner", disabled: true },
     { key: "firstName", label: "First Name", validationType: "textOnly" },
@@ -362,12 +351,14 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       type: "custom",
       customComponent: LeadStagingForm,
       customComponentProps: {
-        initialStatusId: String(lead?.leadStage?.id),
+        initialStatusId: lead?.leadStage?.id,
         stageOptions: stageOptions,
         className: "flex-shrink-0 pt-8",
       },
       customDisplayValue: (value) => {
-        const stage = stageOptions?.find((option) => option.id === value);
+        const stage = stageOptions?.find(
+          (option) => String(option.id) === value
+        );
         return stage ? stage.type : "Select Lead Stage";
       },
       placeholder: "Select Stage",
@@ -381,15 +372,17 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       type: "custom",
       customComponent: LeadStagingForm,
       customComponentProps: {
-        initialStatusId: String(lead?.leadStage?.id),
+        initialStatusId: lead?.leadStage?.id,
         stageOptions: stageOptions,
         className: "flex-shrink-0 pt-8",
       },
       customDisplayValue: (value) => {
-        const stage = stageOptions?.find((option) => option.id === value);
-        return stage ? stage.name : "Select Lead Type";
+        const stage = stageOptions?.find(
+          (option) => String(option.id) === value
+        );
+        return stage ? stage.name : "Select lead status";
       },
-      placeholder: "Select Stage",
+      placeholder: "Select status",
       textColor: "text-black",
       disabled: false,
     },
@@ -400,7 +393,7 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (lead: Lead): any[] => {
       type: "custom",
       customComponent: LeadStagingForm,
       customComponentProps: {
-        initialStatusId: String(lead?.leadStage?.id),
+        initialStatusId: lead?.leadStage?.id,
         stageOptions: stageOptions,
         className: "flex-shrink-0 pt-8",
       },
