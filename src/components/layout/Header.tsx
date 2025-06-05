@@ -35,9 +35,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     await logout();
-    localStorage.removeItem("accessToken");
     toast.success("Logged out successfully");
-    navigate("/login");
   };
 
   return (

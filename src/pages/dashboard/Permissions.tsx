@@ -1,12 +1,21 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
   getPermissionsByRoleId,
   updatePermissionsByRoleId,
 } from "@/services/permission-service/permission-service";
-import { ChangeEvent, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { ChangeEvent, useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // Type definitions based on API response
 interface ScopeOption {
@@ -97,6 +106,9 @@ const Permissions = () => {
   const [apiData, setApiData] = useState<APIResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const sectionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const navigate = useNavigate();
 
   const location = useLocation();
   const roleData = location.state;
@@ -108,6 +120,9 @@ const Permissions = () => {
         const res = await getPermissionsByRoleId(roleData.role.id);
         setApiData(res);
         setError(null);
+        if (res.categories.length > 0) {
+          setActiveCategory(res.categories[0].id);
+        }
       } catch (error) {
         console.error("Error fetching permissions:", error);
         setError("Failed to fetch permissions data");
@@ -120,6 +135,14 @@ const Permissions = () => {
       fetchPermissionsData();
     }
   }, [roleData]);
+
+  const scrollToSection = (categoryId: number) => {
+    setActiveCategory(categoryId);
+    const element = sectionRefs.current[categoryId];
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const updatePermission = (
     categoryId: number,
@@ -284,15 +307,16 @@ const Permissions = () => {
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex gap-8 mb-3 items-start">
               <div className="flex items-center w-[250px]">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={currentPerm.isEnabled || false}
-                  onChange={(e) => {
+                  onCheckedChange={(checked) => {
                     handleCrudMatrixCheckBox(
                       categoryId,
                       currentPerm,
-                      e,
-                      uiConfig.has_scope,
+                      {
+                        target: { checked: checked as boolean },
+                      } as ChangeEvent<HTMLInputElement>,
+                      uiConfig.has_scope || false,
                       permission.id
                     );
                   }}
@@ -302,18 +326,16 @@ const Permissions = () => {
               </div>
               <div className="grid grid-cols-3 gap-4 items-center w-full">
                 <div className="font-medium text-sm">View</div>
-                {/* <div className="font-medium text-sm">Create</div> */}
                 <div className="font-medium text-sm">Edit</div>
                 <div className="font-medium text-sm">Delete</div>
 
                 <label className="flex items-center">
                   {!uiConfig.has_scope && (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={currentPerm.canView || false}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         updatePermission(categoryId, permission.id, {
-                          canView: e.target.checked,
+                          canView: checked as boolean,
                         })
                       }
                       className="mr-2"
@@ -321,68 +343,39 @@ const Permissions = () => {
                     />
                   )}
                   {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.viewScopeId || ""}
-                      onChange={(e) =>
+                    <Select
+                      value={currentPerm.viewScopeId?.toString() || ""}
+                      onValueChange={(value) =>
                         updatePermission(categoryId, permission.id, {
-                          viewScopeId: parseInt(e.target.value),
+                          viewScopeId: parseInt(value),
                         })
                       }
-                      className="text-sm border rounded px-2 py-1"
                       disabled={!currentPerm.isEnabled}
                     >
-                      {/* <option value="">Select</option> */}
-                      {uiConfig.scope_options.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {uiConfig.scope_options.map((option) => (
+                          <SelectItem
+                            key={option.id}
+                            value={option.id.toString()}
+                          >
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </label>
 
-                {/* <label className="flex items-center">
-                  {!uiConfig.has_scope && (
-                    <input
-                      type="checkbox"
-                      checked={currentPerm.canCreate || false}
-                      onChange={(e) =>
-                        updatePermission(categoryId, permission.id, {
-                          canCreate: e.target.checked,
-                        })
-                      }
-                      className="mr-2"
-                      disabled={!currentPerm.isEnabled}
-                    />
-                  )}
-                  {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.createScopeId || ""}
-                      onChange={(e) =>
-                        updatePermission(categoryId, permission.id, {
-                          createScopeId: parseInt(e.target.value),
-                        })
-                      }
-                      className="ml-2 text-sm border rounded px-2 py-1"
-                      disabled={!currentPerm.isEnabled}
-                    >
-                      {uiConfig.scope_options.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </label> */}
-
                 <label className="flex items-center">
                   {!uiConfig.has_scope && (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={currentPerm.canEdit || false}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         updatePermission(categoryId, permission.id, {
-                          canEdit: e.target.checked,
+                          canEdit: checked as boolean,
                         })
                       }
                       className="mr-2"
@@ -390,34 +383,39 @@ const Permissions = () => {
                     />
                   )}
                   {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.editScopeId || ""}
-                      onChange={(e) =>
+                    <Select
+                      value={currentPerm.editScopeId?.toString() || ""}
+                      onValueChange={(value) =>
                         updatePermission(categoryId, permission.id, {
-                          editScopeId: parseInt(e.target.value),
+                          editScopeId: parseInt(value),
                         })
                       }
-                      className="text-sm border rounded px-2 py-1"
                       disabled={!currentPerm.isEnabled}
                     >
-                      {/* <option value="">Select</option> */}
-                      {uiConfig.scope_options.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {uiConfig.scope_options.map((option) => (
+                          <SelectItem
+                            key={option.id}
+                            value={option.id.toString()}
+                          >
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </label>
 
                 <label className="flex items-center">
                   {!uiConfig.has_scope && (
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={currentPerm.canDelete || false}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         updatePermission(categoryId, permission.id, {
-                          canDelete: e.target.checked,
+                          canDelete: checked as boolean,
                         })
                       }
                       className="mr-2"
@@ -425,23 +423,29 @@ const Permissions = () => {
                     />
                   )}
                   {uiConfig.has_scope && uiConfig.scope_options && (
-                    <select
-                      value={currentPerm.deleteScopeId || ""}
-                      onChange={(e) =>
+                    <Select
+                      value={currentPerm.deleteScopeId?.toString() || ""}
+                      onValueChange={(value) =>
                         updatePermission(categoryId, permission.id, {
-                          deleteScopeId: parseInt(e.target.value),
+                          deleteScopeId: parseInt(value),
                         })
                       }
-                      className="text-sm border rounded px-2 py-1"
                       disabled={!currentPerm.isEnabled}
                     >
-                      {/* <option value="">Select</option> */}
-                      {uiConfig.scope_options.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {uiConfig.scope_options.map((option) => (
+                          <SelectItem
+                            key={option.id}
+                            value={option.id.toString()}
+                          >
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </label>
               </div>
@@ -454,12 +458,11 @@ const Permissions = () => {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <label className="flex items-center mb-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={currentPerm.isEnabled || false}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       updatePermission(categoryId, permission.id, {
-                        isEnabled: e.target.checked,
+                        isEnabled: checked as boolean,
                       })
                     }
                     className="mr-3"
@@ -493,19 +496,39 @@ const Permissions = () => {
                           </span>
                         ))}
                       </div>
-
                       <div className="relative">
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
                             const dropdownId = `dropdown-${categoryId}-${permission.id}`;
                             const dropdown =
                               document.getElementById(dropdownId);
                             if (dropdown) {
-                              dropdown.style.display =
-                                dropdown.style.display === "block"
-                                  ? "none"
-                                  : "block";
+                              const isVisible =
+                                dropdown.style.display === "block";
+                              dropdown.style.display = isVisible
+                                ? "none"
+                                : "block";
+
+                              // Position dropdown to prevent off-screen issues
+                              if (!isVisible) {
+                                const buttonRect =
+                                  e.currentTarget.getBoundingClientRect();
+                                const viewportWidth = window.innerWidth;
+                                const dropdownWidth = 192; // w-48 = 192px
+
+                                // Check if dropdown would go off-screen on the right
+                                if (
+                                  buttonRect.right + dropdownWidth >
+                                  viewportWidth
+                                ) {
+                                  dropdown.style.right = "0";
+                                  dropdown.style.left = "auto";
+                                } else {
+                                  dropdown.style.left = "0";
+                                  dropdown.style.right = "auto";
+                                }
+                              }
                             }
                           }}
                           className="p-2 border rounded hover:bg-gray-50 flex items-center"
@@ -526,7 +549,7 @@ const Permissions = () => {
                         </button>
                         <div
                           id={`dropdown-${categoryId}-${permission.id}`}
-                          className="absolute z-10 left-5 mt-1 w-48 bg-white border rounded shadow-lg hidden max-h-48 overflow-y-auto"
+                          className="absolute z-10 mt-1 w-48 bg-white border rounded shadow-lg hidden max-h-48 overflow-y-auto"
                           style={{ display: "none" }}
                         >
                           {uiConfig.multiselect_options
@@ -583,12 +606,11 @@ const Permissions = () => {
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex items-center justify-between">
               <label className="flex items-center">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={currentPerm.isEnabled || false}
-                  onChange={(e) =>
+                  onCheckedChange={(checked) =>
                     updatePermission(categoryId, permission.id, {
-                      isEnabled: e.target.checked,
+                      isEnabled: checked as boolean,
                     })
                   }
                   className="mr-3"
@@ -601,7 +623,7 @@ const Permissions = () => {
                   <span className="text-sm">
                     {uiConfig.numeric_config.label}
                   </span>
-                  <input
+                  <Input
                     type="number"
                     min={uiConfig.numeric_config.min}
                     max={uiConfig.numeric_config.max}
@@ -614,7 +636,7 @@ const Permissions = () => {
                         numericValue: parseInt(e.target.value),
                       })
                     }
-                    className="w-20 px-2 py-1 border rounded text-sm"
+                    className="w-20"
                   />
                   <span className="text-sm text-gray-500">
                     {uiConfig.numeric_config.suffix}
@@ -629,12 +651,11 @@ const Permissions = () => {
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex items-center justify-between">
               <label className="flex items-center">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={currentPerm.isEnabled || false}
-                  onChange={(e) =>
+                  onCheckedChange={(checked) =>
                     updatePermission(categoryId, permission.id, {
-                      isEnabled: e.target.checked,
+                      isEnabled: checked as boolean,
                     })
                   }
                   className="mr-3"
@@ -642,30 +663,27 @@ const Permissions = () => {
                 <span className="font-medium">{permission.name}</span>
               </label>
 
-              {/* Alternative: if using different select options */}
               {currentPerm.isEnabled && uiConfig.select_options && (
-                <div className="flex items-center space-x-2">
-                  {/* <span className="text-sm text-gray-600">
-                    {uiConfig.select_label || "Select:"}
-                  </span> */}
-                  <select
-                    value={currentPerm.applicableModules?.[0] || ""}
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        applicableModules: [e.target.value],
-                      })
-                    }
-                    className="px-3 py-1 border rounded text-sm min-w-[120px]"
-                    disabled={!currentPerm.isEnabled}
-                  >
-                    <option value="">Choose option</option>
+                <Select
+                  value={currentPerm.applicableModules?.[0] || ""}
+                  onValueChange={(value) =>
+                    updatePermission(categoryId, permission.id, {
+                      applicableModules: [value],
+                    })
+                  }
+                  disabled={!currentPerm.isEnabled}
+                >
+                  <SelectTrigger className="min-w-[120px]">
+                    <SelectValue placeholder="Choose option" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {uiConfig.select_options.map((option) => (
-                      <option key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value}>
                         {option.label}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                </div>
+                  </SelectContent>
+                </Select>
               )}
             </div>
           </div>
@@ -675,12 +693,11 @@ const Permissions = () => {
         return (
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <label className="flex items-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={currentPerm.isEnabled || false}
-                onChange={(e) =>
+                onCheckedChange={(checked) =>
                   updatePermission(categoryId, permission.id, {
-                    isEnabled: e.target.checked,
+                    isEnabled: checked as boolean,
                   })
                 }
                 className="mr-3"
@@ -692,13 +709,49 @@ const Permissions = () => {
     }
   };
 
+  // Replace the loading condition with this updated version
+
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading permissions...</div>
+      <MainLayout>
+        <div className="flex h-full">
+          <div className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  onClick={() => navigate("/roles")}
+                  className="p-1 hover:bg-gray-100 rounded flex items-center justify-center"
+                  title="Back to Roles"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                <h1 className="text-lg font-semibold">Permission Management</h1>
+              </div>
+              <p className="text-sm text-gray-600">Loading role...</p>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="text-lg text-gray-600">
+                Loading permissions...
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
@@ -722,56 +775,92 @@ const Permissions = () => {
 
   return (
     <MainLayout>
-      <div className=" mb-20">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Permission Management</h1>
-          <p className="text-gray-600 mt-2">
-            Role: <span className="font-medium">{apiData.role.name}</span> -{" "}
-            {apiData.role.description}
-          </p>
+      <div className="flex h-full">
+        {/* Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                onClick={() => navigate("/roles")}
+                className="p-1 hover:bg-gray-100 rounded flex items-center justify-center"
+                title="Back to Roles"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <h1 className="text-lg font-semibold">Permissions</h1>
+            </div>
+            <p className="text-sm text-gray-600">
+              Role: <span className="font-medium">{apiData.role.name}</span>
+            </p>
+          </div>
+          <div className="p-2">
+            {apiData.categories
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => scrollToSection(category.id)}
+                  className={`w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 ${
+                    activeCategory === category.id
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-700"
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
+          </div>
         </div>
 
-        <div className="">
-          {apiData.categories
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((category) => (
-              <div key={category.id} className="my-3">
-                <div className="mb-4">
-                  <h2 className="text-lg font-semibold text-blue-600">
-                    {category.name}
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    {category.description}
-                  </p>
-                </div>
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          <div className="p-6 mb-20">
+            {apiData.categories
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((category) => (
+                <div
+                  key={category.id}
+                  ref={(el) => (sectionRefs.current[category.id] = el)}
+                  className="mb-8"
+                >
+                  <div className="mb-4">
+                    <h2 className="text-lg font-semibold text-blue-600">
+                      {category.name}
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      {category.description}
+                    </p>
+                  </div>
 
-                <div className="space-y-3">
-                  {category.permissions.map((permission) =>
-                    renderPermission(category.id, permission)
-                  )}
+                  <div className="space-y-3">
+                    {category.permissions.map((permission) =>
+                      renderPermission(category.id, permission)
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+          </div>
+
+          <Button
+            onClick={handleSaveChanges}
+            className="fixed bottom-5 right-5 bg-blue-600 text-white"
+          >
+            Save Changes
+          </Button>
         </div>
-
-        {/* Debug section - uncomment to see current state */}
-        {/* <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-        <h3 className="font-semibold mb-2">Current State (JSON):</h3>
-        <pre className="text-xs overflow-auto bg-white p-3 rounded border max-h-96">
-          {JSON.stringify(apiData, null, 2)}
-        </pre>
-      </div> */}
       </div>
-      {/* <div
-        className={`fixed bottom-0 right-0 bg-none shadow-lg p-4 border-t flex justify-end transition-all duration-300 z-0`}
-      > */}
-      <Button
-        onClick={handleSaveChanges}
-        className="fixed bottom-0 right-0 bg-blue-600 text-white m-5"
-      >
-        Save Changes
-      </Button>
-      {/* </div> */}
     </MainLayout>
   );
 };
