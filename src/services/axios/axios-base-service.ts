@@ -1,4 +1,3 @@
-
 import axios, { AxiosRequestConfig } from "axios";
 import { AXIOS_TIMEOUT } from "@/lib/constants";
 // Remove the toast import here as it's causing duplicate toasts
@@ -14,9 +13,9 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.set('Authorization', `Bearer ${token}`);
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      config.headers.set("Authorization", `Bearer ${accessToken}`);
     }
     return config;
   },

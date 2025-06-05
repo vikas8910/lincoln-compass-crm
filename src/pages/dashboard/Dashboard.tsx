@@ -1,4 +1,3 @@
-
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -120,7 +119,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, index) => (
-          <StatCard 
+          <StatCard
             key={index}
             title={stat.title}
             value={stat.value}
@@ -131,10 +130,10 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <Tabs defaultValue="salesOfficers" className="space-y-6">
-        <TabsList className="grid w-full md:w-auto grid-cols-3 h-auto md:h-10">
+      <Tabs defaultValue="leads" className="space-y-6">
+        <TabsList className="grid w-full md:w-auto grid-cols-2 h-auto md:h-10">
           {/* <TabsTrigger value="overview">Overview</TabsTrigger> */}
-          <TabsTrigger value="salesOfficers">Sales Officers</TabsTrigger>
+          {/* <TabsTrigger value="salesOfficers">Sales Officers</TabsTrigger> */}
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
         </TabsList>
@@ -149,7 +148,7 @@ const Dashboard = () => {
                 <LeadsByStatus data={leadsByStatusData} />
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Leads by Source</CardTitle>
@@ -159,11 +158,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           <RecentLeads leads={recentLeadsData} />
         </TabsContent>
 
-        <TabsContent value="salesOfficers">
+        {/* <TabsContent value="salesOfficers">
           <Card>
             <CardHeader>
               <CardTitle>Sales Officers Management</CardTitle>
@@ -179,7 +178,7 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="leads">
           <Card>
@@ -188,23 +187,12 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                View and manage all leads, track their progress through the pipeline, and assign them to sales officers.
+                View and manage all leads, track their progress through the
+                pipeline, and assign them to sales officers.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link to="/leads">
-                    View All Leads
-                  </Link>
-                </Button>
-                {/* <Button asChild variant="outline">
-                  <Link to="/lead-pipeline">
-                    Lead Pipeline
-                  </Link>
-                </Button> */}
-                <Button asChild variant="outline">
-                  <Link to="/lead-assignment">
-                    Lead Assignment
-                  </Link>
+                  <Link to="/leads">View All Leads</Link>
                 </Button>
               </div>
             </CardContent>
@@ -218,12 +206,11 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Manage user roles and permissions to control access to various features of the system.
+                Manage user roles and permissions to control access to various
+                features of the system.
               </p>
               <Button asChild>
-                <Link to="/roles-permissions">
-                  Manage Roles & Permissions
-                </Link>
+                <Link to="/roles-permissions">Manage Roles & Permissions</Link>
               </Button>
             </CardContent>
           </Card>

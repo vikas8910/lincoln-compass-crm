@@ -38,7 +38,12 @@ import {
 } from "@/services/lead/lead";
 import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
-import { DEBOUNCE_DELAY, INITIAL_PAGINATION } from "@/lib/constants";
+import {
+  DEBOUNCE_DELAY,
+  DROPDOWN_OPTIONS,
+  INITIAL_PAGINATION,
+  PermissionsEnum,
+} from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { createLeadFormValues } from "@/schemas/lead";
 import { getUsers } from "@/services/user-service/user-service";
@@ -57,6 +62,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { set } from "date-fns";
 
 // Define tab types
 type TabType = "all" | "my" | "new";
@@ -128,12 +135,15 @@ const Leads = () => {
   const [selectedLeadForNote, setSelectedLeadForNote] = useState<Lead | null>(
     null
   );
+  const [isEditable, setIsEditable] = useState(false);
 
   // Debounced filters for better performance
   const debouncedColumnFilters: ColumnFiltersState = useDebounce(
     columnFilters,
     DEBOUNCE_DELAY
   );
+
+  const { authoritiesList } = useAuthoritiesList();
 
   // Create modified column filters based on active tab
   const getModifiedColumnFilters = () => {
@@ -175,6 +185,9 @@ const Leads = () => {
     getAllLeadTypesList();
     getAllCoursesList();
     getAllSourcesList();
+    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
+      ? setIsEditable(false)
+      : setIsEditable(true);
   }, []);
 
   // API data fetching
@@ -365,6 +378,7 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter first name"
+          disabled={isEditable}
         />
       ),
       // Add custom meta for filtering
@@ -384,6 +398,7 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter last name"
+          disabled={isEditable}
         />
       ),
       enableColumnFilter: false,
@@ -400,6 +415,7 @@ const Leads = () => {
           validationType="phone"
           placeholder="Enter mobile number"
           textColor="text-[#2c5cc5]"
+          disabled={isEditable}
         />
       ),
       enableColumnFilter: false,
@@ -414,6 +430,7 @@ const Leads = () => {
           validationType="email"
           placeholder="Enter email address"
           textColor="text-[#2c5cc5]"
+          disabled={isEditable}
         />
       ),
       enableColumnFilter: false,
@@ -434,6 +451,7 @@ const Leads = () => {
           placeholder="Select source"
           emptyOptionLabel="Select source..."
           allowEmpty={true}
+	  disabled={isEditable}
         />
       ),
     },
@@ -453,6 +471,7 @@ const Leads = () => {
           placeholder="Select course"
           emptyOptionLabel="Select course..."
           allowEmpty={true}
+	  disabled={isEditable}
         />
       ),
     },
@@ -472,6 +491,7 @@ const Leads = () => {
           placeholder="Select lead type"
           emptyOptionLabel="Select lead type..."
           allowEmpty={true}
+          disabled={isEditable}
         />
       ),
     },
@@ -496,20 +516,25 @@ const Leads = () => {
           }
           validationType="text"
           placeholder="No notes"
+          disabled={isEditable}
         />
       ),
       enableColumnFilter: false,
     },
-    {
-      header: "Assigned To",
-      accessorKey: "salesOfficerId",
-      cell: ({ row }) => (
-        <div className="min-w-[160px]">
-          <AssignToDropdown lead={row.original} />
-        </div>
-      ),
-      enableColumnFilter: false,
-    },
+    ...(authoritiesList.includes(PermissionsEnum.ASSIGN_LEADS)
+      ? [
+          {
+            header: "Assigned To",
+            accessorKey: "salesOfficerId",
+            cell: ({ row }) => (
+              <div className="min-w-[160px]">
+                <AssignToDropdown lead={row.original} />
+              </div>
+            ),
+            enableColumnFilter: false,
+          },
+        ]
+      : []),
   ];
 
   // Error state
@@ -571,13 +596,15 @@ const Leads = () => {
           </button>
 
           {/* Add Lead Button */}
-          <Button
-            aria-label="Add new lead"
-            onClick={() => setIsCreateLeadDialogOpen(true)}
-          >
-            <FiUserPlus className="mr-2 h-4 w-4" />
-            Add Lead
-          </Button>
+          {authoritiesList.includes(PermissionsEnum.LEADS_CREATE) && (
+            <Button
+              aria-label="Add new lead"
+              onClick={() => setIsCreateLeadDialogOpen(true)}
+            >
+              <FiUserPlus className="mr-2 h-4 w-4" />
+              Add Lead
+            </Button>
+          )}
         </div>
       </div>
 

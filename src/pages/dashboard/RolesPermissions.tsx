@@ -61,6 +61,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useNavigate } from "react-router-dom";
 
 // Define types
 export interface Permission {
@@ -118,6 +119,7 @@ const RolesPermissions = () => {
   // State for search/filter
   const [searchRoles, setSearchRoles] = useState("");
   const [searchPermissions, setSearchPermissions] = useState("");
+  const navigate = useNavigate();
 
   // Initialize the role form with Zod validation
   const roleForm = useForm<RoleFormValues>({
@@ -158,7 +160,7 @@ const RolesPermissions = () => {
         });
       }
     }
-    fetchPermissions();
+    // fetchPermissions();
     
     const fetchRolePermissionsActions = async () => {
       try {
@@ -173,7 +175,7 @@ const RolesPermissions = () => {
         });
       }
     }
-    fetchRolePermissionsActions();
+    // fetchRolePermissionsActions();
   }, [])
 
   // Handle role creation/editing
@@ -446,7 +448,7 @@ const RolesPermissions = () => {
             ? { ...p, ...newPermission } 
             : p
         );
-        await updatePermission(selectedPermission.id, newPermission);
+        // await updatePermission(selectedPermission.id, newPermission);
         setPermissions(updatedPermissions);
         toast({
           title: "Success",
@@ -733,6 +735,14 @@ const RolesPermissions = () => {
     READ: "View"
   };
 
+  const handleRoleClick = (role: Role) => {
+    navigate(`/permissions`, {
+      state: {
+        role: role
+      }
+    });
+  };
+
   const renderRolesTab = () => (
     <TabsContent value="roles" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
@@ -763,7 +773,7 @@ const RolesPermissions = () => {
               <TableRow>
                 <TableHead>Role Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Permissions</TableHead>
+                {/* <TableHead>Permissions</TableHead> */}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -777,9 +787,9 @@ const RolesPermissions = () => {
               ) : (
                 filteredRoles.map((role, index) => (
                   <TableRow key={index}>
-                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell className="font-medium text-blue-600 hover:underline cursor-pointer" onClick={() => handleRoleClick(role)}>{role.name}</TableCell>
                     <TableCell>{role.description}</TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -794,7 +804,7 @@ const RolesPermissions = () => {
                           {(role.permissions || []).length || 0}
                         </Badge>
                       </Button>
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="text-right">
                       <Button 
                         variant="ghost" 
@@ -1406,7 +1416,7 @@ const RolesPermissions = () => {
                           <TableCell className="text-center">
                             <Checkbox 
                               id={`view-permission-${permission.id}-read`}
-                              checked={isPSelected && isActionSelected(permission.id, "read")}
+                              checked={isPSelected}
                               disabled={true}
                               className="mx-auto"
                             />
@@ -1537,15 +1547,15 @@ const RolesPermissions = () => {
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Roles & Permissions Management</h1>
+        <h1 className="text-3xl font-bold">Roles Management</h1>
       </div>
 
       <Tabs defaultValue="roles" className="space-y-6">
-        <TabsList>
+        {/* <TabsList>
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
           <TabsTrigger value="assignment">Assign Permissions</TabsTrigger>
-        </TabsList>
+        </TabsList> */}
 
         {renderRolesTab()}
         {renderPermissionsTab()}

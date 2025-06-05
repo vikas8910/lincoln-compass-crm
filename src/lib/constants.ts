@@ -766,3 +766,14 @@ export const DROPDOWN_OPTIONS = {
     { id: 5, name: "Others" },
   ],
 };
+
+export enum PermissionsEnum {
+  MANAGE_ROLES = "manage_roles",
+  MANAGE_USERS = "manage_users",
+  MANAGE_SALES_TEAMS = "manage_sales_teams",
+  LEADS_DELETE = "leads:delete",
+  LEADS_VIEW = "leads:view",
+  LEADS_CREATE = "create_records:leads",
+  LEADS_UPDATE = "leads:edit",
+  ASSIGN_LEADS = "assign_records:leads",
+}

@@ -1,97 +1,124 @@
-
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
-import {
   LayoutDashboard,
-  UserRound,
   Users,
-  ClipboardList,
   Shield,
   UserCog,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { PermissionsEnum } from "@/lib/constants";
+import { useSidebarContext } from "./MainLayout";
 
 const MainSidebar = () => {
   const location = useLocation();
-  
+  const { authoritiesList } = useAuthoritiesList();
+  const { isExpanded, setIsExpanded } = useSidebarContext();
+
   const menuItems = [
-    {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      href: "/dashboard",
-    },
-    {
-      title: "Sales Officers",
-      icon: UserRound,
-      href: "/sales-officers",
-    },
+    ...(authoritiesList.includes(PermissionsEnum.MANAGE_ROLES)
+      ? [
+          {
+            title: "Dashboard",
+            icon: LayoutDashboard,
+            href: ["/dashboard"],
+          },
+        ]
+      : []),
     {
       title: "Leads",
       icon: Users,
-      href: "/leads",
+      href: ["/leads", "/leads-details"],
     },
-    {
-      title: "Leads Mapping",
-      icon: ClipboardList,
-      href: "/leads-mapping",
-    },
-    {
-      title: "User Management",
-      icon: UserCog,
-      href: "/sales-officer-roles",
-    },
-    {
-      title: "Roles & Permissions",
-      icon: Shield,
-      href: "/roles-permissions",
-    },
+    ...(authoritiesList.includes(PermissionsEnum.MANAGE_USERS)
+      ? [
+          {
+            title: "User Management",
+            icon: UserCog,
+            href: ["/sales-officer-roles"],
+          },
+        ]
+      : []),
+    ...(authoritiesList.includes(PermissionsEnum.MANAGE_ROLES)
+      ? [
+          {
+            title: "Roles & Permissions",
+            icon: Shield,
+            href: ["/roles", "/permissions"],
+          },
+        ]
+      : []),
   ];
 
+  const toggleSidebar = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <Sidebar className="bg-[#1A1F2C] text-white">
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400">Main Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                // Fix the highlighting logic to correctly handle the leads-mapping route
-                const isActive = 
-                  location.pathname === item.href || 
-                  (location.pathname.startsWith(item.href) && 
-                   item.href !== '/dashboard' && 
-                   item.href !== '/leads');
-                
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={isActive}
-                      tooltip={item.title}
-                      className={isActive ? "bg-blue-700 text-white" : "text-gray-300 hover:text-white hover:bg-blue-800/50"}
-                    >
-                      <Link to={item.href} className="flex items-center gap-2">
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <div className="h-full w-full text-white flex flex-col z-50">
+      {/* Toggle Button */}
+      <div className="flex justify-end p-3">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-lg hover:bg-blue-800/50 transition-colors"
+          aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {isExpanded ? (
+            <ChevronLeft className="h-4 w-4 text-gray-300" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-gray-300" />
+          )}
+        </button>
+      </div>
+
+      {/* Menu Content */}
+      <div className="flex-1 p-3">
+        {isExpanded && (
+          <div className="text-gray-400 text-sm font-medium mb-4 px-3">
+            Main Menu
+          </div>
+        )}
+
+        <nav className="space-y-2">
+          {menuItems.map((item) => {
+            const isActive = item.href.some(
+              (href) =>
+                location.pathname === href ||
+                (location.pathname.startsWith(href) &&
+                  href !== "/dashboard" &&
+                  href !== "/leads")
+            );
+
+            return (
+              <div key={item.title} className="relative group">
+                <Link
+                  to={item.href[0]}
+                  className={`flex items-center rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue-700 text-white"
+                      : "text-gray-300 hover:text-white hover:bg-blue-800/50"
+                  } ${isExpanded ? "p-3 gap-3" : "p-3 justify-center"}`}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {isExpanded && (
+                    <span className="truncate font-medium">{item.title}</span>
+                  )}
+
+                  {/* Tooltip for collapsed state */}
+                  {!isExpanded && (
+                    <div className="absolute left-full ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
+                      {item.title}
+                      <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45"></div>
+                    </div>
+                  )}
+                </Link>
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
   );
 };
 
