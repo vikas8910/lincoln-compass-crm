@@ -1,3 +1,4 @@
+import { Tag } from "@/components/leads/lead-details/TagManager";
 import { validationSchemas } from "@/components/tablec/EditableCell";
 import type {
   ColumnFiltersState,
@@ -61,6 +62,7 @@ export interface Lead {
     name: string;
     sequenceOrder: number;
   };
+  tags: Tag[];
   intake: string;
   assignedTo: string | null;
   assignedCounselorName: string | null;

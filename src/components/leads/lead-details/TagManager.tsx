@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Edit2Icon, Tag } from "lucide-react";
+import { Edit2Icon, Tag } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -7,11 +7,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  createNewTag,
-  getAllTags,
-  updateLeadFullDetails,
-} from "@/services/lead/lead";
+import { createNewTag, updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
 
@@ -21,7 +17,7 @@ interface Color {
   createdAt: string;
 }
 
-interface Tag {
+export interface Tag {
   id: number;
   name: string;
   description: string;
@@ -33,10 +29,15 @@ interface Tag {
 }
 
 const TagManager: React.FC = () => {
-  const { lead, setLead } = useLeadDetails();
-  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const {
+    lead,
+    setLead,
+    allTags,
+    setAllTags,
+    selectedTagIds,
+    setSelectedTagIds,
+  } = useLeadDetails();
   const [assignedTags, setAssignedTags] = useState<Tag[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,11 +55,7 @@ const TagManager: React.FC = () => {
   };
 
   const assignTagsToLead = async (tagIds: number[]): Promise<void> => {
-    // Simulate API delay
-
     const tagList = allTags.filter((tag) => tagIds.includes(tag.id));
-
-    console.log(tagList);
 
     try {
       const updatedData = await updateLeadFullDetails(lead.id, "tags", tagList);
@@ -76,13 +73,6 @@ const TagManager: React.FC = () => {
     } catch {
       toast.error("Failed to assign tags to lead");
     }
-
-    // console.log("New Assigned Tags => ", assignedTags);
-
-    // await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // const newAssignedTags = allTags.filter((tag) => tagIds.includes(tag.id));
-    // setAssignedTags(newAssignedTags);
   };
 
   const createTag = async (tagName: string): Promise<Tag> => {
@@ -100,15 +90,8 @@ const TagManager: React.FC = () => {
   useEffect(() => {
     const loadTags = async () => {
       try {
-        setLoading(true);
-        // const tags = await fetchAllTags();
-        const tags = await getAllTags();
-        setAllTags(tags);
-
-        // Initialize with some assigned tags for demo
-        const initialAssigned = tags.slice(0, 3);
-        setAssignedTags(initialAssigned);
-        setSelectedTagIds(initialAssigned.map((tag) => tag.id));
+        setAssignedTags(lead?.tags);
+        setSelectedTagIds(lead?.tags?.map((tag) => tag.id));
       } catch (error) {
         console.error("Error fetching tags:", error);
       } finally {
@@ -148,7 +131,7 @@ const TagManager: React.FC = () => {
   };
 
   // Filter tags based on search term
-  const filteredTags = allTags.filter((tag) =>
+  const filteredTags = allTags?.filter((tag) =>
     tag.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -171,8 +154,6 @@ const TagManager: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Reset selection to current assigned tags
-    setSelectedTagIds(assignedTags.map((tag) => tag.id));
     setSearchTerm("");
     setIsPopoverOpen(false);
   };
@@ -199,16 +180,22 @@ const TagManager: React.FC = () => {
             <div className="flex items-center gap-2">
               <Tag />
               <div className="flex items-center space-x-2">
-                {assignedTags.map((tag) => (
-                  <div
-                    key={tag.id}
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getTagColorClass(
-                      tag.color.name
-                    )} group-hover:shadow-sm transition-shadow`}
-                  >
-                    {tag.name}
-                  </div>
-                ))}
+                {lead?.tags?.length > 0 ? (
+                  lead.tags.map((tag) => (
+                    <div
+                      key={tag.id}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getTagColorClass(
+                        tag.color.name
+                      )} group-hover:shadow-sm transition-shadow`}
+                    >
+                      {tag.name}
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500 cursor-pointer hover:underline">
+                    Click here to add tags
+                  </span>
+                )}
               </div>
             </div>
 
@@ -256,7 +243,7 @@ const TagManager: React.FC = () => {
                   )}
 
                   {/* Existing filtered tags */}
-                  {(searchTerm ? filteredTags : allTags).map((tag) => (
+                  {(searchTerm ? filteredTags : allTags)?.map((tag) => (
                     <div
                       key={tag.id}
                       className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer"

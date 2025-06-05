@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { toast } from "sonner";
 import {
+  getAllTags,
   getLeadFullDetails,
   getLeadStages,
   updateLeadFullDetails,
@@ -21,6 +22,7 @@ import {
   getAllSources,
   getAllUniversities,
 } from "@/services/dropdowns/dropdown";
+import { Tag } from "@/components/leads/lead-details/TagManager";
 
 // Types
 interface LeadDetailsContextType {
@@ -40,6 +42,10 @@ interface LeadDetailsContextType {
   refreshLead: (leadId: string) => Promise<void>;
   dropdownOptions: any;
   stageOptions: StageOption[];
+  allTags: Tag[];
+  setAllTags: React.Dispatch<React.SetStateAction<Tag[]>>;
+  selectedTagIds: number[];
+  setSelectedTagIds: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 interface LeadDetailsProviderProps {
@@ -63,6 +69,8 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
   );
   const [dropdownOptions, setDropdownOptions] = useState(DROPDOWN_OPTIONS);
   const [stageOptions, setStageOptions] = useState<StageOption[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   // Fetch lead data
   const fetchLead = useCallback(async (leadId: string) => {
@@ -125,12 +133,18 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
       setStageOptions(content);
     };
 
+    const getAllTagsList = async () => {
+      const tags = await getAllTags();
+      setAllTags(tags);
+    };
+
     getAllUnivertiesList();
     getAllLeadTypesList();
     getAllCoursesList();
     getAllSourcesList();
     getAllCountriesList();
     getAllStagesList();
+    getAllTagsList();
   }, []);
 
   // Handle save operations
@@ -195,6 +209,10 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     refreshLead,
     dropdownOptions,
     stageOptions,
+    allTags,
+    setAllTags,
+    selectedTagIds,
+    setSelectedTagIds,
   };
 
   return (
