@@ -108,10 +108,44 @@ const Permissions = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const sectionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   const location = useLocation();
   const roleData = location.state;
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container || !apiData) return;
+
+    // Get how far the user has scrolled inside the container:
+    const scrollTop = container.scrollTop;
+    let newlyActive: number | null = null;
+
+    // We iterate in ascending sortOrder, so when a section’s top
+    // is <= scrollTop, it means that section is at or above the scroll line.
+    // As we go, we keep the *last* category whose offsetTop <= scrollTop.
+    for (const category of apiData.categories.sort(
+      (a, b) => a.sortOrder - b.sortOrder
+    )) {
+      const elem = sectionRefs.current[category.id];
+      if (!elem) continue;
+
+      // `elem.offsetTop` is measured relative to the scrolling container's top-left.
+      const sectionTop = elem.offsetTop;
+      if (sectionTop <= scrollTop + 100) {
+        newlyActive = category.id;
+      } else {
+        // Since categories are sorted by sortOrder, once we find the first
+        // section whose top is > scrollTop, we can stop looping.
+        break;
+      }
+    }
+
+    if (newlyActive !== null && newlyActive !== activeCategory) {
+      setActiveCategory(newlyActive);
+    }
+  };
 
   useEffect(() => {
     const fetchPermissionsData = async () => {
@@ -825,7 +859,12 @@ const Permissions = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+
+        <div
+          className="flex-1 overflow-auto"
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+        >
           <div className="p-6 mb-20">
             {apiData.categories
               .sort((a, b) => a.sortOrder - b.sortOrder)
