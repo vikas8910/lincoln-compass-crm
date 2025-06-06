@@ -21,6 +21,8 @@ import {
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
 import { updateLeadFullDetails } from "@/services/lead/lead";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { PermissionsEnum } from "@/lib/constants";
 
 // Zod schema
 const profileSchema = z.object({
@@ -48,6 +50,7 @@ export default function ProfileFormPopover({
 }: ProfileFormPopoverProps) {
   const { lead, setLead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
+  const { authoritiesList } = useAuthoritiesList();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -90,9 +93,22 @@ export default function ProfileFormPopover({
     // Here you can call your API with the data
   };
 
+  const handlePopoverOpen = (open: boolean) => {
+    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) && setIsOpen(open);
+  };
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+    <Popover open={isOpen} onOpenChange={(open) => handlePopoverOpen(open)}>
+      <PopoverTrigger
+        asChild
+        className={`${
+          authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
+            ? "cursor-pointer"
+            : "cursor-default"
+        }`}
+      >
+        {children}
+      </PopoverTrigger>
       <PopoverContent className="w-96" align="start">
         <Form {...form}>
           <form

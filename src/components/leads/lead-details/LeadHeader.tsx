@@ -62,7 +62,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
           </Avatar>
           <div>
             <ProfileFormPopover>
-              <div className="flex items-center gap-4 hover:bg-gray-200 p-2 rounded-md cursor-pointer">
+              <div className="flex items-center gap-4 hover:bg-gray-200 p-2 rounded-md">
                 <h1 className="font-bold text-lg">
                   {lead.firstName} {lead.lastName}
                 </h1>
