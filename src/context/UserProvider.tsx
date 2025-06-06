@@ -47,7 +47,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setUser(res);
       console.log(res);
     };
-    fetchUserDetails();
+    const isLoggedIn = localStorage.getItem("accessToken") !== null;
+    if (isLoggedIn) {
+      fetchUserDetails();
+    }
   }, []);
 
   return (

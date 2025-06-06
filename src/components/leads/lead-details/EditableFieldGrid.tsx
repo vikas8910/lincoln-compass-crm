@@ -1,9 +1,11 @@
 // import { DROPDOWN_OPTIONS } from "@/lib/constants";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { EditableCell } from "../../tablec/EditableCell";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { getNestedValue } from "@/lib/utils";
 import { Lead, StageOption } from "@/types/lead";
 import { useState, useEffect } from "react";
+import { PermissionsEnum } from "@/lib/constants";
 
 interface EditableFieldGridProps {
   onSave: (key: string, value: string | string[] | Date) => Promise<void>;
@@ -33,6 +35,8 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
   const [dependentValues, setDependentValues] = useState<{
     [key: string]: any;
   }>({});
+
+  const { authoritiesList } = useAuthoritiesList();
 
   // Initialize dependent values from lead data
   useEffect(() => {
@@ -208,7 +212,9 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
 
         // Disable field if it's a cascade child and parent hasn't been selected
         const isDisabled =
-          disabled || (cascadeParent && !dependentValues[cascadeParent]);
+          !authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ||
+          disabled ||
+          (cascadeParent && !dependentValues[cascadeParent]);
 
         return (
           <div
