@@ -34,6 +34,7 @@ import { EditableCell } from "@/components/tablec/EditableCell";
 import {
   assignLeadToOfficer,
   createLead,
+  deleteLead,
   updateLead,
 } from "@/services/lead/lead";
 import { toast } from "sonner";
@@ -64,6 +65,7 @@ import {
 } from "@/components/ui/select";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { set } from "date-fns";
+import { FaTrash } from "react-icons/fa";
 
 // Define tab types
 type TabType = "all" | "my" | "new";
@@ -136,6 +138,7 @@ const Leads = () => {
     null
   );
   const [isEditable, setIsEditable] = useState(false);
+  const [deleteLeadId, setDeleteLeadId] = useState<string | null>(null);
 
   // Debounced filters for better performance
   const debouncedColumnFilters: ColumnFiltersState = useDebounce(
@@ -278,6 +281,17 @@ const Leads = () => {
       toast.success("Lead Assigned Successfully");
     } catch (error) {
       toast.error("Failed to assign lead");
+      throw error;
+    }
+  };
+
+  const handleLeadDelete = async () => {
+    try {
+      await deleteLead(deleteLeadId);
+      refetch();
+      toast.success("Lead Deleted Successfully");
+    } catch (error) {
+      toast.error("Failed to delete lead");
       throw error;
     }
   };
@@ -535,6 +549,26 @@ const Leads = () => {
           },
         ]
       : []),
+    ...(authoritiesList.includes(PermissionsEnum.LEADS_DELETE)
+      ? [
+          {
+            header: "Actions",
+            accessorKey: "",
+            cell: ({ row }) => (
+              <Button
+                className="bg-red-500 text-white hover:bg-red-600"
+                onClick={() => {
+                  setIsDeleteUserDialogOpen(true);
+                  setDeleteLeadId(row.original.id);
+                }}
+              >
+                <FaTrash />
+              </Button>
+            ),
+            enableColumnFilter: false,
+          },
+        ]
+      : []),
   ];
 
   // Error state
@@ -686,9 +720,7 @@ const Leads = () => {
         onClose={() => {
           setIsDeleteUserDialogOpen(false);
         }}
-        onConfirm={() => {
-          alert("Deleted User");
-        }}
+        onConfirm={handleLeadDelete}
         title="Delete Lead"
         description="Are you sure you want to delete this lead ?"
         confirmLabel="Delete"

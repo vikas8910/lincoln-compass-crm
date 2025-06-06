@@ -146,3 +146,12 @@ export const getLeadStages = async () => {
     throw error;
   }
 };
+
+export const deleteLead = (leadId: string) => {
+  try {
+    return axiosInstance.delete(`${LEADS}/${leadId}`);
+  } catch (error) {
+    console.error("Error deleting lead:", error);
+    throw error;
+  }
+};
