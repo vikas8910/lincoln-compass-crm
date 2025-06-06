@@ -6,9 +6,12 @@ import { MapPinIcon, Copy } from "lucide-react";
 import { FaFacebook, FaTwitter, FaLinkedin } from "react-icons/fa";
 import ProfileFormPopover from "./ProfileFormPopover";
 import AddressFormPopover from "./LeadAddressPopover";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { PermissionsEnum } from "@/lib/constants";
 
 export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   const { bg, text } = getAvatarColors(lead?.firstName?.charAt(0));
+  const { authoritiesList } = useAuthoritiesList();
 
   // Function to format address
   const formatAddress = () => {
@@ -110,7 +113,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
               </div>
             </ProfileFormPopover>
             <AddressFormPopover>
-              <div className="flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-200 cursor-pointer p-2">
+              <div className="flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-200 p-2">
                 <MapPinIcon className="h-4 w-4" />
                 {hasAddressInfo ? (
                   <>
@@ -123,8 +126,10 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                       }}
                     />
                   </>
-                ) : (
+                ) : authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ? (
                   <span className="text-gray-400">Click to add location</span>
+                ) : (
+                  <span className="text-gray-400">No location available</span>
                 )}
               </div>
             </AddressFormPopover>
