@@ -1,9 +1,20 @@
-import { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+  useCallback,
+} from "react";
 import { FiSearch, FiUserPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getUsers, updateUser, deleteUser, searchUsers } from "@/services/user-service/user-service";
+import {
+  getUsers,
+  updateUser,
+  deleteUser,
+  searchUsers,
+} from "@/services/user-service/user-service";
 import { UserResponse } from "@/types";
 import usePagination from "@/hooks/usePagination";
 import useSearch from "@/hooks/useSearch";
@@ -12,13 +23,17 @@ import ConfirmationDialog from "../ui/ConfirmationDialog";
 import DynamicTable, { Column } from "../table/DynamicTable";
 import { EditUserFormValues, NewUserFormValues } from "@/schemas/user-schemas";
 import { toast } from "@/components/ui/use-toast";
+import { useUser } from "@/context/UserProvider";
 
 interface UserManagementTabProps {
   onAddUser: (data: NewUserFormValues) => Promise<void>;
 }
 
 // Use forwardRef to expose methods to parent component
-const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagementTabProps>(({ onAddUser }, ref) => {
+const UserManagementTab = forwardRef<
+  { refreshUsers: () => void },
+  UserManagementTabProps
+>(({ onAddUser }, ref) => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
@@ -27,69 +42,80 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
   const [userToDelete, setUserToDelete] = useState<UserResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  const { user: currentUser } = useUser();
+
   // Use custom hooks
-  const { 
-    currentPage, 
-    pageSize, 
-    totalItems, 
-    totalPages, 
-    handlePageChange, 
-    handlePageSizeChange, 
-    updatePaginationState 
+  const {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+    updatePaginationState,
   } = usePagination({
     onPageChange: (page, size) => {
       fetchUsers(page, size);
-    }
+    },
   });
 
   // Search users from API - defined before the hook to avoid dependency issues
-  const searchUsersFromAPI = useCallback(async (term: string, page: number, size: number) => {
-    if (!term.trim()) {
-      setIsSearching(false);
-      return fetchUsers(page, size);
-    }
-    
-    setIsLoading(true);
-    try {
-      const response = await searchUsers(term, page, size);
-      setUsers(response.users || []);
-      updatePaginationState(response.totalElements, response.totalPages);
-    } catch (error) {
-      console.error("Error searching users:", error);
-      // Toast is now handled in the service layer, so remove duplicate toast here
-      // toast.error("Failed to search users");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [updatePaginationState]);
+  const searchUsersFromAPI = useCallback(
+    async (term: string, page: number, size: number) => {
+      if (!term.trim()) {
+        setIsSearching(false);
+        return fetchUsers(page, size);
+      }
+
+      setIsLoading(true);
+      try {
+        const response = await searchUsers(term, page, size);
+        setUsers(response.users || []);
+        updatePaginationState(response.totalElements, response.totalPages);
+      } catch (error) {
+        console.error("Error searching users:", error);
+        // Toast is now handled in the service layer, so remove duplicate toast here
+        // toast.error("Failed to search users");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [updatePaginationState]
+  );
 
   // Fetch users from API
-  const fetchUsers = useCallback(async (page: number, size: number) => {
-    setIsLoading(true);
-    try {
-      const response = await getUsers(page, size);
-      setUsers(response.content || []);
-      updatePaginationState(response.totalElements, response.totalPages);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      // Toast is now handled in the service layer, so remove duplicate toast here
-      // toast.error("Failed to fetch users");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [updatePaginationState]);
+  const fetchUsers = useCallback(
+    async (page: number, size: number) => {
+      setIsLoading(true);
+      try {
+        const response = await getUsers(page, size);
+        setUsers(response.content || []);
+        updatePaginationState(response.totalElements, response.totalPages);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        // Toast is now handled in the service layer, so remove duplicate toast here
+        // toast.error("Failed to fetch users");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [updatePaginationState]
+  );
 
   // Handle search when term changes
-  const handleSearch = useCallback((term: string) => {
-    if (term.trim() === "") {
-      setIsSearching(false);
-      fetchUsers(0, pageSize);
-    } else {
-      setIsSearching(true);
-      searchUsersFromAPI(term, 0, pageSize);
-    }
-  }, [fetchUsers, searchUsersFromAPI, pageSize]);
+  const handleSearch = useCallback(
+    (term: string) => {
+      if (term.trim() === "") {
+        setIsSearching(false);
+        fetchUsers(0, pageSize);
+      } else {
+        setIsSearching(true);
+        searchUsersFromAPI(term, 0, pageSize);
+      }
+    },
+    [fetchUsers, searchUsersFromAPI, pageSize]
+  );
 
   // Now initialize the search hook with our properly memoized handler
   const { searchTerm, handleSearchChange, setSearchTerm } = useSearch({
@@ -119,15 +145,26 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
   // }, []);
 
   // Expose the refreshUsers method to parent component
-  useImperativeHandle(ref, () => ({
-    refreshUsers: () => {
-      if (isSearching && searchTerm) {
-        searchUsersFromAPI(searchTerm, currentPage, pageSize);
-      } else {
-        fetchUsers(currentPage, pageSize);
-      }
-    }
-  }), [currentPage, fetchUsers, isSearching, pageSize, searchTerm, searchUsersFromAPI]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      refreshUsers: () => {
+        if (isSearching && searchTerm) {
+          searchUsersFromAPI(searchTerm, currentPage, pageSize);
+        } else {
+          fetchUsers(currentPage, pageSize);
+        }
+      },
+    }),
+    [
+      currentPage,
+      fetchUsers,
+      isSearching,
+      pageSize,
+      searchTerm,
+      searchUsersFromAPI,
+    ]
+  );
 
   // Handle editing a user
   const handleEditUser = (user: UserResponse) => {
@@ -143,59 +180,59 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
 
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
-    
+
     try {
       await deleteUser(userToDelete.id);
-      
+
       // Refresh the user list after deleting the user
       if (isSearching && searchTerm) {
         searchUsersFromAPI(searchTerm, currentPage, pageSize);
       } else {
         fetchUsers(currentPage, pageSize);
       }
-      
+
       setIsDeleteUserDialogOpen(false);
       setUserToDelete(null);
       toast({
         title: "Success",
         description: `User ${userToDelete.name} deleted successfully`,
-        variant: "default"
-      })
+        variant: "default",
+      });
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
         title: "Error",
         description: "Failed to delete user. Please try again later.",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     }
   };
 
   // Handle submitting edited user
   const handleSubmitEditUser = async (data: EditUserFormValues) => {
     if (!editingUser) return;
-    
+
     try {
       await updateUser(editingUser.id, {
         name: data.name,
         email: data.email,
         contactNumber: data.contactNumber,
       });
-      
+
       // Refresh the user list after updating the user
       if (isSearching && searchTerm) {
         searchUsersFromAPI(searchTerm, currentPage, pageSize);
       } else {
         fetchUsers(currentPage, pageSize);
       }
-      
+
       setIsEditUserDialogOpen(false);
       setEditingUser(null);
       toast({
         title: "Success",
         description: `User ${data.name} updated successfully`,
-        variant: "default"
-      })
+        variant: "default",
+      });
     } catch (error) {
       console.error("Error updating user:", error);
     }
@@ -206,42 +243,44 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
     {
       header: "Name",
       accessor: "name",
-      className: "font-medium"
+      className: "font-medium",
     },
     {
       header: "Email",
-      accessor: "email"
+      accessor: "email",
     },
     {
       header: "Contact Number",
-      accessor: "contactNumber"
+      accessor: "contactNumber",
     },
     {
       header: "Role",
-      accessor: (user) => user.roles && user.roles[0]?.name || "None"
+      accessor: (user) => (user.roles && user.roles[0]?.name) || "None",
     },
     {
       header: "Actions",
       accessor: (user) => (
         <div className="flex justify-end">
-          <Button 
-            variant="ghost" 
+          {Number(user.id) !== Number(currentUser.id) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openDeleteDialog(user)}
+            >
+              <FiTrash2 className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleEditUser(user)}
           >
             <FiEdit2 className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => openDeleteDialog(user)}
-          >
-            <FiTrash2 className="h-4 w-4" />
-          </Button>
         </div>
       ),
-      className: "text-right"
-    }
+      className: "text-right",
+    },
   ];
 
   return (
@@ -257,7 +296,7 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
               className="pl-9 w-full"
             />
           </div>
-         
+
           <Button onClick={() => setIsAddUserDialogOpen(true)}>
             <FiUserPlus className="mr-2 h-4 w-4" />
             Add New User
@@ -268,11 +307,13 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>
-            {isSearching && searchTerm ? `Search Results for "${searchTerm}"` : "User Management"}
+            {isSearching && searchTerm
+              ? `Search Results for "${searchTerm}"`
+              : "User Management"}
             {isSearching && searchTerm && (
-              <Button 
-                variant="link" 
-                className="ml-2 text-sm" 
+              <Button
+                variant="link"
+                className="ml-2 text-sm"
                 onClick={resetSearch}
               >
                 Clear Search
@@ -285,21 +326,25 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
             columns={columns}
             data={users}
             isLoading={isLoading}
-            emptyMessage={isSearching ? "No users found matching your search." : "No users found."}
+            emptyMessage={
+              isSearching
+                ? "No users found matching your search."
+                : "No users found."
+            }
             pagination={{
               currentPage,
               pageSize,
               totalPages,
               totalItems,
               onPageChange: handlePageChange,
-              onPageSizeChange: handlePageSizeChange
+              onPageSizeChange: handlePageSizeChange,
             }}
           />
         </CardContent>
       </Card>
 
       {/* Add User Dialog */}
-      <UserFormDialog 
+      <UserFormDialog
         isOpen={isAddUserDialogOpen}
         onClose={() => setIsAddUserDialogOpen(false)}
         onSubmit={onAddUser}
@@ -333,8 +378,12 @@ const UserManagementTab = forwardRef<{ refreshUsers: () => void }, UserManagemen
       >
         {userToDelete && (
           <div className="py-3">
-            <p>Name: <span className="font-semibold">{userToDelete.name}</span></p>
-            <p>Email: <span className="font-semibold">{userToDelete.email}</span></p>
+            <p>
+              Name: <span className="font-semibold">{userToDelete.name}</span>
+            </p>
+            <p>
+              Email: <span className="font-semibold">{userToDelete.email}</span>
+            </p>
           </div>
         )}
       </ConfirmationDialog>

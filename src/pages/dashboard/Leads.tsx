@@ -451,7 +451,7 @@ const Leads = () => {
           placeholder="Select source"
           emptyOptionLabel="Select source..."
           allowEmpty={true}
-	  disabled={isEditable}
+          disabled={isEditable}
         />
       ),
     },
@@ -471,7 +471,7 @@ const Leads = () => {
           placeholder="Select course"
           emptyOptionLabel="Select course..."
           allowEmpty={true}
-	  disabled={isEditable}
+          disabled={isEditable}
         />
       ),
     },
@@ -586,14 +586,16 @@ const Leads = () => {
           )}
 
           {/* Filters Button */}
-          <button
-            onClick={handleOpenFilters}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            aria-label="Open filters"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-          </button>
+          {authoritiesList.includes(PermissionsEnum.SEARCH_LEADS) && (
+            <button
+              onClick={handleOpenFilters}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              aria-label="Open filters"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </button>
+          )}
 
           {/* Add Lead Button */}
           {authoritiesList.includes(PermissionsEnum.LEADS_CREATE) && (
