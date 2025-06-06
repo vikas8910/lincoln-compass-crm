@@ -42,15 +42,19 @@ export const LeadDetailsSidebar: React.FC<{
       </div>
 
       {/* Sidebar Content */}
-      <Card className="p-4 w-full rounded-md shadow-md">
+      <Card className="w-full rounded-md shadow-md">
         {activeTab === "details" && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Lead Details
-            </h3>
-            <div className="mb-4">
-              <h1 className="text-lg font-semibold text-gray-900 mb-2">Tags</h1>
-              <TagManager />
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Lead Details
+              </h3>
+              <div className="mb-4">
+                <h1 className="text-lg font-semibold text-gray-900 mb-2">
+                  Tags
+                </h1>
+                <TagManager />
+              </div>
             </div>
 
             <Accordion
@@ -62,7 +66,7 @@ export const LeadDetailsSidebar: React.FC<{
                 value="basic-information"
                 className="border rounded-lg mb-4"
               >
-                <AccordionTrigger className="px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-t-lg font-semibold text-gray-900">
+                <AccordionTrigger className="px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-t-md font-semibold text-gray-900">
                   Basic Information
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-4">
@@ -78,7 +82,7 @@ export const LeadDetailsSidebar: React.FC<{
                 value="hidden-details"
                 className="border rounded-lg"
               >
-                <AccordionTrigger className="px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-t-lg font-semibold text-gray-900">
+                <AccordionTrigger className="px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-t-md font-semibold text-gray-900">
                   Hidden Details
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-4">

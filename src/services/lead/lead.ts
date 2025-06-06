@@ -136,3 +136,13 @@ export const getLeads = async () => {
     throw error;
   }
 };
+
+export const getLeadStages = async () => {
+  try {
+    const response = await axiosInstance.get(`api/lead-stages`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching lead stages:", error);
+    throw error;
+  }
+};

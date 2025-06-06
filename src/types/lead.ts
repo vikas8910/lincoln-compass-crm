@@ -1,3 +1,4 @@
+import { Tag } from "@/components/leads/lead-details/TagManager";
 import { validationSchemas } from "@/components/tablec/EditableCell";
 import type {
   ColumnFiltersState,
@@ -57,9 +58,11 @@ export interface Lead {
   course: string;
   leadType: string;
   leadStage: {
-    id: string;
+    id: number;
     name: string;
+    sequenceOrder: number;
   };
+  tags: Tag[];
   intake: string;
   assignedTo: string | null;
   assignedCounselorName: string | null;
@@ -145,9 +148,10 @@ export type LeadStatus =
   | "Customer";
 
 export interface StageOption {
-  id: string;
+  id: number;
   name: string;
   type: "leadStage" | "prospectOutcome";
+  sequenceOrder: number;
 }
 
 export interface LeadStagingFormData {

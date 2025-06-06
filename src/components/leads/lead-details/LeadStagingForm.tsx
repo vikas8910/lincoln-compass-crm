@@ -7,23 +7,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
 import { PopoverClose } from "@radix-ui/react-popover";
 
 interface StageOption {
-  id: string;
+  id: number; // Changed: Updated to number type
   name: string;
   type: "leadStage" | "prospectOutcome";
 }
 
 interface LeadStagingFormData {
   lifecycleStage: string;
-  statusId: string;
+  statusId: number | ""; // Changed: Updated to number type (can be empty string initially)
   lostReason?: string;
 }
 
 interface LeadStagingFormProps {
-  initialStatusId?: string;
+  initialStatusId?: number; // Changed: Updated to number type
   onSave: (data: StageOption) => void;
   stageOptions: StageOption[];
   className?: string;
@@ -57,9 +57,9 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
     "Other",
   ];
 
-  // Initialize with statusId or default to "1" (New)
+  // Initialize with statusId or default to 1 (New)
   useEffect(() => {
-    const currentStatusId = initialStatusId || "1";
+    const currentStatusId = initialStatusId || 1; // Changed: Use number instead of string
     const currentStage = stageOptions?.find(
       (stage) => stage.id === currentStatusId
     );
@@ -95,10 +95,11 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
   };
 
   const handleStatusChange = (value: string) => {
-    const selectedStage = stageOptions?.find((stage) => stage.id === value);
+    const statusId = parseInt(value); // Changed: Parse string to number
+    const selectedStage = stageOptions?.find((stage) => stage.id === statusId);
     setFormData((prev) => ({
       ...prev,
-      statusId: value,
+      statusId: statusId,
       lostReason:
         selectedStage?.name === "Junk/Lost" || selectedStage?.name === "Lost"
           ? prev.lostReason
@@ -158,13 +159,16 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
           <label className="text-sm font-medium text-gray-700 mb-2 block">
             Status
           </label>
-          <Select value={formData.statusId} onValueChange={handleStatusChange}>
+          <Select
+            value={formData.statusId ? String(formData.statusId) : ""} // Changed: Convert number to string for Select component
+            onValueChange={handleStatusChange}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
               {getStatusOptions()?.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
+                <SelectItem key={option.id} value={String(option.id)}>
                   {option.name}
                 </SelectItem>
               ))}
