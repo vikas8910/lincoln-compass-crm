@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { createNewTag, updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { PermissionsEnum } from "@/lib/constants";
 
 interface Color {
   id: number;
@@ -42,6 +44,7 @@ const TagManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const { authoritiesList } = useAuthoritiesList();
 
   // Color mapping for tag backgrounds
   const colorMap: Record<string, string> = {
@@ -171,12 +174,26 @@ const TagManager: React.FC = () => {
     );
   }
 
+  const handlePopoverOpen = (open: boolean) => {
+    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) &&
+      setIsPopoverOpen(open);
+  };
+
   return (
     <div className="flex items-center space-x-2">
       {/* Entire tag section as popover trigger */}
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <Popover
+        open={isPopoverOpen}
+        onOpenChange={(open) => handlePopoverOpen(open)}
+      >
         <PopoverTrigger asChild>
-          <div className="flex items-center space-x-2 cursor-pointer group justify-between w-full py-3 rounded-md hover:bg-gray-300">
+          <div
+            className={`flex items-center space-x-2 group justify-between w-full py-3 rounded-md hover:bg-gray-300 ${
+              authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
+                ? "cursor-pointer"
+                : "cursor-default"
+            }`}
+          >
             <div className="flex items-center gap-2">
               <Tag />
               <div className="flex items-center space-x-2">
@@ -191,18 +208,22 @@ const TagManager: React.FC = () => {
                       {tag.name}
                     </div>
                   ))
-                ) : (
+                ) : authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ? (
                   <span className="text-sm text-gray-500 cursor-pointer hover:underline">
                     Click here to add tags
                   </span>
+                ) : (
+                  <span className="text-sm text-gray-500">No tags</span>
                 )}
               </div>
             </div>
 
             {/* Edit icon */}
-            <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
-              <Edit2Icon className=" text-gray-500" />
-            </div>
+            {authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) && (
+              <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
+                <Edit2Icon className=" text-gray-500" />
+              </div>
+            )}
           </div>
         </PopoverTrigger>
 
