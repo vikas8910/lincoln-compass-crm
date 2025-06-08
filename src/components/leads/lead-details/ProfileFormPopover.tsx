@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Edit2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { updateLeadFullDetails } from "@/services/lead/lead";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
+import { useUser } from "@/context/UserProvider";
 
 // Zod schema
 const profileSchema = z.object({
@@ -51,6 +52,17 @@ export default function ProfileFormPopover({
   const { lead, setLead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
   const { authoritiesList } = useAuthoritiesList();
+  const [shouldOpen, setShouldOpen] = useState(false);
+  const { assignedTo } = useLeadDetails();
+  const { user } = useUser();
+
+  useEffect(() => {
+    setShouldOpen(
+      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
+        Number(assignedTo) === Number(user.id)) ||
+        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
+    );
+  }, []);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -94,18 +106,14 @@ export default function ProfileFormPopover({
   };
 
   const handlePopoverOpen = (open: boolean) => {
-    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) && setIsOpen(open);
+    setIsOpen(shouldOpen && open);
   };
 
   return (
     <Popover open={isOpen} onOpenChange={(open) => handlePopoverOpen(open)}>
       <PopoverTrigger
         asChild
-        className={`${
-          authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-            ? "cursor-pointer"
-            : "cursor-default"
-        }`}
+        className={`${shouldOpen ? "cursor-pointer" : "cursor-default"}`}
       >
         {children}
       </PopoverTrigger>

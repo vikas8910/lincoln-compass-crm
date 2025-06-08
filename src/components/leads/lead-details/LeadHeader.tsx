@@ -8,10 +8,14 @@ import ProfileFormPopover from "./ProfileFormPopover";
 import AddressFormPopover from "./LeadAddressPopover";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
+import { useUser } from "@/context/UserProvider";
+import { useLeadDetails } from "@/context/LeadsProvider";
 
 export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   const { bg, text } = getAvatarColors(lead?.firstName?.charAt(0));
   const { authoritiesList } = useAuthoritiesList();
+  const { user } = useUser();
+  const { assignedTo } = useLeadDetails();
 
   // Function to format address
   const formatAddress = () => {
@@ -126,7 +130,11 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                       }}
                     />
                   </>
-                ) : authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ? (
+                ) : (authoritiesList.includes(
+                    PermissionsEnum.LEADS_UPDATE_OWNED
+                  ) &&
+                    Number(assignedTo) === Number(user.id)) ||
+                  authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ? (
                   <span className="text-gray-400">Click to add location</span>
                 ) : (
                   <span className="text-gray-400">No location available</span>

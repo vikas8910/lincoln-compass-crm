@@ -43,7 +43,7 @@ const AppRoutes = () => {
 
     // Check if user has any leads-related permissions
     const hasLeadsPermissions = authoritiesList.some((authority) =>
-      authority.startsWith("leads:")
+      authority.startsWith("leads:view")
     );
 
     if (hasLeadsPermissions) {
@@ -65,27 +65,33 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
 
-        {authoritiesList.length === 0 && (
-          <Route
-            path="/no-permissions"
-            element={<ProtectedRoute element={<NotHavingPermissions />} />}
-          />
-        )}
+        <Route
+          path="/no-permissions"
+          element={<ProtectedRoute element={<NotHavingPermissions />} />}
+        />
 
         {authoritiesList.some((authority) =>
-          authority.startsWith("leads:")
+          authority.startsWith("leads:view")
         ) && (
           <>
             <Route
               path="/leads"
-              element={<ProtectedRoute element={<Leads />} />}
+              element={
+                <ProtectedRoute
+                  element={
+                    <LeadsProvider>
+                      <Leads />
+                    </LeadsProvider>
+                  }
+                />
+              }
             />
             <Route
               path="/lead-details/:leadId"
               element={
                 <ProtectedRoute
                   element={
-                    <LeadsProvider initialStatusId="1">
+                    <LeadsProvider>
                       <LeadDetails />
                     </LeadsProvider>
                   }

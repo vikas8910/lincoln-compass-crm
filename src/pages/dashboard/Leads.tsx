@@ -41,7 +41,6 @@ import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import {
   DEBOUNCE_DELAY,
-  DROPDOWN_OPTIONS,
   INITIAL_PAGINATION,
   PermissionsEnum,
 } from "@/lib/constants";
@@ -64,8 +63,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
-import { set } from "date-fns";
 import { FaTrash } from "react-icons/fa";
+import { useUser } from "@/context/UserProvider";
+import { useLeadDetails } from "@/context/LeadsProvider";
 
 // Define tab types
 type TabType = "all" | "my" | "new";
@@ -139,6 +139,9 @@ const Leads = () => {
   );
   const [isEditable, setIsEditable] = useState(false);
   const [deleteLeadId, setDeleteLeadId] = useState<string | null>(null);
+  const [permissionOwn, setPermissionOwn] = useState(false);
+  const [permissionOwnToDelete, setPermissionOwnToDelete] = useState(false);
+  const { user } = useUser();
 
   // Debounced filters for better performance
   const debouncedColumnFilters: ColumnFiltersState = useDebounce(
@@ -191,6 +194,12 @@ const Leads = () => {
     authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
       ? setIsEditable(false)
       : setIsEditable(true);
+    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED)
+      ? setPermissionOwn(true)
+      : setPermissionOwn(false);
+    authoritiesList.includes(PermissionsEnum.LEADS_DELETE_OWNED)
+      ? setPermissionOwnToDelete(true)
+      : setPermissionOwnToDelete(false);
   }, []);
 
   // API data fetching
@@ -335,6 +344,7 @@ const Leads = () => {
         const user = row.original;
         const firstLetter = user.firstName?.[0]?.toUpperCase() || "?";
         const { bg, text } = getAvatarColors(firstLetter);
+        const { setAssignedTo } = useLeadDetails();
 
         return (
           <div className="flex items-center gap-5 group">
@@ -347,12 +357,16 @@ const Leads = () => {
               <Link
                 className="text-[#2c5cc5] font-bold whitespace-nowrap"
                 to={`/lead-details/${user.id}`}
+                onClick={() => setAssignedTo(user.assignedTo)}
               >
                 {user.firstName} {user.lastName}
               </Link>
             </div>
             <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <Link to={`/lead-details/${user.id}`}>
+              <Link
+                to={`/lead-details/${user.id}`}
+                onClick={() => setAssignedTo(user.assignedTo)}
+              >
                 <MdInfoOutline /> {/* Details */}
               </Link>
               <FiMail /> {/* Email */}
@@ -392,7 +406,11 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter first name"
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
       // Add custom meta for filtering
@@ -412,7 +430,11 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter last name"
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
       enableColumnFilter: false,
@@ -429,7 +451,11 @@ const Leads = () => {
           validationType="phone"
           placeholder="Enter mobile number"
           textColor="text-[#2c5cc5]"
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
       enableColumnFilter: false,
@@ -444,7 +470,11 @@ const Leads = () => {
           validationType="email"
           placeholder="Enter email address"
           textColor="text-[#2c5cc5]"
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
       enableColumnFilter: false,
@@ -465,7 +495,11 @@ const Leads = () => {
           placeholder="Select source"
           emptyOptionLabel="Select source..."
           allowEmpty={true}
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
     },
@@ -485,7 +519,11 @@ const Leads = () => {
           placeholder="Select course"
           emptyOptionLabel="Select course..."
           allowEmpty={true}
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
     },
@@ -505,7 +543,11 @@ const Leads = () => {
           placeholder="Select lead type"
           emptyOptionLabel="Select lead type..."
           allowEmpty={true}
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
     },
@@ -530,7 +572,11 @@ const Leads = () => {
           }
           validationType="text"
           placeholder="No notes"
-          disabled={isEditable}
+          disabled={
+            permissionOwn
+              ? !(row.original.assignedTo == user.id.toString())
+              : isEditable
+          }
         />
       ),
       enableColumnFilter: false,
@@ -549,7 +595,9 @@ const Leads = () => {
           },
         ]
       : []),
-    ...(authoritiesList.includes(PermissionsEnum.LEADS_DELETE)
+    ...(authoritiesList.some((authority) =>
+      authority.startsWith("leads:delete")
+    )
       ? [
           {
             header: "Actions",
@@ -561,6 +609,11 @@ const Leads = () => {
                   setIsDeleteUserDialogOpen(true);
                   setDeleteLeadId(row.original.id);
                 }}
+                disabled={
+                  permissionOwnToDelete
+                    ? !(row.original.assignedTo == user.id.toString())
+                    : isEditable
+                }
               >
                 <FaTrash />
               </Button>

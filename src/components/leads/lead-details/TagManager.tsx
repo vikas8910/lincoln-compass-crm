@@ -12,6 +12,7 @@ import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
+import { useUser } from "@/context/UserProvider";
 
 interface Color {
   id: number;
@@ -45,6 +46,17 @@ const TagManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const { authoritiesList } = useAuthoritiesList();
+  const [shouldOpen, setShouldOpen] = useState(false);
+  const { assignedTo } = useLeadDetails();
+  const { user } = useUser();
+
+  useEffect(() => {
+    setShouldOpen(
+      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
+        Number(assignedTo) === Number(user.id)) ||
+        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
+    );
+  }, []);
 
   // Color mapping for tag backgrounds
   const colorMap: Record<string, string> = {
@@ -175,8 +187,7 @@ const TagManager: React.FC = () => {
   }
 
   const handlePopoverOpen = (open: boolean) => {
-    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) &&
-      setIsPopoverOpen(open);
+    setIsPopoverOpen(shouldOpen && open);
   };
 
   return (
@@ -189,9 +200,7 @@ const TagManager: React.FC = () => {
         <PopoverTrigger asChild>
           <div
             className={`flex items-center space-x-2 group justify-between w-full py-3 rounded-md hover:bg-gray-300 ${
-              authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-                ? "cursor-pointer"
-                : "cursor-default"
+              shouldOpen ? "cursor-pointer" : "cursor-default"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -219,7 +228,7 @@ const TagManager: React.FC = () => {
             </div>
 
             {/* Edit icon */}
-            {authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) && (
+            {shouldOpen && (
               <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
                 <Edit2Icon className=" text-gray-500" />
               </div>

@@ -6,6 +6,7 @@ import { getNestedValue } from "@/lib/utils";
 import { Lead, StageOption } from "@/types/lead";
 import { useState, useEffect } from "react";
 import { PermissionsEnum } from "@/lib/constants";
+import { useUser } from "@/context/UserProvider";
 
 interface EditableFieldGridProps {
   onSave: (key: string, value: string | string[] | Date) => Promise<void>;
@@ -37,7 +38,17 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
   }>({});
 
   const { authoritiesList } = useAuthoritiesList();
+  const [shouldOpen, setShouldOpen] = useState(false);
+  const { assignedTo } = useLeadDetails();
+  const { user } = useUser();
 
+  useEffect(() => {
+    setShouldOpen(
+      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
+        Number(assignedTo) === Number(user.id)) ||
+        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
+    );
+  }, []);
   // Initialize dependent values from lead data
   useEffect(() => {
     const initialDependentValues: { [key: string]: any } = {};
@@ -212,7 +223,7 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
 
         // Disable field if it's a cascade child and parent hasn't been selected
         const isDisabled =
-          !authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ||
+          !shouldOpen ||
           disabled ||
           (cascadeParent && !dependentValues[cascadeParent]);
 

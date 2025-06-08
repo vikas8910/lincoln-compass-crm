@@ -46,6 +46,8 @@ interface LeadDetailsContextType {
   setAllTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   selectedTagIds: number[];
   setSelectedTagIds: React.Dispatch<React.SetStateAction<number[]>>;
+  assignedTo: string;
+  setAssignedTo: (assignedToId: string) => void;
 }
 
 interface LeadDetailsProviderProps {
@@ -71,6 +73,7 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
   const [stageOptions, setStageOptions] = useState<StageOption[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [assignedTo, setAssignedTo] = useState<string>("");
 
   // Fetch lead data
   const fetchLead = useCallback(async (leadId: string) => {
@@ -213,6 +216,8 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     setAllTags,
     selectedTagIds,
     setSelectedTagIds,
+    assignedTo,
+    setAssignedTo,
   };
 
   return (
