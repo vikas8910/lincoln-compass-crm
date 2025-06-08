@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { LeadStagingForm } from "./LeadStagingForm";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import {
@@ -17,25 +17,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { StageOption } from "@/types/lead";
 import { updateLeadFullDetails } from "@/services/lead/lead";
-import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
-import { PermissionsEnum } from "@/lib/constants";
-import { useUser } from "@/context/UserProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 const LeadStaging = () => {
   const { lead, setLead, stageOptions } = useLeadDetails();
-  const { authoritiesList } = useAuthoritiesList();
-  const [shouldOpen, setShouldOpen] = useState(false);
   const { assignedTo } = useLeadDetails();
-  const { user } = useUser();
-
-  useEffect(() => {
-    setShouldOpen(
-      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
-        Number(assignedTo) === Number(user.id)) ||
-        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-    );
-  }, []);
-
+  const leadPermissions = useLeadPermissions();
   // Helper function to find stage by sequenceOrder
   const findStageBySequence = (sequenceOrder: number) => {
     return stageOptions.find((stage) => stage.sequenceOrder === sequenceOrder);
@@ -260,7 +247,9 @@ const LeadStaging = () => {
     )} ${index === 0 ? "rounded-l-md" : ""} ${
       index === getDisplayStages().length - 1 ? "rounded-r-md" : ""
     } ${index > 0 ? "border-l-0" : ""} ${
-      shouldOpen ? "cursor-pointer" : "pointer-events-none"
+      leadPermissions.canEditLead(assignedTo)
+        ? "cursor-pointer"
+        : "pointer-events-none"
     }`;
 
     const chipStyle = {
@@ -329,7 +318,7 @@ const LeadStaging = () => {
   return (
     <div className="flex items-end gap-12 border border-t-slate-300 border-l-0 border-r-0 border-b-0 pt-4">
       {/* Left side - Form Component */}
-      {shouldOpen && (
+      {leadPermissions.canEditLead(assignedTo) && (
         <div>
           <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
             Lifecycle Stage

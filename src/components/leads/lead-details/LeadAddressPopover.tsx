@@ -10,9 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { updateLeadFullDetails } from "@/services/lead/lead";
 import { toast } from "sonner";
-import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
-import { PermissionsEnum } from "@/lib/constants";
-import { useUser } from "@/context/UserProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 interface AddressFormData {
   address: string;
@@ -39,18 +37,8 @@ export default function AddressFormPopover({
     country: lead?.leadAddrCountry,
     zipcode: lead?.leadAddrZipCode,
   });
-  const { authoritiesList } = useAuthoritiesList();
-  const [shouldOpen, setShouldOpen] = useState(false);
   const { assignedTo } = useLeadDetails();
-  const { user } = useUser();
-
-  useEffect(() => {
-    setShouldOpen(
-      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
-        Number(assignedTo) === Number(user.id)) ||
-        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-    );
-  }, []);
+  const leadPermissions = useLeadPermissions();
 
   // Sync formData when lead changes
   useEffect(() => {
@@ -107,7 +95,7 @@ export default function AddressFormPopover({
   };
 
   const handlePopoverOpen = (open: boolean) => {
-    setIsOpen(shouldOpen && open);
+    setIsOpen(leadPermissions.canEditLead(assignedTo) && open);
   };
   return (
     <Popover
@@ -118,7 +106,11 @@ export default function AddressFormPopover({
     >
       <PopoverTrigger
         asChild
-        className={`${shouldOpen ? "cursor-pointer" : "cursor-default"}`}
+        className={`${
+          leadPermissions.canEditLead(assignedTo)
+            ? "cursor-pointer"
+            : "cursor-default"
+        }`}
       >
         {children}
       </PopoverTrigger>

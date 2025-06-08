@@ -24,6 +24,7 @@ import { updateLeadFullDetails } from "@/services/lead/lead";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
 import { useUser } from "@/context/UserProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 // Zod schema
 const profileSchema = z.object({
@@ -51,18 +52,8 @@ export default function ProfileFormPopover({
 }: ProfileFormPopoverProps) {
   const { lead, setLead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
-  const { authoritiesList } = useAuthoritiesList();
-  const [shouldOpen, setShouldOpen] = useState(false);
   const { assignedTo } = useLeadDetails();
-  const { user } = useUser();
-
-  useEffect(() => {
-    setShouldOpen(
-      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
-        Number(assignedTo) === Number(user.id)) ||
-        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-    );
-  }, []);
+  const leadPermissions = useLeadPermissions();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -106,14 +97,18 @@ export default function ProfileFormPopover({
   };
 
   const handlePopoverOpen = (open: boolean) => {
-    setIsOpen(shouldOpen && open);
+    setIsOpen(leadPermissions.canEditLead(assignedTo) && open);
   };
 
   return (
     <Popover open={isOpen} onOpenChange={(open) => handlePopoverOpen(open)}>
       <PopoverTrigger
         asChild
-        className={`${shouldOpen ? "cursor-pointer" : "cursor-default"}`}
+        className={`${
+          leadPermissions.canEditLead(assignedTo)
+            ? "cursor-pointer"
+            : "cursor-default"
+        }`}
       >
         {children}
       </PopoverTrigger>

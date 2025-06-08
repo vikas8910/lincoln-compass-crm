@@ -66,6 +66,7 @@ import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { FaTrash } from "react-icons/fa";
 import { useUser } from "@/context/UserProvider";
 import { useLeadDetails } from "@/context/LeadsProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 // Define tab types
 type TabType = "all" | "my" | "new";
@@ -137,11 +138,8 @@ const Leads = () => {
   const [selectedLeadForNote, setSelectedLeadForNote] = useState<Lead | null>(
     null
   );
-  const [isEditable, setIsEditable] = useState(false);
   const [deleteLeadId, setDeleteLeadId] = useState<string | null>(null);
-  const [permissionOwn, setPermissionOwn] = useState(false);
-  const [permissionOwnToDelete, setPermissionOwnToDelete] = useState(false);
-  const { user } = useUser();
+  const leadPermissions = useLeadPermissions();
 
   // Debounced filters for better performance
   const debouncedColumnFilters: ColumnFiltersState = useDebounce(
@@ -191,15 +189,6 @@ const Leads = () => {
     getAllLeadTypesList();
     getAllCoursesList();
     getAllSourcesList();
-    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-      ? setIsEditable(false)
-      : setIsEditable(true);
-    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED)
-      ? setPermissionOwn(true)
-      : setPermissionOwn(false);
-    authoritiesList.includes(PermissionsEnum.LEADS_DELETE_OWNED)
-      ? setPermissionOwnToDelete(true)
-      : setPermissionOwnToDelete(false);
   }, []);
 
   // API data fetching
@@ -406,11 +395,7 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter first name"
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       // Add custom meta for filtering
@@ -430,11 +415,7 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter last name"
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
@@ -451,11 +432,7 @@ const Leads = () => {
           validationType="phone"
           placeholder="Enter mobile number"
           textColor="text-[#2c5cc5]"
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
@@ -470,11 +447,7 @@ const Leads = () => {
           validationType="email"
           placeholder="Enter email address"
           textColor="text-[#2c5cc5]"
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
@@ -495,11 +468,7 @@ const Leads = () => {
           placeholder="Select source"
           emptyOptionLabel="Select source..."
           allowEmpty={true}
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
     },
@@ -519,11 +488,7 @@ const Leads = () => {
           placeholder="Select course"
           emptyOptionLabel="Select course..."
           allowEmpty={true}
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
     },
@@ -543,11 +508,7 @@ const Leads = () => {
           placeholder="Select lead type"
           emptyOptionLabel="Select lead type..."
           allowEmpty={true}
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
     },
@@ -572,16 +533,12 @@ const Leads = () => {
           }
           validationType="text"
           placeholder="No notes"
-          disabled={
-            permissionOwn
-              ? !(row.original.assignedTo == user.id.toString())
-              : isEditable
-          }
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
     },
-    ...(authoritiesList.includes(PermissionsEnum.ASSIGN_LEADS)
+    ...(leadPermissions.canAssignLeads
       ? [
           {
             header: "Assigned To",
@@ -595,33 +552,30 @@ const Leads = () => {
           },
         ]
       : []),
-    ...(authoritiesList.some((authority) =>
-      authority.startsWith("leads:delete")
-    )
-      ? [
-          {
-            header: "Actions",
-            accessorKey: "",
-            cell: ({ row }) => (
-              <Button
-                className="bg-red-500 text-white hover:bg-red-600"
-                onClick={() => {
-                  setIsDeleteUserDialogOpen(true);
-                  setDeleteLeadId(row.original.id);
-                }}
-                disabled={
-                  permissionOwnToDelete
-                    ? !(row.original.assignedTo == user.id.toString())
-                    : isEditable
-                }
-              >
-                <FaTrash />
-              </Button>
-            ),
-            enableColumnFilter: false,
-          },
-        ]
-      : []),
+    {
+      header: "Actions",
+      accessorKey: "",
+      cell: ({ row }) => {
+        const canDelete = leadPermissions.canDeleteLead(
+          row.original.assignedTo
+        );
+
+        if (!canDelete) return null;
+
+        return (
+          <Button
+            className="bg-red-500 text-white hover:bg-red-600"
+            onClick={() => {
+              setIsDeleteUserDialogOpen(true);
+              setDeleteLeadId(row.original.id);
+            }}
+          >
+            <FaTrash />
+          </Button>
+        );
+      },
+      enableColumnFilter: false,
+    },
   ];
 
   // Error state
@@ -673,7 +627,7 @@ const Leads = () => {
           )}
 
           {/* Filters Button */}
-          {authoritiesList.includes(PermissionsEnum.SEARCH_LEADS) && (
+          {leadPermissions.canSearchLeads && (
             <button
               onClick={handleOpenFilters}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
@@ -685,7 +639,7 @@ const Leads = () => {
           )}
 
           {/* Add Lead Button */}
-          {authoritiesList.includes(PermissionsEnum.LEADS_CREATE) && (
+          {leadPermissions.canCreateLeads && (
             <Button
               aria-label="Add new lead"
               onClick={() => setIsCreateLeadDialogOpen(true)}

@@ -10,9 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { createNewTag, updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
-import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
-import { useUser } from "@/context/UserProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 interface Color {
   id: number;
@@ -45,18 +44,8 @@ const TagManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
-  const { authoritiesList } = useAuthoritiesList();
-  const [shouldOpen, setShouldOpen] = useState(false);
+  const leadPermissions = useLeadPermissions();
   const { assignedTo } = useLeadDetails();
-  const { user } = useUser();
-
-  useEffect(() => {
-    setShouldOpen(
-      (authoritiesList.includes(PermissionsEnum.LEADS_UPDATE_OWNED) &&
-        Number(assignedTo) === Number(user.id)) ||
-        authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-    );
-  }, []);
 
   // Color mapping for tag backgrounds
   const colorMap: Record<string, string> = {
@@ -187,7 +176,7 @@ const TagManager: React.FC = () => {
   }
 
   const handlePopoverOpen = (open: boolean) => {
-    setIsPopoverOpen(shouldOpen && open);
+    setIsPopoverOpen(leadPermissions.canEditLead(assignedTo) && open);
   };
 
   return (
@@ -200,7 +189,9 @@ const TagManager: React.FC = () => {
         <PopoverTrigger asChild>
           <div
             className={`flex items-center space-x-2 group justify-between w-full py-3 rounded-md hover:bg-gray-300 ${
-              shouldOpen ? "cursor-pointer" : "cursor-default"
+              leadPermissions.canEditLead(assignedTo)
+                ? "cursor-pointer"
+                : "cursor-default"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -217,7 +208,7 @@ const TagManager: React.FC = () => {
                       {tag.name}
                     </div>
                   ))
-                ) : authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ? (
+                ) : leadPermissions.canEditLead(assignedTo) ? (
                   <span className="text-sm text-gray-500 cursor-pointer hover:underline">
                     Click here to add tags
                   </span>
@@ -228,7 +219,7 @@ const TagManager: React.FC = () => {
             </div>
 
             {/* Edit icon */}
-            {shouldOpen && (
+            {leadPermissions.canEditLead(assignedTo) && (
               <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
                 <Edit2Icon className=" text-gray-500" />
               </div>

@@ -6,16 +6,13 @@ import { MapPinIcon, Copy } from "lucide-react";
 import { FaFacebook, FaTwitter, FaLinkedin } from "react-icons/fa";
 import ProfileFormPopover from "./ProfileFormPopover";
 import AddressFormPopover from "./LeadAddressPopover";
-import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
-import { PermissionsEnum } from "@/lib/constants";
-import { useUser } from "@/context/UserProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 import { useLeadDetails } from "@/context/LeadsProvider";
 
 export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   const { bg, text } = getAvatarColors(lead?.firstName?.charAt(0));
-  const { authoritiesList } = useAuthoritiesList();
-  const { user } = useUser();
   const { assignedTo } = useLeadDetails();
+  const leadPermissions = useLeadPermissions();
 
   // Function to format address
   const formatAddress = () => {
@@ -130,11 +127,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                       }}
                     />
                   </>
-                ) : (authoritiesList.includes(
-                    PermissionsEnum.LEADS_UPDATE_OWNED
-                  ) &&
-                    Number(assignedTo) === Number(user.id)) ||
-                  authoritiesList.includes(PermissionsEnum.LEADS_UPDATE) ? (
+                ) : leadPermissions.canEditLead(assignedTo) ? (
                   <span className="text-gray-400">Click to add location</span>
                 ) : (
                   <span className="text-gray-400">No location available</span>
