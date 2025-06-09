@@ -1,16 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  X,
-  Calendar,
-  Clock,
-  User,
-  ChevronDown,
-  Video,
-  MapPin,
-} from "lucide-react";
+import { X, ChevronDown, Check, Video } from "lucide-react";
 import { DateTimePicker } from "./DateTimePicker";
+import { TaskFormData } from "@/schemas/taskSchema";
 import {
   Form,
   FormControl,
@@ -19,13 +12,30 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../ui/command";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { useLeads } from "@/context/LeadsProvider";
+import { getAvatarColors } from "@/lib/utils";
+import { Task } from "@/types/task";
 import { MeetingFormData, meetingFormSchema } from "@/schemas/meeting-schema";
-import { getMeetings, saveMeeting } from "@/services/activities/meetings";
-import { getLeads } from "@/services/lead/lead";
-import { Lead } from "@/types/lead";
-import { getUsers } from "@/services/user-service/user-service";
+import { Meeting } from "@/types/meetings";
 
 const Textarea = ({ className = "", ...props }) => (
   <textarea
@@ -34,6 +44,13 @@ const Textarea = ({ className = "", ...props }) => (
   />
 );
 
+const collaboratorOptions = [
+  { id: 1, name: "Alice Johnson", email: "alice@company.com" },
+  { id: 2, name: "Bob Wilson", email: "bob@company.com" },
+  { id: 3, name: "Carol Davis", email: "carol@company.com" },
+  { id: 4, name: "David Brown", email: "david@company.com" },
+];
+
 const timeZoneOptions = [
   "(GMT+04:00) Abu Dhabi",
   "(GMT+05:30) Mumbai",
@@ -41,125 +58,206 @@ const timeZoneOptions = [
   "(GMT-05:00) New York",
   "(GMT-08:00) Los Angeles",
 ];
+const outcomeOptions = ["Successful", "Pending", "Failed", "Rescheduled"];
 
-export const MeetingForm = ({ isOpen, setIsOpen }) => {
-  const [showRelatedToDropdown, setShowRelatedToDropdown] = useState(false);
-  const [showAttendeesDropdown, setShowAttendeesDropdown] = useState(false);
-  const [showTimeZoneDropdown, setShowTimeZoneDropdown] = useState(false);
+interface MeetingFormProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  onSubmit: (data: TaskFormData) => void;
+  initialData?: Meeting | null;
+  isEdit?: boolean;
+}
+
+export const MeetingForm: React.FC<MeetingFormProps> = ({
+  isOpen,
+  setIsOpen,
+  onSubmit,
+  initialData = null,
+  isEdit = false,
+}) => {
+  const { allUsersData, users: ownerOptions, lead } = useLeads();
   const [selectedRelatedTo, setSelectedRelatedTo] = useState([]);
-  const [selectedAttendees, setSelectedAttendees] = useState([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState([]);
+  const [openRelatedTo, setOpenRelatedTo] = useState(false);
+  const [openCollaborators, setOpenCollaborators] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
   const [showMeetingNotes, setShowMeetingNotes] = useState(false);
-  const [relatedToOptions, setRelatedToOptions] = useState([]);
-  const [attendeeOptions, setAttendeeOptions] = useState([]);
+
+  const relatedToOptions = allUsersData?.data;
+
+  // Helper function to get default related lead
+  const getDefaultRelatedLead = () => {
+    if (lead?.id && relatedToOptions) {
+      const defaultLead = relatedToOptions.find(
+        (person) => person.id === lead.id
+      );
+      return defaultLead ? [defaultLead] : [];
+    }
+    return [];
+  };
 
   const form = useForm<MeetingFormData>({
     resolver: zodResolver(meetingFormSchema),
     defaultValues: {
       title: "",
-      from: new Date(),
-      to: new Date(Date.now() + 60 * 60 * 1000), // 1 hour later
-      allDay: false,
-      timeZone: "(GMT+04:00) Abu Dhabi",
-      location: "",
       description: "",
-      relatedTo: [],
-      attendees: [],
-      videoConferencing: "",
+      timeZone: "",
+      fromDate: new Date(),
+      toDate: new Date(),
       outcome: "",
-      meetingNotes: "",
-      calendarIntegration: "",
+      relatedTo: lead?.id ? [lead.id] : [],
+      collaboratorsId: [],
+      allDay: false,
+      videoConferencing: "zoom",
     },
     mode: "onChange",
   });
 
-  //TODO: Get the leads data and users data
-  useEffect(() => {
-    //Call the API to get leads data and assign to selectedRelatedTo and selectedAttendees
-    const fetchLeadsData = async () => {
-      try {
-        const leadsData = await getLeads();
-        setRelatedToOptions(
-          leadsData.content.map((lead: Lead) => ({
-            id: lead.id,
-            name: lead.firstName + " " + lead.lastName,
-            email: lead.email,
-            avatar: lead.firstName.charAt(0).toUpperCase(),
-            color: "bg-yellow-100 text-yellow-800",
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching leads data:", error);
-      }
-    };
-    fetchLeadsData();
-    //Call the API to get users data and assign to attendeeOptions
-    const fetchUsersData = async () => {
-      try {
-        const usersData = await getUsers();
-        setAttendeeOptions(
-          usersData.content.map((user: any) => ({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            avatar: user.name.charAt(0).toUpperCase(),
-            color: "bg-yellow-100 text-yellow-800",
-          }))
-        );
-      } catch (error) {
-        console.error("Error fetching users data:", error);
-      }
-    };
-    fetchUsersData();
-  }, []);
+  const findRelatedToById = (relatedToIds) => {
+    if (!Array.isArray(relatedToIds)) return [];
+    return relatedToIds
+      .map((id) => relatedToOptions.find((person) => person.id === id))
+      .filter(Boolean);
+  };
 
+  const findCollaboratorsById = (collaboratorIds) => {
+    if (!Array.isArray(collaboratorIds)) return [];
+    return collaboratorIds
+      .map((id) => collaboratorOptions.find((person) => person.id === id))
+      .filter(Boolean);
+  };
+
+  // Reset form when initialData changes or when opening/closing
   useEffect(() => {
-    setAttendeeOptions((prevOptions) => [...prevOptions, ...relatedToOptions]);
-  }, [relatedToOptions]);
+    if (isOpen) {
+      if (initialData && isEdit) {
+        let relatedToObjects = [];
+        if (initialData.relatedTo) {
+          if (Array.isArray(initialData.relatedTo)) {
+            // Check if first item is an object or an ID
+            if (initialData.relatedTo.length > 0) {
+              if (typeof initialData.relatedTo[0] === "object") {
+                relatedToObjects = initialData.relatedTo;
+              } else {
+                // Array of IDs
+                relatedToObjects = findRelatedToById(initialData.relatedTo);
+              }
+            }
+          }
+        }
+
+        // Handle collaborators - convert IDs to objects if needed
+        let collaboratorObjects = [];
+        if (initialData.collaboratorsId) {
+          if (Array.isArray(initialData.collaboratorsId)) {
+            if (initialData.collaboratorsId.length > 0) {
+              if (typeof initialData.collaboratorsId[0] === "object") {
+                collaboratorObjects = initialData.collaboratorsId;
+              } else {
+                // Array of IDs
+                collaboratorObjects = findCollaboratorsById(
+                  initialData.collaboratorsId
+                );
+              }
+            }
+          }
+        }
+
+        // Populate form with initial data for editing
+        form.reset({
+          title: initialData.title || "",
+          description: initialData.description || "",
+          timeZone: initialData.timeZone || "",
+          fromDate: initialData.fromDate || new Date(),
+          toDate: initialData.toDate || new Date(),
+          outcome: initialData.outcome || "",
+          relatedTo: relatedToObjects.map((obj) => obj.id), // Store as array of IDs
+          collaboratorsId: collaboratorObjects.map((obj) => obj.id), // Store as array of IDs
+          allDay: initialData.allDay || false,
+          location: initialData.location || "",
+          meetingNotes: initialData.meetingNotes || "",
+          videoConferencing: initialData.videoConferencing || "zoom",
+        });
+
+        setSelectedRelatedTo(relatedToObjects);
+        setSelectedCollaborators(collaboratorObjects);
+      } else {
+        // Reset to defaults for new task with default related lead
+        const defaultRelatedLeads = getDefaultRelatedLead();
+        form.reset({
+          title: "",
+          description: "",
+          timeZone: "",
+          fromDate: new Date(),
+          toDate: new Date(),
+          outcome: "",
+          relatedTo: defaultRelatedLeads.map((lead) => lead.id),
+          collaboratorsId: [],
+          allDay: false,
+          videoConferencing: "zoom",
+        });
+        setSelectedRelatedTo(defaultRelatedLeads);
+        setSelectedCollaborators([]);
+      }
+    }
+  }, [isOpen, initialData, isEdit, form, lead?.id, relatedToOptions]);
 
   const handleRelatedToAdd = (person) => {
     if (!selectedRelatedTo.find((p) => p.id === person.id)) {
       const updatedRelatedTo = [...selectedRelatedTo, person];
       setSelectedRelatedTo(updatedRelatedTo);
-      form.setValue("relatedTo", updatedRelatedTo);
+      const updatedIds = updatedRelatedTo.map((p) => p.id);
+      form.setValue("relatedTo", updatedIds, { shouldValidate: true });
     }
-    setShowRelatedToDropdown(false);
   };
 
   const handleRelatedToRemove = (personId) => {
     const updatedRelatedTo = selectedRelatedTo.filter((p) => p.id !== personId);
     setSelectedRelatedTo(updatedRelatedTo);
-    form.setValue("relatedTo", updatedRelatedTo);
+    const updatedIds = updatedRelatedTo.map((p) => p.id);
+    form.setValue("relatedTo", updatedIds, { shouldValidate: true });
   };
 
-  const handleAttendeeAdd = (person) => {
-    if (!selectedAttendees.find((p) => p.id === person.id)) {
-      const updatedAttendees = [...selectedAttendees, person];
-      setSelectedAttendees(updatedAttendees);
-      form.setValue("attendees", updatedAttendees);
+  const handleCollaboratorAdd = (person) => {
+    if (!selectedCollaborators.find((p) => p.id === person.id)) {
+      const updatedCollaborators = [...selectedCollaborators, person];
+      setSelectedCollaborators(updatedCollaborators);
+      form.setValue(
+        "collaboratorsId",
+        updatedCollaborators.map((p) => p.id)
+      );
     }
-    setShowAttendeesDropdown(false);
   };
 
-  const handleAttendeeRemove = (personId) => {
-    const updatedAttendees = selectedAttendees.filter((p) => p.id !== personId);
-    setSelectedAttendees(updatedAttendees);
-    form.setValue("attendees", updatedAttendees);
+  const handleCollaboratorRemove = (personId) => {
+    const updatedCollaborators = selectedCollaborators.filter(
+      (p) => p.id !== personId
+    );
+    setSelectedCollaborators(updatedCollaborators);
+    form.setValue(
+      "collaboratorsId",
+      updatedCollaborators.map((p) => p.id)
+    );
   };
 
-  const handleSubmit = async (data: MeetingFormData) => {
-    await saveMeeting(data);
-    setIsOpen(false);
+  const handleSubmit = (data: MeetingFormData) => {
+    alert(JSON.stringify(data, null, 2));
+    // onSubmit({
+    //   ...data,
+    //   ownerId: Number(data.ownerId),
+    //   dueDate: data.dueDate,
+    // });
+    // setIsOpen(false);
     form.reset();
     setSelectedRelatedTo([]);
-    setSelectedAttendees([]);
+    setSelectedCollaborators([]);
   };
 
   const handleCancel = () => {
     setIsOpen(false);
     form.reset();
     setSelectedRelatedTo([]);
-    setSelectedAttendees([]);
+    setSelectedCollaborators([]);
   };
 
   return (
@@ -180,7 +278,9 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Add meeting</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {isEdit ? "Edit Meeting" : "Add Meeting"}
+          </h2>
           <button
             onClick={handleCancel}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -197,18 +297,19 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
             {/* Content - Scrollable */}
             <div className="flex gap-2 divide-x-2 flex-1 overflow-hidden">
               <div className="p-4 flex-1 overflow-y-auto">
-                {/* Title */}
+                {/* Mark as completed checkbox */}
+
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
-                    <FormItem className="mb-4">
+                    <FormItem>
                       <FormLabel>
                         Title <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter title of meeting"
+                          placeholder="Enter Name"
                           className={
                             form.formState.errors.title ? "border-red-500" : ""
                           }
@@ -220,21 +321,24 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
                   )}
                 />
 
-                {/* From and To Date Row */}
+                {/* Task Type and Due Date Row */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
+                  {/* Due Date */}
                   <FormField
                     control={form.control}
-                    name="from"
-                    render={({ field }) => (
+                    name="fromDate"
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormLabel>
                           From <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <DateTimePicker
-                            date={field.value}
-                            onChange={field.onChange}
-                          />
+                          <div className="relative">
+                            <DateTimePicker
+                              date={new Date(field.value)}
+                              onChange={field.onChange}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -243,17 +347,19 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
 
                   <FormField
                     control={form.control}
-                    name="to"
-                    render={({ field }) => (
+                    name="toDate"
+                    render={({ field, fieldState }) => (
                       <FormItem>
                         <FormLabel>
                           To <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <DateTimePicker
-                            date={field.value}
-                            onChange={field.onChange}
-                          />
+                          <div className="relative">
+                            <DateTimePicker
+                              date={new Date(field.value)}
+                              onChange={field.onChange}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -261,77 +367,60 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
                   />
                 </div>
 
-                {/* All day toggle */}
                 <FormField
                   control={form.control}
                   name="allDay"
                   render={({ field }) => (
-                    <FormItem className="mb-4">
+                    <FormItem className="mb-6">
                       <div className="flex items-center">
                         <input
                           type="checkbox"
                           id="allDay"
                           checked={field.value}
                           onChange={field.onChange}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label
                           htmlFor="allDay"
-                          className="text-sm text-gray-700"
+                          className="ml-2 text-sm text-gray-700"
                         >
-                          All day
+                          All Day
                         </label>
                       </div>
                     </FormItem>
                   )}
                 />
 
-                {/* Time Zone */}
                 <FormField
                   control={form.control}
                   name="timeZone"
                   render={({ field }) => (
-                    <FormItem className="mb-4 relative">
-                      <FormLabel>Time zone</FormLabel>
-                      <FormControl>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowTimeZoneDropdown(!showTimeZoneDropdown)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <span className="text-gray-900">{field.value}</span>
-                          <ChevronDown size={16} />
-                        </button>
-                      </FormControl>
-
-                      {showTimeZoneDropdown && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                          {timeZoneOptions.map((timezone) => (
-                            <button
-                              key={timezone}
-                              type="button"
-                              onClick={() => {
-                                field.onChange(timezone);
-                                setShowTimeZoneDropdown(false);
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm"
-                            >
-                              {timezone}
-                            </button>
+                    <FormItem>
+                      <FormLabel>Timezone</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeZoneOptions.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
                           ))}
-                        </div>
-                      )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Add video conferencing */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Add video conferencing
-                  </label>
+                  <FormLabel> Add video conferencing</FormLabel>
                   <div className="flex gap-2">
                     <FormField
                       control={form.control}
@@ -376,19 +465,24 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
                   </div>
                 </div>
 
-                {/* Location */}
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
-                    <FormItem className="mb-4">
+                    <FormItem>
                       <FormLabel>Location</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter location of meeting"
+                          placeholder="Enter Name"
+                          className={
+                            form.formState.errors.location
+                              ? "border-red-500"
+                              : ""
+                          }
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -402,7 +496,7 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Start typing the details about the meeting..."
+                          placeholder="Start typing the details about the task..."
                           rows={4}
                           {...field}
                         />
@@ -411,7 +505,7 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
                   )}
                 />
 
-                {/* Add outcome button */}
+                {/* Outcome */}
                 <button
                   type="button"
                   onClick={() => setShowOutcome(!showOutcome)}
@@ -473,162 +567,256 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
               </div>
 
               <div className="p-4 w-80 overflow-y-auto">
+                {/* Owner */}
+                {/* <FormField
+                  control={form.control}
+                  name="ownerId"
+                  render={({ field }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>
+                        Owner <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))} // Convert string to number
+                        value={field.value ? field.value.toString() : ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select owner" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ownerOptions.map((owner) => (
+                            <SelectItem
+                              key={owner.id}
+                              value={owner.id.toString()}
+                            >
+                              {owner.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                /> */}
+
                 {/* Related to */}
-                <div className="mb-4 relative">
+                <FormField
+                  control={form.control}
+                  name="relatedTo"
+                  render={({ field }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>
+                        Related to ({selectedRelatedTo.length}){" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+
+                      {/* Selected chips */}
+                      {selectedRelatedTo.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {selectedRelatedTo.map((person) => {
+                            const firstLetter =
+                              person.firstName?.[0]?.toUpperCase() || "?";
+                            const { bg, text } = getAvatarColors(firstLetter);
+
+                            return (
+                              <Badge
+                                key={person.id}
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                <div
+                                  className={`w-4 h-4 rounded-full ${bg} ${text} flex items-center justify-center text-xs font-medium`}
+                                >
+                                  {firstLetter}
+                                </div>
+                                {person?.firstName} {person?.lastName}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRelatedToRemove(person.id)
+                                  }
+                                  className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
+                                >
+                                  <X size={10} />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <FormControl>
+                        <Popover
+                          open={openRelatedTo}
+                          onOpenChange={setOpenRelatedTo}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openRelatedTo}
+                              className="w-full justify-between text-muted-foreground"
+                            >
+                              Click to select records
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search leads..." />
+                              <CommandList>
+                                <CommandEmpty>No leads found.</CommandEmpty>
+                                <CommandGroup heading="Leads">
+                                  {relatedToOptions?.map((person) => {
+                                    const firstLetter =
+                                      person.firstName?.[0]?.toUpperCase() ||
+                                      "?";
+                                    const { bg, text } =
+                                      getAvatarColors(firstLetter);
+                                    const isSelected = selectedRelatedTo.find(
+                                      (p) => p.id === person.id
+                                    );
+
+                                    return (
+                                      <CommandItem
+                                        key={person.id}
+                                        value={`${person.firstName} ${person.lastName} ${person.email}`}
+                                        onSelect={() => {
+                                          if (!isSelected) {
+                                            handleRelatedToAdd(person);
+                                          }
+                                          setOpenRelatedTo(false);
+                                        }}
+                                        disabled={!!isSelected}
+                                      >
+                                        <div className="flex items-center gap-2 w-full">
+                                          <div
+                                            className={`w-6 h-6 rounded-full ${bg} ${text} flex items-center justify-center text-xs font-medium`}
+                                          >
+                                            {firstLetter}
+                                          </div>
+                                          <div className="flex-1">
+                                            <div className="text-sm font-medium">
+                                              {person?.firstName}{" "}
+                                              {person?.lastName}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              {person.email}
+                                            </div>
+                                          </div>
+                                          {isSelected && (
+                                            <Check className="ml-auto h-4 w-4" />
+                                          )}
+                                        </div>
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Collaborators */}
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Related to ({selectedRelatedTo.length}){" "}
-                    <span className="text-blue-500 cursor-pointer">ⓘ</span>
+                    Attendees ({selectedCollaborators.length})
                   </label>
 
-                  {/* Selected chips */}
-                  {selectedRelatedTo.length > 0 && (
+                  {/* Selected collaborators chips */}
+                  {selectedCollaborators.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {selectedRelatedTo.map((person) => (
-                        <div
+                      {selectedCollaborators.map((person) => (
+                        <Badge
                           key={person.id}
-                          className={`${person.color} px-2 py-1 rounded-full text-xs flex items-center gap-1`}
+                          variant="secondary"
+                          className="flex items-center gap-1"
                         >
-                          <span className="w-4 h-4 rounded-full bg-current bg-opacity-20 flex items-center justify-center text-xs font-medium">
-                            {person.avatar}
-                          </span>
+                          <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-medium">
+                            {person.name.charAt(0)}
+                          </div>
                           {person.name}
                           <button
                             type="button"
-                            onClick={() => handleRelatedToRemove(person.id)}
+                            onClick={() => handleCollaboratorRemove(person.id)}
                             className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
                           >
                             <X size={10} />
                           </button>
-                        </div>
+                        </Badge>
                       ))}
                     </div>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowRelatedToDropdown(!showRelatedToDropdown)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
+                  <Popover
+                    open={openCollaborators}
+                    onOpenChange={setOpenCollaborators}
                   >
-                    Click to select records
-                    <ChevronDown size={16} />
-                  </button>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCollaborators}
+                        className="w-full justify-between text-muted-foreground"
+                      >
+                        Select collaborators
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search team members..." />
+                        <CommandList>
+                          <CommandEmpty>No team members found.</CommandEmpty>
+                          <CommandGroup heading="Team Members">
+                            {collaboratorOptions.map((person) => {
+                              const isSelected = selectedCollaborators.find(
+                                (p) => p.id === person.id
+                              );
 
-                  {showRelatedToDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                      <div className="p-2 border-b border-gray-200">
-                        <h4 className="font-medium text-sm text-gray-900">
-                          Leads
-                        </h4>
-                      </div>
-                      <div className="max-h-40 overflow-y-auto">
-                        {relatedToOptions.map((person) => (
-                          <button
-                            key={person.id}
-                            type="button"
-                            onClick={() => handleRelatedToAdd(person)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                            disabled={selectedRelatedTo.find(
-                              (p) => p.id === person.id
-                            )}
-                          >
-                            <div
-                              className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center text-xs font-medium`}
-                            >
-                              {person.avatar}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-900">
-                                {person.name}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {person.email}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Attendees */}
-                <div className="mb-4 relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Attendees ({selectedAttendees.length})
-                  </label>
-                  <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                    <span>ⓘ</span>
-                    Attendees will get an email invitation
-                  </div>
-
-                  {/* Selected attendees chips */}
-                  {selectedAttendees.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {selectedAttendees.map((person) => (
-                        <div
-                          key={person.id}
-                          className={`${person.color} px-2 py-1 rounded-full text-xs flex items-center gap-1`}
-                        >
-                          <span className="w-4 h-4 rounded-full bg-current bg-opacity-20 flex items-center justify-center text-xs font-medium">
-                            {person.avatar}
-                          </span>
-                          {person.name}
-                          <button
-                            type="button"
-                            onClick={() => handleAttendeeRemove(person.id)}
-                            className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
-                          >
-                            <X size={10} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowAttendeesDropdown(!showAttendeesDropdown)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
-                  >
-                    Click to select records
-                    <ChevronDown size={16} />
-                  </button>
-
-                  {showAttendeesDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                      <div className="max-h-40 overflow-y-auto">
-                        {attendeeOptions.map((person) => (
-                          <button
-                            key={person.id}
-                            type="button"
-                            onClick={() => handleAttendeeAdd(person)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                            disabled={selectedAttendees.find(
-                              (p) => p.id === person.id
-                            )}
-                          >
-                            <div
-                              className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center text-xs font-medium`}
-                            >
-                              {person.avatar}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-900">
-                                {person.name}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {person.email}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                              return (
+                                <CommandItem
+                                  key={person.id}
+                                  value={`${person.name} ${person.email}`}
+                                  onSelect={() => {
+                                    if (!isSelected) {
+                                      handleCollaboratorAdd(person);
+                                    }
+                                    setOpenCollaborators(false);
+                                  }}
+                                  disabled={!!isSelected}
+                                >
+                                  <div className="flex items-center gap-2 w-full">
+                                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-medium">
+                                      {person.name.charAt(0)}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="text-sm font-medium">
+                                        {person.name}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {person.email}
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <Check className="ml-auto h-4 w-4" />
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
@@ -638,7 +826,7 @@ export const MeetingForm = ({ isOpen, setIsOpen }) => {
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+              <Button type="submit">{isEdit ? "Update" : "Save"}</Button>
             </div>
           </form>
         </Form>

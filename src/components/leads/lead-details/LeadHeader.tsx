@@ -56,10 +56,10 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
     <div className="flex gap-3">
       <div className="flex gap-2 items-start pr-6">
         <div className="flex items-center gap-2">
-          <Avatar className="h-20 w-20 rounded-full overflow-hidden">
+          <Avatar className="h-16 w-16 rounded-full overflow-hidden">
             <AvatarImage src="" />
             <AvatarFallback
-              className={`${bg} ${text} text-xl flex items-center justify-center h-20 w-20 rounded-full`}
+              className={`${bg} ${text} text-xl flex items-center justify-center h-16 w-16 rounded-full`}
             >
               {lead?.firstName?.charAt(0) || ""}
             </AvatarFallback>
@@ -70,7 +70,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                 <h1 className="font-bold text-lg">
                   {lead.firstName} {lead.lastName}
                 </h1>
-                <div className="flex gap-1 text-white">
+                <div className="flex gap-2 text-white">
                   <div
                     className={`rounded-full p-1 transition cursor-pointer ${
                       lead.facebookUrl

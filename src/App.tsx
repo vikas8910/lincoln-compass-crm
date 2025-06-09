@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppRoutes from "./AppRoutes";
 import { AuthoritiesProvider } from "./context/AuthoritiesProvider";
 import { UserProvider } from "./context/UserProvider";
+import { ToastContainer } from "react-toastify";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,17 @@ const App = () => {
             <AppRoutes />
           </UserProvider>
         </AuthoritiesProvider>
+        <ToastContainer
+          limit={1}
+          position="bottom-left" // 👈 Set default position
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -20,9 +20,9 @@ export default function TanStackBasicTablePaginationComponent<TData>({
   const totalPages = table.getPageCount();
 
   return (
-    <div className="bg-white dark:bg-gray-900">
+    <div className="bg-white dark:bg-gray-900 flex flex-row-reverse items-center justify-between w-full">
       <TanStackBasicTablePaginationNavigationComponent table={table} />
-      <div className="flex flex-row items-center gap-4 justify-center mt-4">
+      <div className="flex flex-row items-center gap-4 justify-start mt-4 w-full">
         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
           Items per page
         </p>

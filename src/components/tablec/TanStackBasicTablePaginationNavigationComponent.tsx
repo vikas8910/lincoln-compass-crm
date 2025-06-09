@@ -17,7 +17,7 @@ export default function TanStackBasicTablePaginationNavigationComponent<TData>({
   table,
 }: TanStackBasicTablePaginationNavigationComponentProps<TData>) {
   return (
-    <Pagination>
+    <Pagination className="flex items-center justify-end">
       <PaginationContent>
         <PaginationItem className="bg-indigo-100 rounded-md hover:cursor-pointer">
           <PaginationPrevious onClick={() => table.previousPage()} />

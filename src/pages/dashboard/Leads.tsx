@@ -4,16 +4,7 @@ import { Filter, X } from "lucide-react";
 import { FiUserPlus } from "react-icons/fi";
 import { FiMail, FiPhone, FiCheckSquare, FiFileText } from "react-icons/fi";
 import { MdInfoOutline } from "react-icons/md";
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-  PaginationState,
-  SortingState,
-  Table,
-} from "@tanstack/react-table";
-
-// API hooks
-import { useGetLeads } from "@/api/useGetLeads";
+import type { ColumnDef, Table } from "@tanstack/react-table";
 
 // Components
 import MainLayout from "@/components/layout/MainLayout";
@@ -22,11 +13,8 @@ import TanStackBasicTableFilterComponent from "@/components/tablec/TanStackBasic
 import Offcanvas from "@/components/common/Offcanvas";
 import { Button } from "@/components/ui/button";
 
-// Hooks
-import { useDebounce } from "@/hooks/useDebounce";
-
 // Types
-import { Lead } from "@/types/lead";
+import { Lead, Tab, TabType } from "@/types/lead";
 
 // Utils
 import { formatDateTime, getAvatarColors } from "@/lib/utils";
@@ -46,12 +34,6 @@ import {
 } from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { createLeadFormValues } from "@/schemas/lead";
-import { getUsers } from "@/services/user-service/user-service";
-import {
-  getAllCourses,
-  getAllLeadTypes,
-  getAllSources,
-} from "@/services/dropdowns/dropdown";
 import { NoteForm } from "@/components/common/NoteForm";
 import { TaskForm } from "@/components/common/TaskForm";
 import {
@@ -63,72 +45,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { useLeads } from "@/context/LeadsProvider";
 import { FaTrash } from "react-icons/fa";
 import { useUser } from "@/context/UserProvider";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
-// Define tab types
-type TabType = "all" | "my" | "new";
-
-interface Tab {
-  id: TabType;
-  label: string;
-  count?: number;
-}
-
-// User interface for typing
-interface User {
-  id: string;
-  name: string;
-  // Add other user properties as needed
-}
-
-// Option interfaces for dropdowns
-interface SourceOption {
-  id: number;
-  name: string;
-  description?: string;
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface CourseOption {
-  id: number;
-  name: string;
-  description?: string;
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface LeadTypeOption {
-  id: number;
-  name: string;
-  description?: string;
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Context// Import the context hook
 
 const Leads = () => {
-  // Table state management
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] =
-    useState<PaginationState>(INITIAL_PAGINATION);
+  // Get everything from the LeadsProvider context
+  const {
+    // Lead List State
+    allUsersData,
+    isAllUsersDataLoading,
+    error,
+    appliedFilters,
 
-  // Tab state management
-  const [activeTab, setActiveTab] = useState<TabType>("all");
-  const [users, setUsers] = useState<User[]>([]);
+    // Table State
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    pagination,
+    setPagination,
 
-  // Options for dropdowns - you'll need to fetch these from your APIs
-  const [sourceOptions, setSourceOptions] = useState<SourceOption[]>([]);
-  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
-  const [leadTypeOptions, setLeadTypeOptions] = useState<LeadTypeOption[]>([]);
+    // Tab State
+    activeTab,
+    setActiveTab,
 
-  // UI state management
+    // Dropdown Options
+    users,
+    sourceOptions,
+    courseOptions,
+    leadTypeOptions,
+
+    // Operations
+    refetch,
+    handleSaveField,
+    handleAddLead,
+    handleAssignToChange,
+  } = useLeads();
+
+  // Local UI state management
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
   const [tableInstance, setTableInstance] = useState<Table<Lead> | null>(null);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
@@ -141,79 +100,7 @@ const Leads = () => {
   const [deleteLeadId, setDeleteLeadId] = useState<string | null>(null);
   const leadPermissions = useLeadPermissions();
 
-  // Debounced filters for better performance
-  const debouncedColumnFilters: ColumnFiltersState = useDebounce(
-    columnFilters,
-    DEBOUNCE_DELAY
-  );
-
   const { authoritiesList } = useAuthoritiesList();
-
-  // Create modified column filters based on active tab
-  const getModifiedColumnFilters = () => {
-    let modifiedFilters = [...debouncedColumnFilters];
-
-    if (activeTab === "my") {
-      // Add sortedBy=assignedTo filter for My Leads
-      const existingAssignedToFilter = modifiedFilters.find(
-        (filter) => filter.id === "assignedTo"
-      );
-      if (!existingAssignedToFilter) {
-        modifiedFilters.push({ id: "assignedTo", value: "sortedBy" });
-      }
-    } else if (activeTab === "new") {
-      // Add any specific filters for New Leads if needed
-      // For now, keeping it same as All Leads
-    }
-
-    return modifiedFilters;
-  };
-
-  useEffect(() => {
-    fetchUsers();
-    const getAllLeadTypesList = async () => {
-      const { content } = await getAllLeadTypes();
-      setLeadTypeOptions(content);
-    };
-
-    const getAllCoursesList = async () => {
-      const { content } = await getAllCourses();
-      setCourseOptions(content);
-    };
-
-    const getAllSourcesList = async () => {
-      const { content } = await getAllSources();
-      setSourceOptions(content);
-    };
-
-    getAllLeadTypesList();
-    getAllCoursesList();
-    getAllSourcesList();
-  }, []);
-
-  // API data fetching
-  const {
-    allUsersData,
-    isAllUsersDataLoading,
-    error,
-    refetch,
-    appliedFilters,
-  } = useGetLeads({
-    sorting,
-    columnFilters: getModifiedColumnFilters(),
-    pagination,
-  });
-
-  const fetchUsers = async () => {
-    try {
-      const response = await getUsers(0, 10);
-      setUsers(response.content || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
-  console.log("Users => ", users);
 
   // Define tabs with dynamic counts
   const tabs: Tab[] = [
@@ -231,11 +118,11 @@ const Leads = () => {
     return filtersToCount.length;
   };
 
-  // Tab change handler
+  // Tab change handler - now uses context
   const handleTabChange = (tabId: TabType) => {
     setActiveTab(tabId);
     // Reset pagination when switching tabs
-    setPagination(INITIAL_PAGINATION);
+    setPagination({ pageIndex: 0, pageSize: 10 }); // Use INITIAL_PAGINATION value
   };
 
   // Add this handler for resetting filters
@@ -248,41 +135,6 @@ const Leads = () => {
   const handleOpenFilters = () => setIsOffcanvasOpen(true);
   const handleCloseOffcanvas = () => setIsOffcanvasOpen(false);
   const handleApplyFilters = () => setIsOffcanvasOpen(false);
-
-  const handleSaveField = async (updatedLeadDetails) => {
-    try {
-      await updateLead(updatedLeadDetails);
-      refetch();
-      toast.success("Lead Details Updated Successfully");
-    } catch (error) {
-      toast.error("Failed to update lead details");
-      throw error;
-    }
-  };
-
-  const handleAddLead = async (data: createLeadFormValues) => {
-    try {
-      await createLead(data);
-      refetch();
-      toast.success("Lead Added Successfully");
-    } catch (error) {
-      toast.error(error?.response?.data?.error || "failed to add lead");
-      throw error;
-    }
-  };
-
-  // Handle assign to change
-  const handleAssignToChange = async (leadId: string, userId: string) => {
-    try {
-      await assignLeadToOfficer(leadId, userId);
-      refetch();
-      toast.success("Lead Assigned Successfully");
-    } catch (error) {
-      toast.error("Failed to assign lead");
-      throw error;
-    }
-  };
-
   const handleLeadDelete = async () => {
     try {
       await deleteLead(deleteLeadId);
@@ -293,7 +145,6 @@ const Leads = () => {
       throw error;
     }
   };
-
   // Assign To Dropdown Component
   const AssignToDropdown = ({ lead }: { lead: Lead }) => {
     const selectedUserId = lead?.assignedTo || "";
@@ -768,7 +619,11 @@ const Leads = () => {
         onSave={() => {}}
       />
 
-      <TaskForm isOpen={isTaskFormOpen} setIsOpen={setIsTaskFormOpen} />
+      <TaskForm
+        isOpen={isTaskFormOpen}
+        setIsOpen={setIsTaskFormOpen}
+        onSubmit={(values) => console.log(values)}
+      />
     </MainLayout>
   );
 };

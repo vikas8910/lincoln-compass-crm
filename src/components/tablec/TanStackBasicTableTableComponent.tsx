@@ -33,7 +33,7 @@ export default function TanStackBasicTableTableComponent<TData>({
             {header.headers.map((header) => (
               <TableHead
                 key={header.id}
-                className="px-4 py-1 border-r border-gray-200 last:border-r-0"
+                className="px-4 py-1 border-r border-gray-200 last:border-r-0 whitespace-nowrap bg-gray-200 text-black"
               >
                 {header.isPlaceholder ? null : (
                   <div
