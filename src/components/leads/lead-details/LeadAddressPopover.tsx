@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { updateLeadFullDetails } from "@/services/lead/lead";
 import { toast } from "sonner";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 interface AddressFormData {
   address: string;
@@ -36,6 +37,8 @@ export default function AddressFormPopover({
     country: lead?.leadAddrCountry,
     zipcode: lead?.leadAddrZipCode,
   });
+  const { assignedTo } = useLeadDetails();
+  const leadPermissions = useLeadPermissions();
 
   // Sync formData when lead changes
   useEffect(() => {
@@ -91,9 +94,26 @@ export default function AddressFormPopover({
     setIsOpen(false);
   };
 
+  const handlePopoverOpen = (open: boolean) => {
+    setIsOpen(leadPermissions.canEditLead(assignedTo) && open);
+  };
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+    <Popover
+      open={isOpen}
+      onOpenChange={(open) => {
+        handlePopoverOpen(open);
+      }}
+    >
+      <PopoverTrigger
+        asChild
+        className={`${
+          leadPermissions.canEditLead(assignedTo)
+            ? "cursor-pointer"
+            : "cursor-default"
+        }`}
+      >
+        {children}
+      </PopoverTrigger>
       <PopoverContent className="w-96" align="start">
         <div className="space-y-4">
           <div className="space-y-2">

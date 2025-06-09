@@ -6,6 +6,7 @@ import Leads from "./pages/dashboard/Leads";
 import RolesPermissions from "./pages/dashboard/RolesPermissions";
 import SalesOfficerRoles from "./pages/dashboard/SalesOfficerRoles";
 import LeadDetails from "./pages/lead/LeadDetails";
+import { LeadsProvider } from "./context/LeadsProvider";
 import Permissions from "./pages/dashboard/Permissions";
 import { useAuthoritiesList } from "./hooks/useAuthoritiesList";
 import { PermissionsEnum } from "./lib/constants";
@@ -37,13 +38,13 @@ const AppRoutes = () => {
     }
 
     // Check if user has manage roles permission
-    if (authoritiesList.includes(PermissionsEnum.MANAGE_ROLES)) {
+    if (authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW)) {
       return "/dashboard";
     }
 
     // Check if user has any leads-related permissions
     const hasLeadsPermissions = authoritiesList.some((authority) =>
-      authority.startsWith("leads:")
+      authority.startsWith("leads:view")
     );
 
     if (hasLeadsPermissions) {
@@ -65,15 +66,13 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
 
-        {authoritiesList.length === 0 && (
-          <Route
-            path="/no-permissions"
-            element={<ProtectedRoute element={<NotHavingPermissions />} />}
-          />
-        )}
+        <Route
+          path="/no-permissions"
+          element={<ProtectedRoute element={<NotHavingPermissions />} />}
+        />
 
         {authoritiesList.some((authority) =>
-          authority.startsWith("leads:")
+          authority.startsWith("leads:view")
         ) && (
           <Route element={<ProtectedRoute element={<LeadsLayout />} />}>
             <Route path="/leads" element={<Leads />} />
@@ -84,7 +83,7 @@ const AppRoutes = () => {
         <Route
           path="/dashboard"
           element={
-            authoritiesList.includes(PermissionsEnum.MANAGE_ROLES) ? (
+            authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW) ? (
               <ProtectedRoute element={<Dashboard />} />
             ) : (
               <Navigate to={getDefaultRoute()} replace />
@@ -92,7 +91,7 @@ const AppRoutes = () => {
           }
         />
 
-        {authoritiesList.includes(PermissionsEnum.MANAGE_ROLES) && (
+        {authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW) && (
           <>
             <Route
               path="/roles"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Edit2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,10 @@ import {
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
 import { updateLeadFullDetails } from "@/services/lead/lead";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { PermissionsEnum } from "@/lib/constants";
+import { useUser } from "@/context/UserProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 // Zod schema
 const profileSchema = z.object({
@@ -48,6 +52,8 @@ export default function ProfileFormPopover({
 }: ProfileFormPopoverProps) {
   const { lead, setLead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
+  const { assignedTo } = useLeadDetails();
+  const leadPermissions = useLeadPermissions();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -90,9 +96,22 @@ export default function ProfileFormPopover({
     // Here you can call your API with the data
   };
 
+  const handlePopoverOpen = (open: boolean) => {
+    setIsOpen(leadPermissions.canEditLead(assignedTo) && open);
+  };
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+    <Popover open={isOpen} onOpenChange={(open) => handlePopoverOpen(open)}>
+      <PopoverTrigger
+        asChild
+        className={`${
+          leadPermissions.canEditLead(assignedTo)
+            ? "cursor-pointer"
+            : "cursor-default"
+        }`}
+      >
+        {children}
+      </PopoverTrigger>
       <PopoverContent className="w-96" align="start">
         <Form {...form}>
           <form

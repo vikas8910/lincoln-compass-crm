@@ -106,6 +106,8 @@ interface LeadsContextType {
   handleSave: (leadId: string, key: string, value: string) => Promise<void>;
   refreshLead: (leadId: string) => Promise<void>;
   getModifiedColumnFilters: () => ColumnFiltersState;
+  assignedTo: string;
+  setAssignedTo: (assignedToId: string) => void;
 }
 
 interface LeadsProviderProps {
@@ -142,6 +144,7 @@ export const LeadsProvider: React.FC<LeadsProviderProps> = ({ children }) => {
   >("details");
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [assignedTo, setAssignedTo] = useState<string>("");
 
   // Create modified column filters based on active tab
   const getModifiedColumnFilters = useCallback(() => {
@@ -338,7 +341,7 @@ export const LeadsProvider: React.FC<LeadsProviderProps> = ({ children }) => {
           updatedAt: updatedData.updatedAt,
           id: updatedData.leadId,
         };
-
+        refetch();
         setLead(updatedLead);
         toast.success("Lead details updated successfully");
       } catch (error) {
@@ -409,6 +412,8 @@ export const LeadsProvider: React.FC<LeadsProviderProps> = ({ children }) => {
     handleSave,
     refreshLead,
     getModifiedColumnFilters,
+    assignedTo,
+    setAssignedTo,
   };
 
   return (
@@ -454,6 +459,8 @@ export const useLeadDetails = () => {
     setAllTags,
     selectedTagIds,
     setSelectedTagIds,
+    assignedTo,
+    setAssignedTo,
   } = useLeads();
 
   return {
@@ -471,5 +478,7 @@ export const useLeadDetails = () => {
     selectedTagIds,
     setSelectedTagIds,
     setLead,
+    assignedTo,
+    setAssignedTo,
   };
 };

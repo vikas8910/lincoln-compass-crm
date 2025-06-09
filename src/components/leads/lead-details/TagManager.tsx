@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { createNewTag, updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { toast } from "sonner";
+import { PermissionsEnum } from "@/lib/constants";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 interface Color {
   id: number;
@@ -42,6 +44,8 @@ const TagManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const leadPermissions = useLeadPermissions();
+  const { assignedTo } = useLeadDetails();
 
   // Color mapping for tag backgrounds
   const colorMap: Record<string, string> = {
@@ -171,12 +175,25 @@ const TagManager: React.FC = () => {
     );
   }
 
+  const handlePopoverOpen = (open: boolean) => {
+    setIsPopoverOpen(leadPermissions.canEditLead(assignedTo) && open);
+  };
+
   return (
     <div className="flex items-center space-x-2">
       {/* Entire tag section as popover trigger */}
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <Popover
+        open={isPopoverOpen}
+        onOpenChange={(open) => handlePopoverOpen(open)}
+      >
         <PopoverTrigger asChild>
-          <div className="flex items-center space-x-2 cursor-pointer group justify-between w-full py-3 rounded-md hover:bg-gray-300">
+          <div
+            className={`flex items-center space-x-2 group justify-between w-full py-3 rounded-md hover:bg-gray-300 ${
+              leadPermissions.canEditLead(assignedTo)
+                ? "cursor-pointer"
+                : "cursor-default"
+            }`}
+          >
             <div className="flex items-center gap-2">
               <Tag />
               <div className="flex items-center space-x-2">
@@ -191,18 +208,22 @@ const TagManager: React.FC = () => {
                       {tag.name}
                     </div>
                   ))
-                ) : (
+                ) : leadPermissions.canEditLead(assignedTo) ? (
                   <span className="text-sm text-gray-500 cursor-pointer hover:underline">
                     Click here to add tags
                   </span>
+                ) : (
+                  <span className="text-sm text-gray-500">No tags</span>
                 )}
               </div>
             </div>
 
             {/* Edit icon */}
-            <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
-              <Edit2Icon className=" text-gray-500" />
-            </div>
+            {leadPermissions.canEditLead(assignedTo) && (
+              <div className="flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
+                <Edit2Icon className=" text-gray-500" />
+              </div>
+            )}
           </div>
         </PopoverTrigger>
 

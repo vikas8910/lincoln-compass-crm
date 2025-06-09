@@ -1,6 +1,4 @@
-import { InfoCard } from "./InfoCard";
 import { Card } from "../../ui/card";
-import { formatDateTime } from "@/lib/utils";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { Button } from "@/components/ui/button";
 import { EditIcon } from "lucide-react";
@@ -64,9 +62,9 @@ export const LeadOverview: React.FC<{
           </div>
           <span>{new Date(lead.updatedAt).toLocaleString()}</span>
         </div>
-        <Button variant="outline" className="text-blue-500">
+        {/* <Button variant="outline" className="text-blue-500">
           View All Notes
-        </Button>
+        </Button> */}
       </Card>
 
       <NoteForm

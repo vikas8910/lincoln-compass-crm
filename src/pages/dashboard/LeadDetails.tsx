@@ -1,21 +1,32 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
+import {
+  Card,
+  CardContent,
+  CardHeader,
   CardTitle,
-  CardDescription 
+  CardDescription,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  UserRound, Mail, Phone, Building, Calendar, Tag, Clock,
-  FileText, CheckSquare, BarChart3, ArrowLeft, Edit, Trash,
+import {
+  UserRound,
+  Mail,
+  Phone,
+  Building,
+  Calendar,
+  Tag,
+  Clock,
+  FileText,
+  CheckSquare,
+  BarChart3,
+  ArrowLeft,
+  Edit,
+  Trash,
 } from "lucide-react";
 import { toast } from "sonner";
 import LeadLifecycleStage from "@/components/leads/LeadLifecycleStage";
@@ -33,15 +44,15 @@ interface ExtendedLead extends Lead {
 
 // Define all possible lead stages
 const leadStages: LeadStatus[] = [
-  "New", 
-  "In Contact", 
-  "Follow up", 
-  "Set Meeting", 
-  "Negotiation", 
-  "Enrolled", 
+  "New",
+  "In Contact",
+  "Follow up",
+  "Set Meeting",
+  "Negotiation",
+  "Enrolled",
   "Junk/Lost",
   "On Campus",
-  "Customer"
+  "Customer",
 ];
 
 // Mock data for the lead
@@ -56,7 +67,7 @@ const mockLead: ExtendedLead = {
   assignedTo: "Jane Smith",
   date: "2023-05-01",
   tags: ["Important", "New Client"],
-  createdAt: "2023-05-01T10:00:00"
+  createdAt: "2023-05-01T10:00:00",
 };
 
 interface ExtendedTimelineProps {
@@ -80,23 +91,23 @@ const LeadDetails = () => {
   const [lead, setLead] = useState<ExtendedLead>(mockLead);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  
+
   // In a real app, fetch the lead data based on the ID
   // useEffect(() => {
   //   // Fetch lead data
   // }, [leadId]);
-  
+
   const handleStageChange = (newStage: string) => {
-    setLead(prev => ({ ...prev, status: newStage } as any));
+    setLead((prev) => ({ ...prev, status: newStage } as any));
     toast.success(`Lead status updated to ${newStage}`);
   };
-  
+
   const handleSaveLead = (updatedLead: Lead) => {
     setLead(updatedLead as ExtendedLead);
     setShowEditDialog(false);
     toast.success("Lead information updated successfully");
   };
-  
+
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this lead?")) {
       toast.success("Lead deleted successfully");
@@ -104,10 +115,12 @@ const LeadDetails = () => {
       // navigate('/leads');
     }
   };
-  
+
   return (
     <MainLayout>
-      <div dangerouslySetInnerHTML={{ __html: `
+      <div
+        dangerouslySetInnerHTML={{
+          __html: `
         <style>
           .lead-lifecycle-stage .arrow-right:after {
             content: '';
@@ -129,8 +142,10 @@ const LeadDetails = () => {
             border-left: 15px solid white;
           }
         </style>
-      `}} />
-      
+      `,
+        }}
+      />
+
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" asChild>
@@ -141,7 +156,7 @@ const LeadDetails = () => {
           <h1 className="text-2xl font-bold">{lead.name}</h1>
           <Badge variant="outline">{lead.status}</Badge>
         </div>
-        
+
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowEditDialog(true)}>
             <Edit className="mr-2 h-4 w-4" />
@@ -153,7 +168,7 @@ const LeadDetails = () => {
           </Button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 gap-6">
         {/* Lifecycle Stage Section */}
         <Card>
@@ -166,14 +181,14 @@ const LeadDetails = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <LeadLifecycleStage 
+            <LeadLifecycleStage
               stages={leadStages}
               currentStage={lead.status}
               onStageChange={handleStageChange}
             />
           </CardContent>
         </Card>
-        
+
         {/* Lead Information and Activity Tabs */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Lead Information */}
@@ -187,11 +202,14 @@ const LeadDetails = () => {
                   <Avatar className="h-24 w-24">
                     <AvatarImage src="" />
                     <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                      {lead.name.split(' ').map(n => n[0]).join('')}
+                      {lead.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-start">
                     <UserRound className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
@@ -200,7 +218,7 @@ const LeadDetails = () => {
                       <div className="text-sm text-muted-foreground">Name</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Mail className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
@@ -208,7 +226,7 @@ const LeadDetails = () => {
                       <div className="text-sm text-muted-foreground">Email</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Phone className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
@@ -216,55 +234,71 @@ const LeadDetails = () => {
                       <div className="text-sm text-muted-foreground">Phone</div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Building className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">{lead.company}</div>
-                      <div className="text-sm text-muted-foreground">Company</div>
+                      <div className="text-sm text-muted-foreground">
+                        Company
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <UserRound className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">{lead.assignedTo}</div>
-                      <div className="text-sm text-muted-foreground">Assigned To</div>
+                      <div className="text-sm text-muted-foreground">
+                        Assigned To
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Tag className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">{lead.source}</div>
-                      <div className="text-sm text-muted-foreground">Source</div>
+                      <div className="text-sm text-muted-foreground">
+                        Source
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Calendar className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
-                      <div className="font-medium">{new Date(lead.date).toLocaleDateString()}</div>
-                      <div className="text-sm text-muted-foreground">Created Date</div>
+                      <div className="font-medium">
+                        {new Date(lead.date).toLocaleDateString()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Created Date
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start">
                     <Clock className="mr-2 h-4 w-4 mt-0.5 text-muted-foreground" />
                     <div>
                       <div className="font-medium">{lead.email}</div>
-                      <div className="text-sm text-muted-foreground">Last Activity</div>
+                      <div className="text-sm text-muted-foreground">
+                        Last Activity
+                      </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div>
                   <h4 className="text-sm font-medium mb-2">Tags</h4>
                   <div className="flex flex-wrap gap-2">
                     {lead.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="bg-muted/50">
+                      <Badge
+                        key={tag}
+                        variant="outline"
+                        className="bg-muted/50"
+                      >
                         {tag}
                       </Badge>
                     ))}
@@ -273,16 +307,16 @@ const LeadDetails = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Activities and Timeline */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Activities</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs 
-                defaultValue="timeline" 
-                value={activeTab} 
+              <Tabs
+                defaultValue="timeline"
+                value={activeTab}
                 onValueChange={setActiveTab}
                 className="w-full"
               >
@@ -309,7 +343,9 @@ const LeadDetails = () => {
                   <div className="flex items-center justify-center h-60 bg-muted/30 rounded-md">
                     <div className="text-center">
                       <BarChart3 className="h-10 w-10 mx-auto text-muted-foreground" />
-                      <h3 className="mt-2 font-medium">Analytics coming soon</h3>
+                      <h3 className="mt-2 font-medium">
+                        Analytics coming soon
+                      </h3>
                       <p className="text-sm text-muted-foreground">
                         Lead performance analytics will be available soon.
                       </p>
@@ -321,7 +357,7 @@ const LeadDetails = () => {
           </Card>
         </div>
       </div>
-      
+
       <LeadDialog
         lead={lead}
         open={showEditDialog}

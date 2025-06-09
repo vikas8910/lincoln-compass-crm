@@ -19,9 +19,19 @@ import { Lead, Tab, TabType } from "@/types/lead";
 // Utils
 import { formatDateTime, getAvatarColors } from "@/lib/utils";
 import { EditableCell } from "@/components/tablec/EditableCell";
+import {
+  assignLeadToOfficer,
+  createLead,
+  deleteLead,
+  updateLead,
+} from "@/services/lead/lead";
 import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
-import { PermissionsEnum } from "@/lib/constants";
+import {
+  DEBOUNCE_DELAY,
+  INITIAL_PAGINATION,
+  PermissionsEnum,
+} from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { createLeadFormValues } from "@/schemas/lead";
 import { NoteForm } from "@/components/common/NoteForm";
@@ -36,6 +46,10 @@ import {
 } from "@/components/ui/select";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { useLeads } from "@/context/LeadsProvider";
+import { FaTrash } from "react-icons/fa";
+import { useUser } from "@/context/UserProvider";
+import { useLeadDetails } from "@/context/LeadsProvider";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 // Context// Import the context hook
 
@@ -83,16 +97,10 @@ const Leads = () => {
   const [selectedLeadForNote, setSelectedLeadForNote] = useState<Lead | null>(
     null
   );
-  const [isEditable, setIsEditable] = useState(false);
+  const [deleteLeadId, setDeleteLeadId] = useState<string | null>(null);
+  const leadPermissions = useLeadPermissions();
 
   const { authoritiesList } = useAuthoritiesList();
-
-  useEffect(() => {
-    // Set editability based on permissions
-    authoritiesList.includes(PermissionsEnum.LEADS_UPDATE)
-      ? setIsEditable(false)
-      : setIsEditable(true);
-  }, [authoritiesList]);
 
   // Define tabs with dynamic counts
   const tabs: Tab[] = [
@@ -127,7 +135,16 @@ const Leads = () => {
   const handleOpenFilters = () => setIsOffcanvasOpen(true);
   const handleCloseOffcanvas = () => setIsOffcanvasOpen(false);
   const handleApplyFilters = () => setIsOffcanvasOpen(false);
-
+  const handleLeadDelete = async () => {
+    try {
+      await deleteLead(deleteLeadId);
+      refetch();
+      toast.success("Lead Deleted Successfully");
+    } catch (error) {
+      toast.error("Failed to delete lead");
+      throw error;
+    }
+  };
   // Assign To Dropdown Component
   const AssignToDropdown = ({ lead }: { lead: Lead }) => {
     const selectedUserId = lead?.assignedTo || "";
@@ -167,6 +184,7 @@ const Leads = () => {
         const user = row.original;
         const firstLetter = user.firstName?.[0]?.toUpperCase() || "?";
         const { bg, text } = getAvatarColors(firstLetter);
+        const { setAssignedTo } = useLeadDetails();
 
         return (
           <div className="flex items-center gap-5 group">
@@ -179,12 +197,16 @@ const Leads = () => {
               <Link
                 className="text-[#2c5cc5] font-bold whitespace-nowrap"
                 to={`/lead-details/${user.id}`}
+                onClick={() => setAssignedTo(user.assignedTo)}
               >
                 {user.firstName} {user.lastName}
               </Link>
             </div>
             <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <Link to={`/lead-details/${user.id}`}>
+              <Link
+                to={`/lead-details/${user.id}`}
+                onClick={() => setAssignedTo(user.assignedTo)}
+              >
                 <MdInfoOutline /> {/* Details */}
               </Link>
               <FiMail /> {/* Email */}
@@ -224,7 +246,7 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter first name"
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       // Add custom meta for filtering
@@ -244,7 +266,7 @@ const Leads = () => {
           }
           validationType="textOnly"
           placeholder="Enter last name"
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
@@ -261,7 +283,7 @@ const Leads = () => {
           validationType="phone"
           placeholder="Enter mobile number"
           textColor="text-[#2c5cc5]"
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
@@ -276,7 +298,7 @@ const Leads = () => {
           validationType="email"
           placeholder="Enter email address"
           textColor="text-[#2c5cc5]"
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
@@ -297,7 +319,7 @@ const Leads = () => {
           placeholder="Select source"
           emptyOptionLabel="Select source..."
           allowEmpty={true}
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
     },
@@ -317,7 +339,7 @@ const Leads = () => {
           placeholder="Select course"
           emptyOptionLabel="Select course..."
           allowEmpty={true}
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
     },
@@ -337,7 +359,7 @@ const Leads = () => {
           placeholder="Select lead type"
           emptyOptionLabel="Select lead type..."
           allowEmpty={true}
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
     },
@@ -362,12 +384,12 @@ const Leads = () => {
           }
           validationType="text"
           placeholder="No notes"
-          disabled={isEditable}
+          disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
       enableColumnFilter: false,
     },
-    ...(authoritiesList.includes(PermissionsEnum.ASSIGN_LEADS)
+    ...(leadPermissions.canAssignLeads
       ? [
           {
             header: "Assigned To",
@@ -381,6 +403,37 @@ const Leads = () => {
           },
         ]
       : []),
+
+    ...(authoritiesList.some((authority) =>
+      authority.startsWith("leads:delete")
+    )
+      ? [
+          {
+            header: "Actions",
+            accessorKey: "",
+            cell: ({ row }) => {
+              const canDelete = leadPermissions.canDeleteLead(
+                row.original.assignedTo
+              );
+
+              return (
+                <Button
+                  className="bg-red-500 text-white hover:bg-red-600"
+                  onClick={() => {
+                    setIsDeleteUserDialogOpen(true);
+                    setDeleteLeadId(row.original.id);
+                  }}
+                  disabled={!canDelete}
+                >
+                  <FaTrash />
+                </Button>
+              );
+            },
+            enableColumnFilter: false,
+          },
+        ]
+      : []),
+    ,
   ];
 
   // Error state
@@ -432,17 +485,19 @@ const Leads = () => {
           )}
 
           {/* Filters Button */}
-          <button
-            onClick={handleOpenFilters}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            aria-label="Open filters"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-          </button>
+          {leadPermissions.canSearchLeads && (
+            <button
+              onClick={handleOpenFilters}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              aria-label="Open filters"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </button>
+          )}
 
           {/* Add Lead Button */}
-          {authoritiesList.includes(PermissionsEnum.LEADS_CREATE) && (
+          {leadPermissions.canCreateLeads && (
             <Button
               aria-label="Add new lead"
               onClick={() => setIsCreateLeadDialogOpen(true)}
@@ -530,9 +585,7 @@ const Leads = () => {
         onClose={() => {
           setIsDeleteUserDialogOpen(false);
         }}
-        onConfirm={() => {
-          alert("Deleted User");
-        }}
+        onConfirm={handleLeadDelete}
         title="Delete Lead"
         description="Are you sure you want to delete this lead ?"
         confirmLabel="Delete"

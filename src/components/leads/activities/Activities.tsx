@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Notes } from "./Notes";
 import { Tasks } from "./Tasks";
 import { Meetings } from "./Meetings";
+import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { PermissionsEnum } from "@/lib/constants";
 
 // Mock components - replace these with your actual components
 const ActivityTimeline = () => (
@@ -12,13 +14,30 @@ const ActivityTimeline = () => (
 );
 
 export const Activities = () => {
-  const [activeTab, setActiveTab] = useState("notes");
+  const [activeTab, setActiveTab] = useState("timeline");
+  const { authoritiesList } = useAuthoritiesList();
 
   const tabs = [
     { id: "timeline", label: "Activity timeline", component: ActivityTimeline },
-    { id: "notes", label: "Notes", component: Notes, count: 2 },
-    { id: "tasks", label: "Tasks", component: Tasks, count: 3 },
-    { id: "meetings", label: "Meetings", component: Meetings, count: 4 },
+    { id: "notes", label: "Notes", component: Notes },
+    ...(authoritiesList.includes(PermissionsEnum.TASKS_VIEW)
+      ? [
+          {
+            id: "tasks",
+            label: "Tasks",
+            component: Tasks,
+          },
+        ]
+      : []),
+    ...(authoritiesList.includes(PermissionsEnum.MEETINGS_VIEW)
+      ? [
+          {
+            id: "meetings",
+            label: "Meetings",
+            component: Meetings,
+          },
+        ]
+      : []),
   ];
 
   const ActiveComponent =

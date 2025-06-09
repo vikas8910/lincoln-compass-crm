@@ -17,10 +17,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { StageOption } from "@/types/lead";
 import { updateLeadFullDetails } from "@/services/lead/lead";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 
 const LeadStaging = () => {
   const { lead, setLead, stageOptions } = useLeadDetails();
-
+  const { assignedTo } = useLeadDetails();
+  const leadPermissions = useLeadPermissions();
   // Helper function to find stage by sequenceOrder
   const findStageBySequence = (sequenceOrder: number) => {
     return stageOptions.find((stage) => stage.sequenceOrder === sequenceOrder);
@@ -240,12 +242,16 @@ const LeadStaging = () => {
 
   // Function to render stage chip content
   const renderStageChip = (stage: any, index: number) => {
-    const chipClasses = `px-6 py-2 cursor-pointer w-full text-sm font-medium border transition-colors whitespace-nowrap text-center ${getStageColor(
+    const chipClasses = `px-6 py-2 w-full text-sm font-medium border transition-colors whitespace-nowrap text-center ${getStageColor(
       stage,
       index
     )} ${index === 0 ? "rounded-l-md" : ""} ${
       index === getDisplayStages().length - 1 ? "rounded-r-md" : ""
-    } ${index > 0 ? "border-l-0" : ""}`;
+    } ${index > 0 ? "border-l-0" : ""} ${
+      leadPermissions.canEditLead(assignedTo)
+        ? "cursor-pointer"
+        : "pointer-events-none"
+    }`;
 
     const chipStyle = {
       clipPath:
@@ -313,30 +319,32 @@ const LeadStaging = () => {
   return (
     <div className="flex items-end gap-12 border border-t-slate-300 border-l-0 border-r-0 border-b-0 pt-4">
       {/* Left side - Form Component */}
-      <div>
-        <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
-          Lifecycle Stage
-        </h1>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 px-0 py-2 border-none text-blue-500"
-            >
-              Lead Stages
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-4">
-            <LeadStagingForm
-              initialStatusId={lead?.leadStage?.id}
-              onSave={handleFormSave}
-              stageOptions={stageOptions}
-              className="flex-shrink-0 pt-8"
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+      {leadPermissions.canEditLead(assignedTo) && (
+        <div>
+          <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
+            Lifecycle Stage
+          </h1>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 px-0 py-2 border-none text-blue-500"
+              >
+                Lead Stages
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <LeadStagingForm
+                initialStatusId={lead?.leadStage?.id}
+                onSave={handleFormSave}
+                stageOptions={stageOptions}
+                className="flex-shrink-0 pt-8"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
 
       {/* Right side - Stage visualization */}
       <div className="flex-1 overflow-hidden">

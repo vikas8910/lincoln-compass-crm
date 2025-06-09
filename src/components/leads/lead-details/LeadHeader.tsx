@@ -6,9 +6,13 @@ import { MapPinIcon, Copy } from "lucide-react";
 import { FaFacebook, FaTwitter, FaLinkedin } from "react-icons/fa";
 import ProfileFormPopover from "./ProfileFormPopover";
 import AddressFormPopover from "./LeadAddressPopover";
+import { useLeadPermissions } from "@/hooks/useLeadPermissions";
+import { useLeadDetails } from "@/context/LeadsProvider";
 
 export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   const { bg, text } = getAvatarColors(lead?.firstName?.charAt(0));
+  const { assignedTo } = useLeadDetails();
+  const leadPermissions = useLeadPermissions();
 
   // Function to format address
   const formatAddress = () => {
@@ -62,7 +66,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
           </Avatar>
           <div>
             <ProfileFormPopover>
-              <div className="flex items-center gap-4 hover:bg-gray-200 p-2 rounded-md cursor-pointer">
+              <div className="flex items-center gap-4 hover:bg-gray-200 p-2 rounded-md">
                 <h1 className="font-bold text-lg">
                   {lead.firstName} {lead.lastName}
                 </h1>
@@ -110,7 +114,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
               </div>
             </ProfileFormPopover>
             <AddressFormPopover>
-              <div className="flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-200 cursor-pointer p-2">
+              <div className="flex items-center gap-2 text-sm text-gray-600 hover:bg-gray-200 p-2">
                 <MapPinIcon className="h-4 w-4" />
                 {hasAddressInfo ? (
                   <>
@@ -123,8 +127,10 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                       }}
                     />
                   </>
-                ) : (
+                ) : leadPermissions.canEditLead(assignedTo) ? (
                   <span className="text-gray-400">Click to add location</span>
+                ) : (
+                  <span className="text-gray-400">No location available</span>
                 )}
               </div>
             </AddressFormPopover>
