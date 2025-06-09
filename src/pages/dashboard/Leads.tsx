@@ -552,30 +552,37 @@ const Leads = () => {
           },
         ]
       : []),
-    {
-      header: "Actions",
-      accessorKey: "",
-      cell: ({ row }) => {
-        const canDelete = leadPermissions.canDeleteLead(
-          row.original.assignedTo
-        );
 
-        if (!canDelete) return null;
+    ...(authoritiesList.some((authority) =>
+      authority.startsWith("leads:delete")
+    )
+      ? [
+          {
+            header: "Actions",
+            accessorKey: "",
+            cell: ({ row }) => {
+              const canDelete = leadPermissions.canDeleteLead(
+                row.original.assignedTo
+              );
 
-        return (
-          <Button
-            className="bg-red-500 text-white hover:bg-red-600"
-            onClick={() => {
-              setIsDeleteUserDialogOpen(true);
-              setDeleteLeadId(row.original.id);
-            }}
-          >
-            <FaTrash />
-          </Button>
-        );
-      },
-      enableColumnFilter: false,
-    },
+              return (
+                <Button
+                  className="bg-red-500 text-white hover:bg-red-600"
+                  onClick={() => {
+                    setIsDeleteUserDialogOpen(true);
+                    setDeleteLeadId(row.original.id);
+                  }}
+                  disabled={!canDelete}
+                >
+                  <FaTrash />
+                </Button>
+              );
+            },
+            enableColumnFilter: false,
+          },
+        ]
+      : []),
+    ,
   ];
 
   // Error state
