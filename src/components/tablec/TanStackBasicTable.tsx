@@ -84,16 +84,16 @@ export default function TanStackBasicTable<TData, TValue>({
   }, [columnFilters, setPagination]);
 
   return (
-    <div className="">
+    <div className="w-full min-w-0">
       {/* <div className="flex flex-col md:flex-row justify-evenly gap-4 mb-8">
-        <div className="bg-indigo-100 p-4 rounded-xl w-full">
-          <TanStackBasicTableFilterComponent table={table} />
-        </div>
-        <div className="w-full flex flex-col gap-4 justify-between">
-          <TanStackBasicTableSortingComponent sorting={sorting} />
-          <TanStackBasicTablePaginationComponent table={table} />
-        </div>
-      </div> */}
+    <div className="bg-indigo-100 p-4 rounded-xl w-full">
+      <TanStackBasicTableFilterComponent table={table} />
+    </div>
+    <div className="w-full flex flex-col gap-4 justify-between">
+      <TanStackBasicTableSortingComponent sorting={sorting} />
+      <TanStackBasicTablePaginationComponent table={table} />
+    </div>
+  </div> */}
 
       {isTableDataLoading ? (
         <div>
@@ -103,7 +103,7 @@ export default function TanStackBasicTable<TData, TValue>({
         </div>
       ) : (
         <>
-          <div className="rounded-md border mb-8">
+          <div className="rounded-md border mb-8 w-full overflow-hidden">
             <TanStackBasicTableTableComponent table={table} />
           </div>
           <TanStackBasicTablePaginationComponent table={table} />

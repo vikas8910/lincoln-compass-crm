@@ -1,3 +1,4 @@
+import EmptyState from "@/components/common/EmptyState";
 import { NoteForm } from "@/components/common/NoteForm";
 import { Button } from "@/components/ui/button";
 import { useLeadDetails } from "@/context/LeadsProvider";
@@ -8,7 +9,7 @@ import {
   getNotes,
   updateNote,
 } from "@/services/activities/notes";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Edit, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export interface NoteData {
@@ -98,58 +99,67 @@ export const Notes = () => {
 
   return (
     <div className="p-6 bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Notes</h1>
-        <Button onClick={handleAddNote} className="flex items-center gap-2">
-          <Plus size={16} />
-          Add note
-        </Button>
-      </div>
+      {notes?.length > 0 ? (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-xl font-semibold text-gray-900">Notes</h1>
+            <Button onClick={handleAddNote} className="flex items-center gap-2">
+              <Plus size={16} />
+              Add note
+            </Button>
+          </div>
 
-      {/* Notes List */}
-      <div className="space-y-4">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors group"
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <p className="text-gray-900 mb-2">{note.description}</p>
-                <div className="flex items-center text-sm text-gray-600 space-x-4">
-                  <span className="flex items-center">
-                    <Edit size={14} className="mr-1" />
-                    {note.updatedBy.name} {!note.active && `(Deleted)`}
-                  </span>
-                  <span>•</span>
-                  <span>{formatDate(note.createdAt)}</span>
+          {/* Notes List */}
+          <div className="space-y-4">
+            {notes.map((note) => (
+              <div
+                key={note.id}
+                className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors group"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-gray-900 mb-2">{note.description}</p>
+                    <div className="flex items-center text-sm text-gray-600 space-x-4">
+                      <span className="flex items-center">
+                        <Edit size={14} className="mr-1" />
+                        {note.updatedBy.name} {!note.active && `(Deleted)`}
+                      </span>
+                      <span>•</span>
+                      <span>{formatDate(note.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Action buttons - visible on hover */}
+                  <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEditNote(note)}
+                      className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Edit note"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete note"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* Action buttons - visible on hover */}
-              <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleEditNote(note)}
-                  className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                  title="Edit note"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  onClick={() => handleDeleteNote(note.id)}
-                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                  title="Delete note"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      ) : (
+        <EmptyState
+          text="Schedule virtual and in-person meetings right from the CRM."
+          icon={<CalendarDays size={48} className="text-blue-400" />}
+          buttonText="Add Note"
+          onClick={() => setIsFormOpen(true)}
+        />
+      )}
 
-      {/* Note Form */}
       <NoteForm
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}

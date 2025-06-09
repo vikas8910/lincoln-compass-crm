@@ -24,7 +24,8 @@ export const LeadDetailsSidebar: React.FC<{
   onSave: (key: string, value: string) => Promise<void>;
 }> = ({ activeTab, onTabChange, lead, onSave }) => {
   return (
-    <div className="flex mt-5">
+    <div className="flex mt-5 w-full min-w-0 gap-4">
+      {/* Fixed width sidebar */}
       <div className="w-72 bg-[#f3f5f8] border rounded-lg shadow-sm flex-shrink-0">
         <div className="border-b">
           <h1 className="font-semibold text-lg p-5">Overview</h1>
@@ -41,10 +42,10 @@ export const LeadDetailsSidebar: React.FC<{
         </div>
       </div>
 
-      {/* Sidebar Content */}
-      <Card className="w-full rounded-md shadow-md">
+      {/* Flexible content area with proper width constraints */}
+      <Card className="flex-1 min-w-0 rounded-md shadow-md">
         {activeTab === "details" && (
-          <div>
+          <div className="w-full min-w-0">
             <div className="p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Lead Details
@@ -118,7 +119,11 @@ export const LeadDetailsSidebar: React.FC<{
           </div>
         )}
 
-        {activeTab === "activities" && <Activities />}
+        {activeTab === "activities" && (
+          <div className="w-full min-w-0">
+            <Activities />
+          </div>
+        )}
       </Card>
     </div>
   );

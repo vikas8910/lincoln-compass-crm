@@ -219,3 +219,47 @@ export interface EditableCellProps {
   customDisplayValue?: (value: any) => string; // Function to determine display value for custom component
   sendCompleteObject?: boolean;
 }
+
+// Define tab types
+export type TabType = "all" | "my" | "new";
+
+export interface Tab {
+  id: TabType;
+  label: string;
+  count?: number;
+}
+
+// User interface for typing
+export interface User {
+  id: string;
+  name: string;
+  // Add other user properties as needed
+}
+
+// Option interfaces for dropdowns
+export interface SourceOption {
+  id: number;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CourseOption {
+  id: number;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LeadTypeOption {
+  id: number;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}

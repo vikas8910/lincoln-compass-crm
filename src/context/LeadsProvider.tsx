@@ -7,14 +7,26 @@ import React, {
   useCallback,
 } from "react";
 import { toast } from "sonner";
+import type {
+  ColumnFiltersState,
+  PaginationState,
+  SortingState,
+} from "@tanstack/react-table";
+
+// API hooks
+import { useGetLeads } from "@/api/useGetLeads";
+
+// Services
 import {
   getAllTags,
   getLeadFullDetails,
   getLeadStages,
   updateLeadFullDetails,
+  assignLeadToOfficer,
+  createLead,
+  updateLead,
 } from "@/services/lead/lead";
-import { Lead, StageOption } from "@/types/lead";
-import { DROPDOWN_OPTIONS } from "@/lib/constants";
+import { getUsers } from "@/services/user-service/user-service";
 import {
   getAllCountries,
   getAllCourses,
@@ -22,62 +34,220 @@ import {
   getAllSources,
   getAllUniversities,
 } from "@/services/dropdowns/dropdown";
-import { Tag } from "@/components/leads/lead-details/TagManager";
+import { getNotes } from "@/services/activities/notes";
 
 // Types
-interface LeadDetailsContextType {
-  // State
-  lead: Lead | null;
-  isLoading: boolean;
-  activeTab: "details" | "activities";
+import {
+  CourseOption,
+  Lead,
+  LeadTypeOption,
+  SourceOption,
+  StageOption,
+  TabType,
+  User,
+} from "@/types/lead";
+import { Tag } from "@/components/leads/lead-details/TagManager";
+import { createLeadFormValues } from "@/schemas/lead";
 
-  // Actions
-  setLead: (lead: Lead | null) => void;
-  setIsLoading: (loading: boolean) => void;
-  setActiveTab: (tab: "details" | "activities") => void;
+// Constants
+import { DROPDOWN_OPTIONS, INITIAL_PAGINATION } from "@/lib/constants";
+import { useGetMeetings } from "@/hooks/useGetMeetings";
 
-  // Operations
-  fetchLead: (leadId: string) => Promise<void>;
-  handleSave: (leadId: string, key: string, value: string) => Promise<void>;
-  refreshLead: (leadId: string) => Promise<void>;
+// Types
+interface LeadsContextType {
+  // Lead List State
+  allUsersData: any;
+  allMeetingsData: any;
+  isAllUsersDataLoading: boolean;
+  isAllMettingsDataLoading: boolean;
+  error: any;
+  appliedFilters: any;
+
+  // Table State
+  sorting: SortingState;
+  setSorting: React.Dispatch<React.SetStateAction<SortingState>>;
+  columnFilters: ColumnFiltersState;
+  setColumnFilters: React.Dispatch<React.SetStateAction<ColumnFiltersState>>;
+  pagination: PaginationState;
+  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
+
+  // Tab State
+  activeTab: TabType;
+  setActiveTab: React.Dispatch<React.SetStateAction<TabType>>;
+
+  // Dropdown Options
+  users: User[];
+  sourceOptions: SourceOption[];
+  courseOptions: CourseOption[];
+  leadTypeOptions: LeadTypeOption[];
   dropdownOptions: any;
   stageOptions: StageOption[];
+
+  // Lead Details State (for lead details page)
+  lead: Lead | null;
+  isLeadDetailsLoading: boolean;
+  activeDetailsTab: "details" | "activities";
   allTags: Tag[];
-  setAllTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   selectedTagIds: number[];
+
+  // Actions
+  setActiveDetailsTab: (tab: "details" | "activities") => void;
+  setAllTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   setSelectedTagIds: React.Dispatch<React.SetStateAction<number[]>>;
+  setLead: React.Dispatch<React.SetStateAction<Lead>>;
+
+  // Operations
+  refetch: () => void;
+  refetchMeetings: () => void;
+  fetchLead: (leadId: string) => Promise<void>;
+  handleSaveField: (updatedLeadDetails: any) => Promise<void>;
+  handleAddLead: (data: createLeadFormValues) => Promise<void>;
+  handleAssignToChange: (leadId: string, userId: string) => Promise<void>;
+  handleSave: (leadId: string, key: string, value: string) => Promise<void>;
+  refreshLead: (leadId: string) => Promise<void>;
+  getModifiedColumnFilters: () => ColumnFiltersState;
 }
 
-interface LeadDetailsProviderProps {
+interface LeadsProviderProps {
   children: ReactNode;
 }
 
 // Create Context
-const LeadDetailsContext = createContext<LeadDetailsContextType | undefined>(
-  undefined
-);
+const LeadsContext = createContext<LeadsContextType | undefined>(undefined);
 
 // Provider Component
-export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
-  children,
-}) => {
-  // State
-  const [lead, setLead] = useState<Lead | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"details" | "activities">(
-    "details"
-  );
+export const LeadsProvider: React.FC<LeadsProviderProps> = ({ children }) => {
+  // Table state management
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [pagination, setPagination] =
+    useState<PaginationState>(INITIAL_PAGINATION);
+
+  // Tab state management
+  const [activeTab, setActiveTab] = useState<TabType>("all");
+
+  // Dropdown options state
+  const [users, setUsers] = useState<User[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<SourceOption[]>([]);
+  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
+  const [leadTypeOptions, setLeadTypeOptions] = useState<LeadTypeOption[]>([]);
   const [dropdownOptions, setDropdownOptions] = useState(DROPDOWN_OPTIONS);
   const [stageOptions, setStageOptions] = useState<StageOption[]>([]);
+
+  // Lead Details State (for lead details page)
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [isLeadDetailsLoading, setIsLeadDetailsLoading] = useState(true);
+  const [activeDetailsTab, setActiveDetailsTab] = useState<
+    "details" | "activities"
+  >("details");
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
-  // Fetch lead data
+  // Create modified column filters based on active tab
+  const getModifiedColumnFilters = useCallback(() => {
+    let modifiedFilters = [...columnFilters];
+
+    if (activeTab === "my") {
+      // Add sortedBy=assignedTo filter for My Leads
+      const existingAssignedToFilter = modifiedFilters.find(
+        (filter) => filter.id === "assignedTo"
+      );
+      if (!existingAssignedToFilter) {
+        modifiedFilters.push({ id: "assignedTo", value: "sortedBy" });
+      }
+    } else if (activeTab === "new") {
+      // Add any specific filters for New Leads if needed
+      // For now, keeping it same as All Leads
+    }
+
+    return modifiedFilters;
+  }, [columnFilters, activeTab]);
+
+  // API data fetching using the hook
+  const {
+    allUsersData,
+    isAllUsersDataLoading,
+    error,
+    refetch,
+    appliedFilters,
+  } = useGetLeads({
+    sorting,
+    columnFilters: getModifiedColumnFilters(),
+    pagination,
+  });
+
+  const {
+    allMeetingsData,
+    isAllMettingsDataLoading,
+    error: errorMeetingFetch,
+    refetch: refetchMeetings,
+    appliedFilters: appliedMeetingsFilters,
+  } = useGetMeetings({
+    sorting,
+    columnFilters: getModifiedColumnFilters(),
+    pagination,
+  });
+
+  console.log("All Meetings => ", allMeetingsData);
+
+  // Fetch all dropdown data
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        // Fetch users
+        const usersResponse = await getUsers(0, 10);
+        setUsers(usersResponse.content || []);
+
+        // Fetch lead types
+        const { content: leadTypes } = await getAllLeadTypes();
+        setLeadTypeOptions(leadTypes);
+
+        // Fetch courses
+        const { content: courses } = await getAllCourses();
+        setCourseOptions(courses);
+
+        // Fetch sources
+        const { content: sources } = await getAllSources();
+        setSourceOptions(sources);
+
+        // Fetch universities
+        const { content: universities } = await getAllUniversities();
+        setDropdownOptions((prev) => ({ ...prev, university: universities }));
+
+        // Fetch countries
+        const { content: countries } = await getAllCountries();
+        setDropdownOptions((prev) => ({ ...prev, countries }));
+
+        // Fetch stages
+        const stages = await getLeadStages();
+        setStageOptions(stages);
+
+        // Fetch tags
+        const tags = await getAllTags();
+        setAllTags(tags);
+
+        // Update dropdown options
+        setDropdownOptions((prev) => ({
+          ...prev,
+          leadType: leadTypes,
+          courses,
+          source: sources,
+        }));
+      } catch (error) {
+        console.error("Error fetching dropdown data:", error);
+        toast.error("Failed to load some data");
+      }
+    };
+
+    fetchAllData();
+  }, []);
+
+  // Lead Details Operations
   const fetchLead = useCallback(async (leadId: string) => {
     if (!leadId) return;
 
     try {
-      setIsLoading(true);
+      setIsLeadDetailsLoading(true);
       const leadData = await getLeadFullDetails(leadId);
 
       const formattedLead = {
@@ -93,61 +263,69 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
       };
 
       setLead(formattedLead);
+
+      // Fetch notes for this lead
+      try {
+        const notesRes = await getNotes(leadId);
+        // You might want to store notes in state as well
+      } catch (notesError) {
+        console.error("Error fetching notes:", notesError);
+      }
     } catch (error) {
       toast.error("Failed to load lead details");
       console.error("Error fetching lead:", error);
       setLead(null);
     } finally {
-      setIsLoading(false);
+      setIsLeadDetailsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    const getAllUnivertiesList = async () => {
-      const { content } = await getAllUniversities();
-      setDropdownOptions((prev) => ({ ...prev, university: content }));
-    };
+  // Handle save field operations
+  const handleSaveField = useCallback(
+    async (updatedLeadDetails: any) => {
+      try {
+        await updateLead(updatedLeadDetails);
+        refetch();
+        toast.success("Lead Details Updated Successfully");
+      } catch (error) {
+        toast.error("Failed to update lead details");
+        throw error;
+      }
+    },
+    [refetch]
+  );
 
-    const getAllLeadTypesList = async () => {
-      const { content } = await getAllLeadTypes();
-      setDropdownOptions((prev) => ({ ...prev, leadType: content }));
-    };
+  // Handle add lead
+  const handleAddLead = useCallback(
+    async (data: createLeadFormValues) => {
+      try {
+        await createLead(data);
+        refetch();
+        toast.success("Lead Added Successfully");
+      } catch (error: any) {
+        toast.error(error?.response?.data?.error || "failed to add lead");
+        throw error;
+      }
+    },
+    [refetch]
+  );
 
-    const getAllCoursesList = async () => {
-      const { content } = await getAllCourses();
-      setDropdownOptions((prev) => ({ ...prev, courses: content }));
-    };
+  // Handle assign to change
+  const handleAssignToChange = useCallback(
+    async (leadId: string, userId: string) => {
+      try {
+        await assignLeadToOfficer(leadId, userId);
+        refetch();
+        toast.success("Lead Assigned Successfully");
+      } catch (error) {
+        toast.error("Failed to assign lead");
+        throw error;
+      }
+    },
+    [refetch]
+  );
 
-    const getAllSourcesList = async () => {
-      const { content } = await getAllSources();
-      setDropdownOptions((prev) => ({ ...prev, source: content }));
-    };
-
-    const getAllCountriesList = async () => {
-      const { content } = await getAllCountries();
-      setDropdownOptions((prev) => ({ ...prev, countries: content }));
-    };
-
-    const getAllStagesList = async () => {
-      const content = await getLeadStages();
-      setStageOptions(content);
-    };
-
-    const getAllTagsList = async () => {
-      const tags = await getAllTags();
-      setAllTags(tags);
-    };
-
-    getAllUnivertiesList();
-    getAllLeadTypesList();
-    getAllCoursesList();
-    getAllSourcesList();
-    getAllCountriesList();
-    getAllStagesList();
-    getAllTagsList();
-  }, []);
-
-  // Handle save operations
+  // Handle save operations for lead details
   const handleSave = useCallback(
     async (leadId: string, key: string, value: string) => {
       try {
@@ -162,11 +340,6 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
         };
 
         setLead(updatedLead);
-
-        // if (key === "status") {
-        //   setStatusId(value);
-        // }
-
         toast.success("Lead details updated successfully");
       } catch (error) {
         toast.error("Failed to update lead details");
@@ -176,7 +349,7 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     []
   );
 
-  // Refresh lead data (useful for when data might have changed externally)
+  // Refresh lead data
   const refreshLead = useCallback(
     async (leadId: string) => {
       await fetchLead(leadId);
@@ -184,26 +357,94 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     [fetchLead]
   );
 
-  // Reset state when component unmounts or leadId changes
-  const resetState = () => {
-    setLead(null);
-    setIsLoading(true);
-    setActiveTab("details");
-    // setStatusId("");
-  };
+  const value: LeadsContextType = {
+    // Lead List State
+    allUsersData,
+    isAllUsersDataLoading,
+    isAllMettingsDataLoading,
+    error,
+    appliedFilters,
 
-  const value: LeadDetailsContextType = {
-    // State
-    lead,
-    isLoading,
+    // Table State
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    pagination,
+    setPagination,
+
+    // Tab State
     activeTab,
-
-    // Actions
-    setLead,
-    setIsLoading,
     setActiveTab,
 
+    // Dropdown Options
+    users,
+    sourceOptions,
+    courseOptions,
+    leadTypeOptions,
+    dropdownOptions,
+    stageOptions,
+
+    // Lead Details State
+    lead,
+    isLeadDetailsLoading,
+    activeDetailsTab,
+    allTags,
+    selectedTagIds,
+    allMeetingsData,
+
+    // Actions
+    setActiveDetailsTab,
+    setAllTags,
+    setSelectedTagIds,
+    setLead,
+
     // Operations
+    refetch,
+    refetchMeetings,
+    fetchLead,
+    handleSaveField,
+    handleAddLead,
+    handleAssignToChange,
+    handleSave,
+    refreshLead,
+    getModifiedColumnFilters,
+  };
+
+  return (
+    <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>
+  );
+};
+
+// Custom hook to use the context
+export const useLeads = (): LeadsContextType => {
+  const context = useContext(LeadsContext);
+  if (context === undefined) {
+    throw new Error("useLeads must be used within a LeadsProvider");
+  }
+  return context;
+};
+
+// Optional: Hook for just the lead data (commonly used)
+export const useLead = () => {
+  const { lead } = useLeads();
+  return lead;
+};
+
+// Optional: Hook for loading state (commonly used)
+export const useLeadLoading = () => {
+  const { isAllUsersDataLoading } = useLeads();
+  return isAllUsersDataLoading;
+};
+
+// Hook for lead details (commonly used in lead details page)
+export const useLeadDetails = () => {
+  const {
+    lead,
+    setLead,
+    isLeadDetailsLoading,
+    activeDetailsTab,
+    setActiveDetailsTab,
     fetchLead,
     handleSave,
     refreshLead,
@@ -213,32 +454,22 @@ export const LeadsProvider: React.FC<LeadDetailsProviderProps> = ({
     setAllTags,
     selectedTagIds,
     setSelectedTagIds,
+  } = useLeads();
+
+  return {
+    lead,
+    isLoading: isLeadDetailsLoading,
+    activeTab: activeDetailsTab,
+    setActiveTab: setActiveDetailsTab,
+    fetchLead,
+    handleSave,
+    refreshLead,
+    dropdownOptions,
+    stageOptions,
+    allTags,
+    setAllTags,
+    selectedTagIds,
+    setSelectedTagIds,
+    setLead,
   };
-
-  return (
-    <LeadDetailsContext.Provider value={value}>
-      {children}
-    </LeadDetailsContext.Provider>
-  );
-};
-
-// Custom hook to use the context
-export const useLeadDetails = (): LeadDetailsContextType => {
-  const context = useContext(LeadDetailsContext);
-  if (context === undefined) {
-    throw new Error("useLeadDetails must be used within a LeadDetailsProvider");
-  }
-  return context;
-};
-
-// Optional: Hook for just the lead data (commonly used)
-export const useLead = () => {
-  const { lead } = useLeadDetails();
-  return lead;
-};
-
-// Optional: Hook for loading state (commonly used)
-export const useLeadLoading = () => {
-  const { isLoading } = useLeadDetails();
-  return isLoading;
 };

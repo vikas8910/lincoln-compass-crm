@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,28 +8,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner"; // Use sonner toast consistently
-import {
-  FiBell,
-  FiSearch,
-  FiSettings,
-  FiUser,
-  FiMenu,
-  FiLogOut,
-} from "react-icons/fi";
+import { toast } from "sonner";
+import { FiLogOut } from "react-icons/fi";
 import { logout } from "@/services/auth/auth";
 
 const Header = () => {
-  const navigate = useNavigate();
   const { isMobile } = useSidebar();
-  const [searchQuery, setSearchQuery] = useState("");
-  const userType = localStorage.getItem("user_type") || "guest";
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.info(`Searching for: ${searchQuery}`);
-    // In a real app, this would trigger a search
-  };
+  // Mock user data - replace with actual user data from your auth context/store
+  const userEmail = "subramanian@lincoln-edu.ae";
+  const userName = "Subramanian Iyer";
+  const userInitial = userName.charAt(0).toUpperCase(); // "S"
 
   const handleLogout = async () => {
     await logout();
@@ -45,58 +32,40 @@ const Header = () => {
         <h1 className="font-bold text-xl text-primary">Lincoln CRM</h1>
       </div>
 
-      {/* <form onSubmit={handleSearch} className="hidden sm:flex items-center max-w-md w-full relative">
-        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input 
-          type="search" 
-          placeholder="Search leads, contacts, companies..."
-          className="pl-10 bg-secondary/50"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </form> */}
-
       <div className="flex items-center gap-3">
-        {/* <DropdownMenu>
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <FiBell className="h-5 w-5" />
+            <Button variant="ghost" className="flex items-center gap-2 h-10">
+              <div className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center text-white font-medium">
+                {userInitial}
+              </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <div className="p-2 text-center text-sm text-muted-foreground">
-              No new notifications
+          <DropdownMenuContent align="end" className="w-64 shadow-md">
+            <div className="flex items-center gap-3 p-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                {userInitial}
+              </div>
+              <div className="flex flex-col">
+                <p className="text-sm font-medium">{userName}</p>
+                <p className="text-xs text-muted-foreground">{userEmail}</p>
+              </div>
             </div>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
-
-        {/* <Button variant="ghost" size="icon">
-          <FiSettings className="h-5 w-5" />
-        </Button> */}
-
-        <DropdownMenu>
-          {/* <DropdownMenuTrigger asChild> */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={handleLogout}
-          >
-            <FiLogOut className="h-5 w-5" />
-          </Button>
-          {/* </DropdownMenuTrigger> */}
-          <DropdownMenuContent align="end">
-            {/* <div className="px-3 py-2">
-              <p className="text-sm font-medium">User Account</p>
-              <p className="text-xs text-muted-foreground">
-                {userType.charAt(0).toUpperCase() + userType.slice(1)} Role
-              </p>
-            </div> */}
-            {/* <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator /> */}
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Personal settings</DropdownMenuItem>
+            <DropdownMenuItem>Request demo</DropdownMenuItem>
+            <DropdownMenuItem>Knowledge base</DropdownMenuItem>
+            <DropdownMenuItem>Create support ticket</DropdownMenuItem>
+            <DropdownMenuItem>Privacy policy</DropdownMenuItem>
+            <DropdownMenuItem>Download mobile app</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-red-600 focus:text-red-600"
+            >
+              <FiLogOut className="mr-2 h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

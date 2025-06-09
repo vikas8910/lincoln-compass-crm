@@ -37,6 +37,7 @@ const LeadStaging = () => {
       setLead({ ...lead, leadStage: stage });
       toast.success("Lead stage updated successfully");
     } catch (e) {
+      console.log("Error => ", e);
       toast.error("Failed to update Lead stage");
     }
   };

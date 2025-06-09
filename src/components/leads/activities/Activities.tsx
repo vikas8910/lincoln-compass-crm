@@ -12,13 +12,13 @@ const ActivityTimeline = () => (
 );
 
 export const Activities = () => {
-  const [activeTab, setActiveTab] = useState("meetings");
+  const [activeTab, setActiveTab] = useState("notes");
 
   const tabs = [
     { id: "timeline", label: "Activity timeline", component: ActivityTimeline },
-    { id: "notes", label: "Notes", component: Notes },
-    { id: "tasks", label: "Tasks", component: Tasks },
-    { id: "meetings", label: "Meetings", component: Meetings },
+    { id: "notes", label: "Notes", component: Notes, count: 2 },
+    { id: "tasks", label: "Tasks", component: Tasks, count: 3 },
+    { id: "meetings", label: "Meetings", component: Meetings, count: 4 },
   ];
 
   const ActiveComponent =
@@ -27,28 +27,19 @@ export const Activities = () => {
   return (
     <div className="w-full">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 p-2">
         <nav className="flex space-x-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+              className={`py-2 px-1 border-b-2 font-bold text-sm transition-colors duration-200 ${
                 activeTab === tab.id
                   ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-black hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              {tab.label}
-              {/* {tab.count && (
-                <span
-                  className={`ml-1 ${
-                    activeTab === tab.id ? "text-blue-600" : "text-gray-400"
-                  }`}
-                >
-                  ({tab.count})
-                </span>
-              )} */}
+              {tab.label} ({tab.count})
             </button>
           ))}
         </nav>

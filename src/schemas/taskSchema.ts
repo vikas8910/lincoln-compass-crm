@@ -5,17 +5,30 @@ import { z } from "zod";
 export const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  taskType: z.string().min(1, "Task type is required"),
-  dueDate: z.coerce.date({
-    required_error: "Date is required",
-    invalid_type_error: "Invalid date format",
-  }),
+  taskType: z.string().optional(),
+  dueDate: z.union(
+    [
+      z.string().min(1, "Date is required"),
+      z.coerce.date({
+        required_error: "Date is required",
+        invalid_type_error: "Invalid date format",
+      }),
+    ],
+    {
+      required_error: "Date is required",
+      invalid_type_error: "Invalid date format",
+    }
+  ),
   dueTime: z.date().optional(),
   outcome: z.string().optional(),
-  owner: z.string().min(1, "Owner is required"),
-  relatedTo: z.array(z.any()).optional(),
-  collaborators: z.array(z.any()).optional(),
-  markAsCompleted: z.boolean().optional(),
+  ownerId: z.number({
+    required_error: "Owner is required",
+  }),
+  relatedLeadIds: z
+    .array(z.number())
+    .min(1, "At least one related record is required"),
+  collaboratorsId: z.array(z.number()).optional(),
+  completed: z.boolean().optional(),
 });
 
 // Type inference for TypeScript

@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { useForm, useController } from "react-hook-form";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { X, Calendar, Clock, User, ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
 import { DateTimePicker } from "./DateTimePicker";
 import { TaskFormData, taskFormSchema } from "@/schemas/taskSchema";
 import {
@@ -13,107 +12,239 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { useLeads } from "@/context/LeadsProvider";
+import { getAvatarColors } from "@/lib/utils";
+import { Task } from "@/types/task";
+import { UserMultiSelect } from "./form/UserMultiSelect";
+import { Textarea } from "../ui/textarea";
+import { useUser } from "@/context/UserProvider";
 
-const Textarea = ({ className = "", ...props }) => (
-  <textarea
-    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${className}`}
-    {...props}
-  />
-);
+// Custom hook for form data transformation
+const useTaskFormData = (
+  initialData,
+  isEdit,
+  lead,
+  relatedToOptions,
+  ownerOptions,
+  currentUserId
+) => {
+  const getDefaultRelatedLead = () => {
+    if (lead?.id && relatedToOptions) {
+      const defaultLead = relatedToOptions.find(
+        (person) => person.id === lead.id
+      );
+      return defaultLead ? [defaultLead] : [];
+    }
+    return [];
+  };
 
-// Mock data
-const ownerOptions = [
-  { id: 1, name: "Subramanian Iyer", email: "subramanian@company.com" },
-  { id: 2, name: "John Doe", email: "john.doe@company.com" },
-  { id: 3, name: "Jane Smith", email: "jane.smith@company.com" },
-  { id: 4, name: "Mike Johnson", email: "mike.johnson@company.com" },
-];
+  const findItemsById = (ids, options) => {
+    if (!Array.isArray(ids) || !options) return [];
+    return ids
+      .map((id) => options.find((item) => item.id === id))
+      .filter(Boolean);
+  };
 
-const relatedToOptions = [
-  {
-    id: 1,
-    name: "Satya Jha",
-    email: "satya.jha.jnk@gmail.com",
-    avatar: "S",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    id: 2,
-    name: "Edvin Segundo Galdod",
-    email: "jhadezkee@gmail.com",
-    avatar: "E",
-    color: "bg-purple-100 text-purple-800",
-  },
-  {
-    id: 3,
-    name: "Ali Dabran",
-    email: "ali.jhanan909@gmail.com",
-    avatar: "A",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    id: 4,
-    name: "Sumaiya shaikh",
-    email: "sumaiya@company.com",
-    avatar: "S",
-    color: "bg-green-100 text-green-800",
-  },
-];
+  const transformInitialData = () => {
+    if (!initialData || !isEdit) {
+      const defaultRelatedLeads = getDefaultRelatedLead();
+      return {
+        formData: {
+          title: "",
+          description: "",
+          taskType: "",
+          dueDate: new Date(),
+          outcome: "",
+          ownerId: currentUserId,
+          relatedLeadIds: defaultRelatedLeads.map((lead) => lead.id), // Store IDs in form
+          collaboratorsId: [], // Empty array of IDs
+          completed: false,
+        },
+        selectedRelatedTo: defaultRelatedLeads,
+        selectedCollaborators: [],
+      };
+    }
 
+    // Transform initial data for editing
+    let relatedToObjects = [];
+    let collaboratorObjects = [];
+
+    // Handle relatedLeadIds - check if it's already objects or just IDs
+    if (Array.isArray(initialData.relatedLeadIds)) {
+      if (initialData.relatedLeadIds.length > 0) {
+        // Check if first item is an object (has name, email, id properties)
+        if (
+          typeof initialData.relatedLeadIds[0] === "object" &&
+          initialData.relatedLeadIds[0].id
+        ) {
+          relatedToObjects = initialData.relatedLeadIds;
+        } else {
+          // It's an array of IDs, find the corresponding objects
+          relatedToObjects = findItemsById(
+            initialData.relatedLeadIds,
+            relatedToOptions
+          );
+        }
+      }
+    }
+
+    // Handle collaboratorsId - check if it's already objects or just IDs
+    if (Array.isArray(initialData.collaboratorsId)) {
+      if (initialData.collaboratorsId.length > 0) {
+        // Check if first item is an object (has name, email, id properties)
+        if (
+          typeof initialData.collaboratorsId[0] === "object" &&
+          initialData.collaboratorsId[0].id
+        ) {
+          collaboratorObjects = initialData.collaboratorsId;
+        } else {
+          // It's an array of IDs, find the corresponding objects
+          collaboratorObjects = findItemsById(
+            initialData.collaboratorsId,
+            ownerOptions
+          );
+        }
+      }
+    }
+
+    return {
+      formData: {
+        title: initialData.title || "",
+        description: initialData.description || "",
+        taskType: initialData.taskType || "",
+        dueDate: initialData.dueDate || new Date(),
+        outcome: initialData.outcome || "",
+        ownerId: initialData.ownerId,
+        relatedLeadIds: relatedToObjects.map((obj) => obj.id), // Store IDs in form
+        collaboratorsId: collaboratorObjects.map((obj) => obj.id), // Store IDs in form
+        completed: initialData.completed || false,
+      },
+      selectedRelatedTo: relatedToObjects,
+      selectedCollaborators: collaboratorObjects,
+    };
+  };
+
+  return transformInitialData();
+};
+
+// Constants
 const taskTypeOptions = ["Call", "Email", "Meeting", "Task", "Follow-up"];
 const outcomeOptions = ["Successful", "Pending", "Failed", "Rescheduled"];
 
-export const TaskForm = ({ isOpen, setIsOpen }) => {
-  const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
-  const [showRelatedToDropdown, setShowRelatedToDropdown] = useState(false);
-  const [showTaskTypeDropdown, setShowTaskTypeDropdown] = useState(false);
-  const [showOutcomeDropdown, setShowOutcomeDropdown] = useState(false);
-  const [selectedRelatedTo, setSelectedRelatedTo] = useState([]);
+interface TaskFormProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  onSubmit: (data: TaskFormData) => void;
+  initialData?: Task | null;
+  isEdit?: boolean;
+}
+
+export const TaskForm: React.FC<TaskFormProps> = ({
+  isOpen,
+  setIsOpen,
+  onSubmit,
+  initialData = null,
+  isEdit = false,
+}) => {
+  const { user } = useUser();
+  const { allUsersData, users: ownerOptions, lead } = useLeads();
+  const relatedToOptions = allUsersData?.data;
+
+  // Use custom hook for data transformation - now passing ownerOptions
+  const {
+    formData,
+    selectedRelatedTo: initialRelatedTo,
+    selectedCollaborators: initialCollaborators,
+  } = useTaskFormData(
+    initialData,
+    isEdit,
+    lead,
+    relatedToOptions,
+    ownerOptions,
+    user?.id
+  );
+
+  const [selectedRelatedTo, setSelectedRelatedTo] = useState(initialRelatedTo);
+  const [selectedCollaborators, setSelectedCollaborators] =
+    useState(initialCollaborators);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      taskType: "",
-      dueDate: new Date(),
-      outcome: "",
-      owner: "",
-      relatedTo: [],
-      collaborators: [],
-      markAsCompleted: false,
-    },
+    defaultValues: formData,
     mode: "onChange",
   });
 
-  const handleRelatedToAdd = (person) => {
-    if (!selectedRelatedTo.find((p) => p.id === person.id)) {
-      const updatedRelatedTo = [...selectedRelatedTo, person];
-      setSelectedRelatedTo(updatedRelatedTo);
-      form.setValue("relatedTo", updatedRelatedTo);
+  // Reset form when dialog opens/closes or data changes
+  useEffect(() => {
+    if (isOpen) {
+      const { formData, selectedRelatedTo, selectedCollaborators } =
+        useTaskFormData(
+          initialData,
+          isEdit,
+          lead,
+          relatedToOptions,
+          ownerOptions,
+          user?.id
+        );
+
+      form.reset(formData);
+      setSelectedRelatedTo(selectedRelatedTo);
+      setSelectedCollaborators(selectedCollaborators);
     }
-    setShowRelatedToDropdown(false);
+  }, [
+    isOpen,
+    initialData,
+    isEdit,
+    form,
+    lead?.id,
+    relatedToOptions,
+    ownerOptions,
+    user?.id,
+  ]);
+
+  // Handle related to selection change
+  const handleRelatedToChange = (newSelection) => {
+    setSelectedRelatedTo(newSelection);
+    form.setValue(
+      "relatedLeadIds",
+      newSelection.map((item) => item.id), // Convert objects to IDs for form
+      { shouldValidate: true }
+    );
   };
 
-  const handleRelatedToRemove = (personId) => {
-    const updatedRelatedTo = selectedRelatedTo.filter((p) => p.id !== personId);
-    setSelectedRelatedTo(updatedRelatedTo);
-    form.setValue("relatedTo", updatedRelatedTo);
+  // Handle collaborators selection change
+  const handleCollaboratorsChange = (newSelection) => {
+    setSelectedCollaborators(newSelection);
+    form.setValue(
+      "collaboratorsId",
+      newSelection.map((item) => item.id) // Convert objects to IDs for form
+    );
   };
 
   const handleSubmit = (data: TaskFormData) => {
-    console.log("Task Data:", data);
-    setIsOpen(false);
-    form.reset();
-    setSelectedRelatedTo([]);
+    onSubmit({
+      ...data,
+      ownerId: Number(data.ownerId),
+      dueDate: data.dueDate,
+      // relatedLeadIds and collaboratorsId are arrays of numbers (IDs)
+    });
+    handleClose();
   };
 
-  const handleCancel = () => {
+  const handleClose = () => {
     setIsOpen(false);
     form.reset();
     setSelectedRelatedTo([]);
+    setSelectedCollaborators([]);
   };
 
   return (
@@ -122,7 +253,7 @@ export const TaskForm = ({ isOpen, setIsOpen }) => {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={handleCancel}
+          onClick={handleClose}
         />
       )}
 
@@ -134,9 +265,11 @@ export const TaskForm = ({ isOpen, setIsOpen }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Add task</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {isEdit ? "Edit task" : "Add task"}
+          </h2>
           <button
-            onClick={handleCancel}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={20} />
@@ -150,11 +283,12 @@ export const TaskForm = ({ isOpen, setIsOpen }) => {
           >
             {/* Content - Scrollable */}
             <div className="flex gap-2 divide-x-2 flex-1 overflow-hidden">
+              {/* Left Column */}
               <div className="p-4 flex-1 overflow-y-auto">
-                {/* Mark as completed checkbox */}
+                {/* Completed Checkbox */}
                 <FormField
                   control={form.control}
-                  name="markAsCompleted"
+                  name="completed"
                   render={({ field }) => (
                     <FormItem className="mb-6">
                       <div className="flex items-center">
@@ -176,12 +310,15 @@ export const TaskForm = ({ isOpen, setIsOpen }) => {
                   )}
                 />
 
+                {/* Title */}
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>
+                        Title <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter Name"
@@ -216,74 +353,47 @@ export const TaskForm = ({ isOpen, setIsOpen }) => {
 
                 {/* Task Type and Due Date Row */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  {/* Task Type */}
                   <FormField
                     control={form.control}
                     name="taskType"
-                    render={({ field, fieldState }) => (
-                      <FormItem className="relative">
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Task type</FormLabel>
-                        <FormControl>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setShowTaskTypeDropdown(!showTaskTypeDropdown)
-                            }
-                            className={`w-full px-3 py-2 border rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              fieldState.error
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            }`}
-                          >
-                            <span
-                              className={
-                                field.value ? "text-gray-900" : "text-gray-500"
-                              }
-                            >
-                              {field.value || "Select a type"}
-                            </span>
-                            <ChevronDown size={16} />
-                          </button>
-                        </FormControl>
-                        <FormMessage />
-
-                        {showTaskTypeDropdown && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
                             {taskTypeOptions.map((type) => (
-                              <button
-                                key={type}
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(type);
-                                  setShowTaskTypeDropdown(false);
-                                }}
-                                className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm"
-                              >
+                              <SelectItem key={type} value={type}>
                                 {type}
-                              </button>
+                              </SelectItem>
                             ))}
-                          </div>
-                        )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  {/* Due Date */}
                   <FormField
                     control={form.control}
                     name="dueDate"
-                    render={({ field, fieldState }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>
                           Due date <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <DateTimePicker
-                              date={field.value}
-                              onChange={field.onChange}
-                            />
-                          </div>
+                          <DateTimePicker
+                            date={new Date(field.value)}
+                            onChange={field.onChange}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -296,217 +406,108 @@ export const TaskForm = ({ isOpen, setIsOpen }) => {
                   control={form.control}
                   name="outcome"
                   render={({ field }) => (
-                    <FormItem className="mb-6 relative">
+                    <FormItem className="mb-6">
                       <FormLabel>Outcome</FormLabel>
-                      <FormControl>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowOutcomeDropdown(!showOutcomeDropdown)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <span
-                            className={
-                              field.value ? "text-gray-900" : "text-gray-500"
-                            }
-                          >
-                            {field.value || "Select an outcome"}
-                          </span>
-                          <ChevronDown size={16} />
-                        </button>
-                      </FormControl>
-
-                      {showOutcomeDropdown && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an outcome" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
                           {outcomeOptions.map((outcome) => (
-                            <button
-                              key={outcome}
-                              type="button"
-                              onClick={() => {
-                                field.onChange(outcome);
-                                setShowOutcomeDropdown(false);
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm"
-                            >
+                            <SelectItem key={outcome} value={outcome}>
                               {outcome}
-                            </button>
+                            </SelectItem>
                           ))}
-                        </div>
-                      )}
+                        </SelectContent>
+                      </Select>
                     </FormItem>
                   )}
                 />
               </div>
 
+              {/* Right Column */}
               <div className="p-4 w-80 overflow-y-auto">
                 {/* Owner */}
                 <FormField
                   control={form.control}
-                  name="owner"
-                  render={({ field, fieldState }) => (
-                    <FormItem className="mb-4 relative">
-                      <FormLabel>Owner</FormLabel>
-                      <FormControl>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowOwnerDropdown(!showOwnerDropdown)
-                          }
-                          className={`w-full px-3 py-2 border rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            fieldState.error
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          <span
-                            className={
-                              field.value ? "text-gray-900" : "text-gray-500"
-                            }
-                          >
-                            {field.value || "Select owner"}
-                          </span>
-                          <div className="flex items-center">
-                            {field.value && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  field.onChange("");
-                                }}
-                                className="mr-2 text-gray-400 hover:text-gray-600"
-                              >
-                                <X size={14} />
-                              </button>
-                            )}
-                            <ChevronDown size={16} />
-                          </div>
-                        </button>
-                      </FormControl>
-                      <FormMessage />
-
-                      {showOwnerDropdown && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                  name="ownerId"
+                  render={({ field }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>
+                        Owner <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value ? field.value.toString() : ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select owner" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
                           {ownerOptions.map((owner) => (
-                            <button
+                            <SelectItem
                               key={owner.id}
-                              type="button"
-                              onClick={() => {
-                                field.onChange(owner.name);
-                                setShowOwnerDropdown(false);
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm"
+                              value={owner.id.toString()}
                             >
                               {owner.name}
-                            </button>
+                            </SelectItem>
                           ))}
-                        </div>
-                      )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Related to */}
-                <div className="mb-4 relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Related to ({selectedRelatedTo.length}){" "}
-                    <span className="text-blue-500 cursor-pointer">ⓘ</span>
-                  </label>
-
-                  {/* Selected chips */}
-                  {selectedRelatedTo.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {selectedRelatedTo.map((person) => (
-                        <div
-                          key={person.id}
-                          className={`${person.color} px-2 py-1 rounded-full text-xs flex items-center gap-1`}
-                        >
-                          <span className="w-4 h-4 rounded-full bg-current bg-opacity-20 flex items-center justify-center text-xs font-medium">
-                            {person.avatar}
-                          </span>
-                          {person.name}
-                          <button
-                            type="button"
-                            onClick={() => handleRelatedToRemove(person.id)}
-                            className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
-                          >
-                            <X size={10} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                {/* Related To - Using UserMultiSelect */}
+                <FormField
+                  control={form.control}
+                  name="relatedLeadIds"
+                  render={() => (
+                    <FormItem>
+                      <UserMultiSelect
+                        label="Related to"
+                        placeholder="Click to select records"
+                        users={relatedToOptions || []}
+                        selectedUsers={selectedRelatedTo}
+                        onSelectionChange={handleRelatedToChange}
+                        getAvatarColors={getAvatarColors}
+                        searchPlaceholder="Search leads..."
+                        emptyMessage="No leads found."
+                        required
+                      />
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowRelatedToDropdown(!showRelatedToDropdown)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
-                  >
-                    Click to select records
-                    <ChevronDown size={16} />
-                  </button>
-
-                  {showRelatedToDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                      <div className="p-2 border-b border-gray-200">
-                        <h4 className="font-medium text-sm text-gray-900">
-                          Leads
-                        </h4>
-                      </div>
-                      <div className="max-h-40 overflow-y-auto">
-                        {relatedToOptions.map((person) => (
-                          <button
-                            key={person.id}
-                            type="button"
-                            onClick={() => handleRelatedToAdd(person)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                            disabled={selectedRelatedTo.find(
-                              (p) => p.id === person.id
-                            )}
-                          >
-                            <div
-                              className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center text-xs font-medium`}
-                            >
-                              {person.avatar}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-900">
-                                {person.name}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {person.email}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Collaborators */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Collaborators (0)
-                  </label>
-                  <button
-                    type="button"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    Select collaborators
-                  </button>
-                </div>
+                {/* Collaborators - Using UserMultiSelect */}
+                <UserMultiSelect
+                  label="Collaborators"
+                  placeholder="Select collaborators"
+                  users={ownerOptions || []}
+                  selectedUsers={selectedCollaborators}
+                  onSelectionChange={handleCollaboratorsChange}
+                  getAvatarColors={getAvatarColors}
+                  searchPlaceholder="Search team members..."
+                  emptyMessage="No team members found."
+                />
               </div>
             </div>
 
-            {/* Footer Buttons - Fixed at bottom */}
+            {/* Footer */}
             <div className="flex justify-end gap-3 p-4 border-t border-gray-200 bg-white flex-shrink-0">
-              <Button variant="outline" onClick={handleCancel}>
+              <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button onClick={form.handleSubmit(handleSubmit)}>Save</Button>
+              <Button type="submit">{isEdit ? "Update" : "Save"}</Button>
             </div>
           </form>
         </Form>

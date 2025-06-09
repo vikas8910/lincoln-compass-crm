@@ -6,11 +6,11 @@ import Leads from "./pages/dashboard/Leads";
 import RolesPermissions from "./pages/dashboard/RolesPermissions";
 import SalesOfficerRoles from "./pages/dashboard/SalesOfficerRoles";
 import LeadDetails from "./pages/lead/LeadDetails";
-import { LeadsProvider } from "./context/LeadsProvider";
 import Permissions from "./pages/dashboard/Permissions";
 import { useAuthoritiesList } from "./hooks/useAuthoritiesList";
 import { PermissionsEnum } from "./lib/constants";
 import NotHavingPermissions from "./pages/NotHavingPermissions";
+import { LeadsLayout } from "./components/layout/LeadsLayout";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -75,24 +75,10 @@ const AppRoutes = () => {
         {authoritiesList.some((authority) =>
           authority.startsWith("leads:")
         ) && (
-          <>
-            <Route
-              path="/leads"
-              element={<ProtectedRoute element={<Leads />} />}
-            />
-            <Route
-              path="/lead-details/:leadId"
-              element={
-                <ProtectedRoute
-                  element={
-                    <LeadsProvider initialStatusId="1">
-                      <LeadDetails />
-                    </LeadsProvider>
-                  }
-                />
-              }
-            />
-          </>
+          <Route element={<ProtectedRoute element={<LeadsLayout />} />}>
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/lead-details/:leadId" element={<LeadDetails />} />
+          </Route>
         )}
 
         <Route
