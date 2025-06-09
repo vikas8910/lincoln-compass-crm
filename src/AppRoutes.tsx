@@ -37,7 +37,7 @@ const AppRoutes = () => {
     }
 
     // Check if user has manage roles permission
-    if (authoritiesList.includes(PermissionsEnum.MANAGE_ROLES)) {
+    if (authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW)) {
       return "/dashboard";
     }
 
@@ -104,7 +104,7 @@ const AppRoutes = () => {
         <Route
           path="/dashboard"
           element={
-            authoritiesList.includes(PermissionsEnum.MANAGE_ROLES) ? (
+            authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW) ? (
               <ProtectedRoute element={<Dashboard />} />
             ) : (
               <Navigate to={getDefaultRoute()} replace />
@@ -112,7 +112,7 @@ const AppRoutes = () => {
           }
         />
 
-        {authoritiesList.includes(PermissionsEnum.MANAGE_ROLES) && (
+        {authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW) && (
           <>
             <Route
               path="/roles"

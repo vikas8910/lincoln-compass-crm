@@ -17,7 +17,7 @@ const MainSidebar = () => {
   const { isExpanded, setIsExpanded } = useSidebarContext();
 
   const menuItems = [
-    ...(authoritiesList.includes(PermissionsEnum.MANAGE_ROLES)
+    ...(authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW)
       ? [
           {
             title: "Dashboard",
@@ -40,7 +40,7 @@ const MainSidebar = () => {
           },
         ]
       : []),
-    ...(authoritiesList.includes(PermissionsEnum.MANAGE_ROLES)
+    ...(authoritiesList.includes(PermissionsEnum.MANAGE_ROLES_VIEW)
       ? [
           {
             title: "Roles & Permissions",
