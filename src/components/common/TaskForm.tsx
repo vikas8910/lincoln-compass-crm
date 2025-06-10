@@ -27,6 +27,7 @@ import { Task } from "@/types/task";
 import { UserMultiSelect } from "./form/UserMultiSelect";
 import { Textarea } from "../ui/textarea";
 import { useUser } from "@/context/UserProvider";
+import { Lead } from "@/types/lead";
 
 // Custom hook for form data transformation
 const useTaskFormData = (
@@ -35,9 +36,16 @@ const useTaskFormData = (
   lead,
   relatedToOptions,
   ownerOptions,
-  currentUserId
+  currentUserId,
+  preSelectedLeads = []
 ) => {
   const getDefaultRelatedLead = () => {
+    // If we have pre-selected leads, use them
+    if (preSelectedLeads.length > 0) {
+      return preSelectedLeads;
+    }
+
+    // Otherwise, use the existing logic
     if (lead?.id && relatedToOptions) {
       const defaultLead = relatedToOptions.find(
         (person) => person.id === lead.id
@@ -66,7 +74,7 @@ const useTaskFormData = (
           outcome: "",
           ownerId: currentUserId,
           relatedLeadIds: defaultRelatedLeads.map((lead) => lead.id), // Store IDs in form
-          collaboratorsId: [], // Empty array of IDs
+          collaboratorIds: [], // Empty array of IDs
           completed: false,
         },
         selectedRelatedTo: defaultRelatedLeads,
@@ -98,18 +106,18 @@ const useTaskFormData = (
     }
 
     // Handle collaboratorsId - check if it's already objects or just IDs
-    if (Array.isArray(initialData.collaboratorsId)) {
-      if (initialData.collaboratorsId.length > 0) {
+    if (Array.isArray(initialData.collaboratorIds)) {
+      if (initialData.collaboratorIds.length > 0) {
         // Check if first item is an object (has name, email, id properties)
         if (
-          typeof initialData.collaboratorsId[0] === "object" &&
-          initialData.collaboratorsId[0].id
+          typeof initialData.collaboratorIds[0] === "object" &&
+          initialData.collaboratorIds[0].id
         ) {
-          collaboratorObjects = initialData.collaboratorsId;
+          collaboratorObjects = initialData.collaboratorIds;
         } else {
           // It's an array of IDs, find the corresponding objects
           collaboratorObjects = findItemsById(
-            initialData.collaboratorsId,
+            initialData.collaboratorIds,
             ownerOptions
           );
         }
@@ -125,7 +133,7 @@ const useTaskFormData = (
         outcome: initialData.outcome || "",
         ownerId: initialData.ownerId,
         relatedLeadIds: relatedToObjects.map((obj) => obj.id), // Store IDs in form
-        collaboratorsId: collaboratorObjects.map((obj) => obj.id), // Store IDs in form
+        collaboratorIds: collaboratorObjects.map((obj) => obj.id), // Store IDs in form
         completed: initialData.completed || false,
       },
       selectedRelatedTo: relatedToObjects,
@@ -146,6 +154,7 @@ interface TaskFormProps {
   onSubmit: (data: TaskFormData) => void;
   initialData?: Task | null;
   isEdit?: boolean;
+  preSelectedLeads?: Lead[];
 }
 
 export const TaskForm: React.FC<TaskFormProps> = ({
@@ -154,6 +163,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   onSubmit,
   initialData = null,
   isEdit = false,
+  preSelectedLeads = [],
 }) => {
   const { user } = useUser();
   const { allUsersData, users: ownerOptions, lead } = useLeads();
@@ -170,7 +180,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     lead,
     relatedToOptions,
     ownerOptions,
-    user?.id
+    user?.id,
+    preSelectedLeads // Pass the pre-selected leads
   );
 
   const [selectedRelatedTo, setSelectedRelatedTo] = useState(initialRelatedTo);
@@ -193,7 +204,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
           lead,
           relatedToOptions,
           ownerOptions,
-          user?.id
+          user?.id,
+          preSelectedLeads // FIXED: Pass preSelectedLeads here too
         );
 
       form.reset(formData);
@@ -225,7 +237,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   const handleCollaboratorsChange = (newSelection) => {
     setSelectedCollaborators(newSelection);
     form.setValue(
-      "collaboratorsId",
+      "collaboratorIds",
       newSelection.map((item) => item.id) // Convert objects to IDs for form
     );
   };

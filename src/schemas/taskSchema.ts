@@ -27,7 +27,7 @@ export const taskFormSchema = z.object({
   relatedLeadIds: z
     .array(z.number())
     .min(1, "At least one related record is required"),
-  collaboratorsId: z.array(z.number()).optional(),
+  collaboratorIds: z.array(z.number()).optional(),
   completed: z.boolean().optional(),
 });
 

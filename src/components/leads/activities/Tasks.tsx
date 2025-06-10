@@ -28,7 +28,6 @@ interface Tab {
 }
 
 export const Tasks = () => {
-  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -57,8 +56,6 @@ export const Tasks = () => {
 
     return modifiedFilters;
   };
-
-  console.log("Selected Task => ", selectedTask);
 
   const { allUsersData, isAllUsersDataLoading, error, refetch } = useGetTasks({
     sorting,
@@ -115,9 +112,20 @@ export const Tasks = () => {
   };
 
   const handleMarkComplete = async (id: number, data) => {
-    await updateTask(id, { ...data, completed: true });
-    refetch();
-    toast.success("Task updated successfully");
+    try {
+      const relatedLeadIds = data?.relatedLeadIds.map((item) => item.id);
+      const collaboratorIds = data?.collaboratorIds.map((item) => item.id);
+      await updateTask(id, {
+        ...data,
+        completed: true,
+        relatedLeadIds,
+        collaboratorIds,
+      });
+      refetch();
+      toast.success("Task updated successfully");
+    } catch (error) {
+      toast.error("Failed to update task");
+    }
   };
 
   // Memoize the columns to prevent infinite re-renders
