@@ -2,6 +2,7 @@ import { TaskForm } from "@/components/common/TaskForm";
 import TanStackBasicTable from "@/components/tablec/TanStackBasicTable";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserProvider";
+import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
 import { useGetTasks } from "@/hooks/useGetTasks";
 import { INITIAL_PAGINATION } from "@/lib/constants";
 import { formatDateTime } from "@/lib/utils";
@@ -13,6 +14,7 @@ import {
   PaginationState,
   SortingState,
 } from "@tanstack/react-table";
+import clsx from "clsx";
 import { useState, useMemo } from "react";
 import { FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -40,6 +42,7 @@ export const Tasks = () => {
   // State for selected task
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const taskPermission = useActivitiesPermissions();
 
   // Create modified column filters based on active tab
   const getModifiedColumnFilters = () => {
@@ -56,8 +59,6 @@ export const Tasks = () => {
 
     return modifiedFilters;
   };
-
-  console.log("Selected Task => ", selectedTask);
 
   const { allUsersData, isAllUsersDataLoading, error, refetch } = useGetTasks({
     sorting,
@@ -129,8 +130,17 @@ export const Tasks = () => {
           return (
             <div className="py-3">
               <span
-                className="text-[#2c5cc5] font-bold whitespace-nowrap py-3 cursor-pointer hover:text-[#1e3a8a] hover:underline transition-colors"
-                onClick={() => handleTaskTitleClick(row.original)}
+                className={clsx(
+                  "whitespace-nowrap py-3",
+                  taskPermission.canEditTasks
+                    ? "text-[#2c5cc5] font-bold cursor-pointer hover:text-[#1e3a8a] hover:underline transition-colors"
+                    : ""
+                )}
+                onClick={
+                  taskPermission.canEditTasks
+                    ? () => handleTaskTitleClick(row.original)
+                    : undefined
+                }
               >
                 {row.original.title}
               </span>
@@ -252,7 +262,9 @@ export const Tasks = () => {
             </button>
           ))}
         </nav>
-        <Button onClick={handleAddNewTask}>Add Task</Button>
+        {taskPermission.canCreateMeetings && (
+          <Button onClick={handleAddNewTask}>Add Task</Button>
+        )}
       </div>
 
       {/* Table Container with proper constraints */}

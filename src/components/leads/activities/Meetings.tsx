@@ -18,6 +18,8 @@ import {
 import { useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
+import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
+import clsx from "clsx";
 
 // Define tab types
 type TabType = "all" | "upcoming" | "completed" | "overdue";
@@ -42,6 +44,7 @@ export const Meetings = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const { user } = useUser();
   const { lead } = useLeadDetails();
+  const meetingPermission = useActivitiesPermissions();
 
   // Create modified column filters based on active tab
   const getModifiedColumnFilters = () => {
@@ -127,8 +130,17 @@ export const Meetings = () => {
           return (
             <div className="py-3">
               <span
-                className="text-[#2c5cc5] font-bold whitespace-nowrap py-3 cursor-pointer hover:text-[#1e3a8a] hover:underline transition-colors"
-                onClick={() => handleTaskTitleClick(row.original)}
+                className={clsx(
+                  "whitespace-nowrap py-3",
+                  meetingPermission.canEditMeetings
+                    ? "text-[#2c5cc5] font-bold cursor-pointer hover:text-[#1e3a8a] hover:underline transition-colors"
+                    : ""
+                )}
+                onClick={
+                  meetingPermission.canEditMeetings
+                    ? () => handleTaskTitleClick(row.original)
+                    : undefined
+                }
               >
                 {row.original.title}
               </span>
@@ -264,7 +276,9 @@ export const Meetings = () => {
             </button>
           ))}
         </nav>
-        <Button onClick={handleAddNewTask}>Add Meeting</Button>
+        {meetingPermission.canCreateMeetings && (
+          <Button onClick={handleAddNewTask}>Add Meeting</Button>
+        )}
       </div>
 
       {/* Table Container with proper constraints */}
