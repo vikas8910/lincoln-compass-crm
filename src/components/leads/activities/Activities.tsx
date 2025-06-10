@@ -58,7 +58,7 @@ export const Activities = () => {
                   : "border-transparent text-black hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              {tab.label} ({tab.count})
+              {tab.label}
             </button>
           ))}
         </nav>

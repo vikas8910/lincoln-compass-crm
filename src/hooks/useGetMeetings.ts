@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { AxiosError } from "axios";
-import axiosInstance from "@/services/axios/axios-base-service";
-import { UseTasksInput, UseTasksResponse } from "@/types/task";
 import { UseMeetingInput, UseMeetingsResponse } from "@/types/meetings";
-import { meetings } from "@/data/data";
+import axiosInstance from "@/services/axios/axios-base-service";
+import { useLeadDetails } from "@/context/LeadsProvider";
 
 const getAllMeetingsFn = async ({
   pagination,
   sorting,
   columnFilters,
+  leadId,
 }: UseMeetingInput): Promise<UseMeetingsResponse> => {
   // set pagination
   const page = pagination.pageIndex,
@@ -73,36 +73,27 @@ const getAllMeetingsFn = async ({
   // Add sorting parameter
   if (sorting_param) queryParams.append("sortBy", sorting_param);
 
+  // Add leadId filter
+  // if (leadId) queryParams.append("leadId", leadId);
+
   // Add pagination parameters
   queryParams.append("page", page.toString());
   queryParams.append("size", per_page.toString());
-
-  // const res = await axiosInstance.get("/api/tasks");
-  //   const res = await axiosInstance.get(`/api/tasks?${queryParams.toString()}`);
-
-  //   const data = {
-  //     data: res.data.tasks,
-  //     limit: res.data.page.size,
-  //     page: res.data.page.number,
-  //     total: res.data.page.totalElements,
-  //     total_filtered: res.data.page.totalElements,
-  //     allCount: res.data.allCount,
-  //     upcomingCount: res.data.upcomingCount,
-  //     completedCount: res.data.completedCount,
-  //     overdueCount: res.data.overdueCount,
-  //     appliedFilters: res?.data?.appliedFilters || {},
-  //   };
+  const res = await axiosInstance.get(
+    `/api/v1/meetings?leadId=${leadId}&${queryParams.toString()}`
+  );
 
   const data = {
-    data: meetings,
-    limit: 10,
-    page: 0,
-    total: 11,
-    total_filtered: 11,
-    allCount: 5,
-    upcomingCount: 2,
-    completedCount: 3,
-    appliedFilters: {},
+    data: res.data.meetings,
+    limit: res.data.page.size,
+    page: res.data.page.number,
+    total: res.data.page.totalElements,
+    total_filtered: res.data.page.totalElements,
+    allCount: res.data.allCount,
+    upcomingCount: res.data.upcomingCount,
+    completedCount: res.data.completedCount,
+    overdueCount: res.data.overdueCount,
+    appliedFilters: res?.data?.appliedFilters || {},
   };
 
   return data;
@@ -112,9 +103,10 @@ export const useGetMeetings = ({
   pagination,
   sorting,
   columnFilters,
-}: UseTasksInput) => {
+  leadId,
+}: UseMeetingInput) => {
   const [allMeetingsData, setAllMeetingsData] =
-    useState<UseTasksResponse | null>(null);
+    useState<UseMeetingsResponse | null>(null);
   const [isAllMettingsDataLoading, setIsAllMettingsDataLoading] =
     useState<boolean>(false);
   const [error, setError] = useState<AxiosError | null>(null);
@@ -133,6 +125,7 @@ export const useGetMeetings = ({
           pagination,
           sorting,
           columnFilters,
+          leadId,
         });
 
         setAllMeetingsData(data);
@@ -166,6 +159,7 @@ export const useGetMeetings = ({
           pagination,
           sorting,
           columnFilters,
+          leadId,
         });
 
         setAllMeetingsData(data);

@@ -33,9 +33,9 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { useLeads } from "@/context/LeadsProvider";
 import { getAvatarColors } from "@/lib/utils";
-import { Task } from "@/types/task";
 import { MeetingFormData, meetingFormSchema } from "@/schemas/meeting-schema";
 import { Meeting } from "@/types/meetings";
+import { getCollaborators } from "@/services/activities/meetings";
 
 const Textarea = ({ className = "", ...props }) => (
   <textarea
@@ -45,10 +45,15 @@ const Textarea = ({ className = "", ...props }) => (
 );
 
 const collaboratorOptions = [
-  { id: 1, name: "Alice Johnson", email: "alice@company.com" },
-  { id: 2, name: "Bob Wilson", email: "bob@company.com" },
-  { id: 3, name: "Carol Davis", email: "carol@company.com" },
-  { id: 4, name: "David Brown", email: "david@company.com" },
+  {
+    id: 1,
+    firstName: "Alice",
+    lastName: "Johnson",
+    email: "alice@company.com",
+  },
+  { id: 2, firstName: "Bob", lastName: "Wilson", email: "bob@company.com" },
+  { id: 3, firstName: "Carol", lastName: "Davis", email: "carol@company.com" },
+  { id: 4, firstName: "David", lastName: "Brown", email: "david@company.com" },
 ];
 
 const timeZoneOptions = [
@@ -82,8 +87,43 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
   const [openCollaborators, setOpenCollaborators] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
   const [showMeetingNotes, setShowMeetingNotes] = useState(false);
+  const [rawCollaboratorOptions, setRawCollaboratorOptions] = useState([]);
+  const [collaboratorOptions, setCollaboratorOptions] = useState([]);
 
   const relatedToOptions = allUsersData?.data;
+
+  useEffect(() => {
+    const fetchCollaborators = async () => {
+      try {
+        const collaborators = await getCollaborators();
+        setRawCollaboratorOptions(
+          collaborators.leads
+            .map((lead) => ({
+              id: lead.id,
+              firstName: lead.firstName,
+              lastName: lead.lastName,
+              email: lead.email,
+            }))
+            .concat(
+              collaborators.users.map((user) => ({
+                id: user.id,
+                firstName: user.name.split(" ")[0],
+                lastName: user.name.split(" ").slice(1).join(" "),
+                email: user.email,
+              }))
+            )
+        );
+      } catch (error) {
+        console.error("Error fetching collaborators:", error);
+      }
+    };
+
+    fetchCollaborators();
+  }, []);
+
+  useEffect(() => {
+    setCollaboratorOptions(rawCollaboratorOptions);
+  }, [rawCollaboratorOptions]);
 
   // Helper function to get default related lead
   const getDefaultRelatedLead = () => {
@@ -102,11 +142,11 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
       title: "",
       description: "",
       timeZone: "",
-      fromDate: new Date(),
-      toDate: new Date(),
+      from: new Date(),
+      to: new Date(),
       outcome: "",
-      relatedTo: lead?.id ? [lead.id] : [],
-      collaboratorsId: [],
+      relatedLeadIds: lead?.id ? [lead.id] : [],
+      attendees: [],
       allDay: false,
       videoConferencing: "zoom",
     },
@@ -132,15 +172,15 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     if (isOpen) {
       if (initialData && isEdit) {
         let relatedToObjects = [];
-        if (initialData.relatedTo) {
-          if (Array.isArray(initialData.relatedTo)) {
+        if (initialData.relatedLeads) {
+          if (Array.isArray(initialData.relatedLeads)) {
             // Check if first item is an object or an ID
-            if (initialData.relatedTo.length > 0) {
-              if (typeof initialData.relatedTo[0] === "object") {
-                relatedToObjects = initialData.relatedTo;
+            if (initialData.relatedLeads.length > 0) {
+              if (typeof initialData.relatedLeads[0] === "object") {
+                relatedToObjects = initialData.relatedLeads;
               } else {
                 // Array of IDs
-                relatedToObjects = findRelatedToById(initialData.relatedTo);
+                relatedToObjects = findRelatedToById(initialData.relatedLeads);
               }
             }
           }
@@ -148,15 +188,15 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
 
         // Handle collaborators - convert IDs to objects if needed
         let collaboratorObjects = [];
-        if (initialData.collaboratorsId) {
-          if (Array.isArray(initialData.collaboratorsId)) {
-            if (initialData.collaboratorsId.length > 0) {
-              if (typeof initialData.collaboratorsId[0] === "object") {
-                collaboratorObjects = initialData.collaboratorsId;
+        if (initialData.attendees) {
+          if (Array.isArray(initialData.attendees)) {
+            if (initialData.attendees.length > 0) {
+              if (typeof initialData.attendees[0] === "object") {
+                collaboratorObjects = initialData.attendees;
               } else {
                 // Array of IDs
                 collaboratorObjects = findCollaboratorsById(
-                  initialData.collaboratorsId
+                  initialData.attendees
                 );
               }
             }
@@ -168,15 +208,16 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
           title: initialData.title || "",
           description: initialData.description || "",
           timeZone: initialData.timeZone || "",
-          fromDate: initialData.fromDate || new Date(),
-          toDate: initialData.toDate || new Date(),
+          from: initialData.from || new Date(),
+          to: initialData.to || new Date(),
           outcome: initialData.outcome || "",
-          relatedTo: relatedToObjects.map((obj) => obj.id), // Store as array of IDs
-          collaboratorsId: collaboratorObjects.map((obj) => obj.id), // Store as array of IDs
+          relatedLeadIds: relatedToObjects.map((obj) => obj.id), // Store as array of IDs
+          attendees: collaboratorObjects.map((obj) => obj.id), // Store as array of IDs
           allDay: initialData.allDay || false,
           location: initialData.location || "",
           meetingNotes: initialData.meetingNotes || "",
-          videoConferencing: initialData.videoConferencing || "zoom",
+          videoConferencing:
+            (initialData.videoConferencing as "" | "zoom" | "teams") || "zoom",
         });
 
         setSelectedRelatedTo(relatedToObjects);
@@ -188,11 +229,11 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
           title: "",
           description: "",
           timeZone: "",
-          fromDate: new Date(),
-          toDate: new Date(),
+          from: new Date(),
+          to: new Date(),
           outcome: "",
-          relatedTo: defaultRelatedLeads.map((lead) => lead.id),
-          collaboratorsId: [],
+          relatedLeadIds: defaultRelatedLeads.map((lead) => lead.id),
+          attendees: [],
           allDay: false,
           videoConferencing: "zoom",
         });
@@ -207,7 +248,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
       const updatedRelatedTo = [...selectedRelatedTo, person];
       setSelectedRelatedTo(updatedRelatedTo);
       const updatedIds = updatedRelatedTo.map((p) => p.id);
-      form.setValue("relatedTo", updatedIds, { shouldValidate: true });
+      form.setValue("relatedLeadIds", updatedIds, { shouldValidate: true });
     }
   };
 
@@ -215,7 +256,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     const updatedRelatedTo = selectedRelatedTo.filter((p) => p.id !== personId);
     setSelectedRelatedTo(updatedRelatedTo);
     const updatedIds = updatedRelatedTo.map((p) => p.id);
-    form.setValue("relatedTo", updatedIds, { shouldValidate: true });
+    form.setValue("relatedLeadIds", updatedIds, { shouldValidate: true });
   };
 
   const handleCollaboratorAdd = (person) => {
@@ -223,8 +264,13 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
       const updatedCollaborators = [...selectedCollaborators, person];
       setSelectedCollaborators(updatedCollaborators);
       form.setValue(
-        "collaboratorsId",
-        updatedCollaborators.map((p) => p.id)
+        "attendees",
+        updatedCollaborators.map(({ id, firstName, lastName, email }) => ({
+          id,
+          firstName,
+          lastName,
+          email,
+        }))
       );
     }
   };
@@ -235,19 +281,16 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     );
     setSelectedCollaborators(updatedCollaborators);
     form.setValue(
-      "collaboratorsId",
+      "attendees",
       updatedCollaborators.map((p) => p.id)
     );
   };
 
   const handleSubmit = (data: MeetingFormData) => {
-    alert(JSON.stringify(data, null, 2));
-    // onSubmit({
-    //   ...data,
-    //   ownerId: Number(data.ownerId),
-    //   dueDate: data.dueDate,
-    // });
-    // setIsOpen(false);
+    onSubmit({
+      ...data,
+    });
+    setIsOpen(false);
     form.reset();
     setSelectedRelatedTo([]);
     setSelectedCollaborators([]);
@@ -258,6 +301,19 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     form.reset();
     setSelectedRelatedTo([]);
     setSelectedCollaborators([]);
+  };
+
+  const handleCollaboratorSearch = (query: string) => {
+    if (query) {
+      const filteredCollaborators = rawCollaboratorOptions.filter(
+        (collaborator) =>
+          collaborator.firstName.toLowerCase().includes(query.toLowerCase()) ||
+          collaborator.lastName.toLowerCase().includes(query.toLowerCase())
+      );
+      setCollaboratorOptions(filteredCollaborators);
+    } else {
+      setCollaboratorOptions(rawCollaboratorOptions);
+    }
   };
 
   return (
@@ -326,7 +382,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                   {/* Due Date */}
                   <FormField
                     control={form.control}
-                    name="fromDate"
+                    name="from"
                     render={({ field, fieldState }) => (
                       <FormItem>
                         <FormLabel>
@@ -347,7 +403,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
 
                   <FormField
                     control={form.control}
-                    name="toDate"
+                    name="to"
                     render={({ field, fieldState }) => (
                       <FormItem>
                         <FormLabel>
@@ -604,7 +660,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                 {/* Related to */}
                 <FormField
                   control={form.control}
-                  name="relatedTo"
+                  name="relatedLeadIds"
                   render={({ field }) => (
                     <FormItem className="mb-4">
                       <FormLabel>
@@ -740,9 +796,9 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                           className="flex items-center gap-1"
                         >
                           <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-medium">
-                            {person.name.charAt(0)}
+                            {person.firstName.charAt(0)}
                           </div>
-                          {person.name}
+                          {person.firstName} {person.lastName}
                           <button
                             type="button"
                             onClick={() => handleCollaboratorRemove(person.id)}
@@ -772,34 +828,42 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="Search team members..." />
+                        <CommandInput
+                          placeholder="Search team members..."
+                          onValueChange={handleCollaboratorSearch}
+                        />
                         <CommandList>
                           <CommandEmpty>No team members found.</CommandEmpty>
                           <CommandGroup heading="Team Members">
-                            {collaboratorOptions.map((person) => {
+                            {collaboratorOptions.map((person, index) => {
                               const isSelected = selectedCollaborators.find(
-                                (p) => p.id === person.id
+                                (p) => p.email === person.email
                               );
 
                               return (
                                 <CommandItem
-                                  key={person.id}
-                                  value={`${person.name} ${person.email}`}
+                                  key={index}
+                                  value={`${person.firstName} ${person.lastName} ${person.email}`}
                                   onSelect={() => {
                                     if (!isSelected) {
                                       handleCollaboratorAdd(person);
                                     }
                                     setOpenCollaborators(false);
                                   }}
-                                  disabled={!!isSelected}
+                                  disabled={
+                                    !!isSelected ||
+                                    selectedRelatedTo.some(
+                                      (p) => p.email === person.email
+                                    )
+                                  }
                                 >
                                   <div className="flex items-center gap-2 w-full">
                                     <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-medium">
-                                      {person.name.charAt(0)}
+                                      {person.firstName.charAt(0)}
                                     </div>
                                     <div className="flex-1">
                                       <div className="text-sm font-medium">
-                                        {person.name}
+                                        {person.firstName} {person.lastName}
                                       </div>
                                       <div className="text-xs text-muted-foreground">
                                         {person.email}

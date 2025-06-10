@@ -1,4 +1,3 @@
-import EmptyState from "@/components/common/EmptyState";
 import { TaskForm } from "@/components/common/TaskForm";
 import TanStackBasicTable from "@/components/tablec/TanStackBasicTable";
 import { Button } from "@/components/ui/button";
