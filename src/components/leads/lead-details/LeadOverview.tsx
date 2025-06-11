@@ -6,12 +6,29 @@ import { NoteForm } from "@/components/common/NoteForm";
 import { useState } from "react";
 import { EditableFieldGrid } from "./EditableFieldGrid";
 import { LEAD_OVERVIEW_FIELDS } from "@/lib/constants";
+import { NoteData } from "../activities/Notes";
+import { createNote, updateNote } from "@/services/activities/notes";
+import { useUser } from "@/context/UserProvider";
 
 export const LeadOverview: React.FC<{
   onSave: (key: string, value: string | string[] | Date) => Promise<void>;
 }> = ({ onSave }) => {
   const { lead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useUser();
+  const handleSaveNote = async (noteData: NoteData, isEdit: boolean) => {
+    if (isEdit) {
+      await updateNote(noteData.id, user.id, {
+        description: noteData.description,
+        leadId: lead.id,
+      });
+    } else {
+      await createNote(user.id, {
+        description: noteData.description,
+        leadId: lead.id,
+      });
+    }
+  };
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       {/* Basic Info Card */}
@@ -52,7 +69,7 @@ export const LeadOverview: React.FC<{
         >
           <span className="text-gray-400"> add note here</span>
         </div>
-        <p className="text-sm text-gray-700 my-2">
+        {/* <p className="text-sm text-gray-700 my-2">
           {lead.recentNote || "No notes yet."}
         </p>
         <div className="flex items-center gap-5 text-gray-400 text-sm my-3">
@@ -61,7 +78,7 @@ export const LeadOverview: React.FC<{
             <span>Asif Mujawar</span>
           </div>
           <span>{new Date(lead.updatedAt).toLocaleString()}</span>
-        </div>
+        </div> */}
         {/* <Button variant="outline" className="text-blue-500">
           View All Notes
         </Button> */}
@@ -72,7 +89,7 @@ export const LeadOverview: React.FC<{
         setIsOpen={setIsOpen}
         relatedTo={`${lead.firstName} ${lead.lastName}`}
         editingNote={null}
-        onSave={() => {}}
+        onSave={handleSaveNote}
       />
     </div>
   );

@@ -478,9 +478,9 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (
 export const SIDEBAR_ITEMS = [
   { id: "details", label: "Lead Details", Icon: UserIcon },
   { id: "activities", label: "Activities", Icon: Activity },
-  { id: "conversations", label: "Conversations", Icon: MessageSquareMore },
+  // { id: "conversations", label: "Conversations", Icon: MessageSquareMore },
   { id: "files", label: "Files", Icon: Paperclip },
-  { id: "reminders", label: "Reminders", Icon: Hand },
+  // { id: "reminders", label: "Reminders", Icon: Hand },
 ];
 
 export const DROPDOWN_OPTIONS = {

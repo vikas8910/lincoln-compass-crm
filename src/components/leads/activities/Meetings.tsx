@@ -1,14 +1,14 @@
-import EmptyState from "@/components/common/EmptyState";
 import { MeetingForm } from "@/components/common/MeetingForm";
-import { TaskForm } from "@/components/common/TaskForm";
 import TanStackBasicTable from "@/components/tablec/TanStackBasicTable";
 import { Button } from "@/components/ui/button";
-import { useLead, useLeads } from "@/context/LeadsProvider";
-import { useGetTasks } from "@/hooks/useGetTasks";
+import { useLeadDetails } from "@/context/LeadsProvider";
+import { useUser } from "@/context/UserProvider";
+import { useGetMeetings } from "@/hooks/useGetMeetings";
 import { INITIAL_PAGINATION } from "@/lib/constants";
 import { formatDateTime } from "@/lib/utils";
-import { createTask, updateTask } from "@/services/activities/task";
-import { Task } from "@/types/task";
+import { saveMeeting, updateMeeting } from "@/services/activities/meetings";
+import { updateTask } from "@/services/activities/task";
+import { Meeting } from "@/types/meetings";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import {
   ColumnDef,
@@ -16,8 +16,10 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { useState, useMemo } from "react";
-import { FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { format } from "date-fns";
+import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
+import clsx from "clsx";
 
 // Define tab types
 type TabType = "all" | "upcoming" | "completed" | "overdue";
@@ -29,8 +31,6 @@ interface Tab {
 }
 
 export const Meetings = () => {
-  const { allMeetingsData, refetchMeetings, isAllMettingsDataLoading } =
-    useLeads();
   const [isOpen, setIsOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -39,10 +39,37 @@ export const Meetings = () => {
 
   // Tab state management
   const [activeTab, setActiveTab] = useState<TabType>("all");
-
   // State for selected task
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Meeting | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const { user } = useUser();
+  const { lead } = useLeadDetails();
+  const meetingPermission = useActivitiesPermissions();
+
+  // Create modified column filters based on active tab
+  const getModifiedColumnFilters = () => {
+    let modifiedFilters = [...columnFilters];
+
+    if (activeTab !== "all") {
+      // Remove existing status filter
+      modifiedFilters = modifiedFilters.filter(
+        (filter) => filter.id !== "statusFilter"
+      );
+      // Add new status filter based on active tab
+      modifiedFilters.push({ id: "statusFilter", value: activeTab });
+    }
+
+    return modifiedFilters;
+  };
+
+  const { allMeetingsData, refetch, isAllMettingsDataLoading } = useGetMeetings(
+    {
+      sorting,
+      columnFilters: getModifiedColumnFilters(),
+      pagination,
+      leadId: lead.id,
+    }
+  );
 
   // Define tabs with dynamic counts (you can update these counts from API response)
   const tabs: Tab[] = [
@@ -67,7 +94,7 @@ export const Meetings = () => {
   };
 
   // Handle task title click
-  const handleTaskTitleClick = (task: Task) => {
+  const handleTaskTitleClick = (task: Meeting) => {
     setSelectedTask(task);
     setIsEditMode(true);
     setIsOpen(true);
@@ -89,12 +116,12 @@ export const Meetings = () => {
 
   const handleMarkComplete = async (id: number, data) => {
     await updateTask(id, { ...data, completed: true });
-    refetchMeetings();
-    toast.success("Task updated successfully");
+    refetch();
+    toast.success("Meeting updated successfully");
   };
 
   // Memoize the columns to prevent infinite re-renders
-  const userColumns: ColumnDef<Task>[] = useMemo(
+  const meetingColumns: ColumnDef<Meeting, unknown>[] = useMemo(
     () => [
       {
         header: "Meeting",
@@ -103,8 +130,17 @@ export const Meetings = () => {
           return (
             <div className="py-3">
               <span
-                className="text-[#2c5cc5] font-bold whitespace-nowrap py-3 cursor-pointer hover:text-[#1e3a8a] hover:underline transition-colors"
-                onClick={() => handleTaskTitleClick(row.original)}
+                className={clsx(
+                  "whitespace-nowrap py-3",
+                  meetingPermission.canEditMeetings
+                    ? "text-[#2c5cc5] font-bold cursor-pointer hover:text-[#1e3a8a] hover:underline transition-colors"
+                    : ""
+                )}
+                onClick={
+                  meetingPermission.canEditMeetings
+                    ? () => handleTaskTitleClick(row.original)
+                    : undefined
+                }
               >
                 {row.original.title}
               </span>
@@ -124,12 +160,18 @@ export const Meetings = () => {
         ),
       },
       {
-        header: "Date",
-        accessorKey: "fromDate",
+        header: "Due Date",
+        accessorKey: "to",
         enableColumnFilter: false,
         cell: ({ row }) => (
           <span className="whitespace-nowrap font-medium text-gray-600">
-            {formatDateTime(row.original.fromDate as string)}
+            {`${format(
+              new Date(row.original.to as string),
+              "dd MMM yyyy"
+            )} | ${format(
+              new Date(row.original.from as string),
+              "hh:mm aaa"
+            )} - ${format(new Date(row.original.to as string), "hh:mm aaa")}`}
           </span>
         ),
       },
@@ -139,9 +181,17 @@ export const Meetings = () => {
         enableColumnFilter: false,
         cell: ({ row }) => (
           <span className="whitespace-nowrap font-medium text-gray-600">
-            {row.original?.completedDate
-              ? formatDateTime(row?.original?.completedDate)
-              : "--"}
+            {formatDateTime(row.original.completedDate) || "--"}
+          </span>
+        ),
+      },
+      {
+        header: "Owner",
+        accessorKey: "owner",
+        enableColumnFilter: false,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap font-medium text-gray-600">
+            {row.original.userName}
           </span>
         ),
       },
@@ -155,47 +205,47 @@ export const Meetings = () => {
           </span>
         ),
       },
-      {
-        header: "Actions",
-        accessorKey: "",
-        enableColumnFilter: false,
-        cell: ({ row }) =>
-          !row.original.completed ? (
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => handleMarkComplete(row.original.id, row.original)}
-            >
-              <FaCheck />
-              Mark Complete
-            </Button>
-          ) : (
-            "-"
-          ),
-      },
+      // {
+      //   header: "Actions",
+      //   accessorKey: "",
+      //   enableColumnFilter: false,
+      //   cell: ({ row }) =>
+      //     !row.original.completed ? (
+      //       <Button
+      //         variant="outline"
+      //         className="flex items-center gap-2"
+      //         onClick={() => handleMarkComplete(row.original.id, row.original)}
+      //       >
+      //         <FaCheck />
+      //         Mark Complete
+      //       </Button>
+      //     ) : (
+      //       "-"
+      //     ),
+      // },
     ],
     [handleTaskTitleClick] // Add dependency for the click handler
   );
 
   const handleSubmit = async (data) => {
-    // alert(data.dueDate);
+    data.userId = user?.id;
     try {
       if (isEditMode && selectedTask) {
         // Update existing task
-        await updateTask(selectedTask.id, data);
-        toast.success("Task updated successfully");
+        await updateMeeting(selectedTask.id, data);
+        toast.success("Meeting updated successfully");
       } else {
         // Create new task
-        await createTask(data);
-        toast.success("Task created successfully");
+        await saveMeeting(data);
+        toast.success("Meeting created successfully");
       }
 
-      refetchMeetings();
+      refetch();
       handleModalClose(); // Close modal after successful operation
     } catch (error) {
       console.log("Error => ", error);
       toast.error(
-        isEditMode ? "Failed to update task" : "Failed to create task"
+        isEditMode ? "Failed to update Meeting" : "Failed to create Meeting"
       );
     }
   };
@@ -226,14 +276,16 @@ export const Meetings = () => {
             </button>
           ))}
         </nav>
-        <Button onClick={handleAddNewTask}>Add Meeting</Button>
+        {meetingPermission.canCreateMeetings && (
+          <Button onClick={handleAddNewTask}>Add Meeting</Button>
+        )}
       </div>
 
       {/* Table Container with proper constraints */}
       <TanStackBasicTable
         isTableDataLoading={isAllMettingsDataLoading}
         paginatedTableData={allMeetingsData}
-        columns={userColumns}
+        columns={meetingColumns}
         pagination={pagination}
         setPagination={setPagination}
         sorting={sorting}

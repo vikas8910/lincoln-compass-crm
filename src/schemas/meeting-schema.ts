@@ -47,7 +47,7 @@ export const meetingFormSchema = z.object({
   description: z.string().optional(),
   timeZone: z.string(),
   location: z.string().optional(),
-  fromDate: z.union(
+  from: z.union(
     [
       z.string().min(1, "Date is required"),
       z.coerce.date({
@@ -60,7 +60,7 @@ export const meetingFormSchema = z.object({
       invalid_type_error: "Invalid date format",
     }
   ),
-  toDate: z.union(
+  to: z.union(
     [
       z.string().min(1, "Date is required"),
       z.coerce.date({
@@ -76,8 +76,10 @@ export const meetingFormSchema = z.object({
   dueTime: z.date().optional(),
   outcome: z.string().optional(),
   meetingNotes: z.string().optional(),
-  relatedTo: z.array(z.any()).min(1, "At least one related record is required"),
-  collaboratorsId: z.array(z.any()).optional(),
+  relatedLeadIds: z
+    .array(z.any())
+    .min(1, "At least one related record is required"),
+  attendees: z.array(z.any()).optional(),
   allDay: z.boolean().optional(),
   videoConferencing: z.enum(["zoom", "teams", ""]).default(""),
 });

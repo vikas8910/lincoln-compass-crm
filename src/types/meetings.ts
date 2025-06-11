@@ -5,6 +5,7 @@ export interface UseMeetingInput {
   sorting?: SortingState;
   columnFilters?: ColumnFiltersState;
   pagination: PaginationState;
+  leadId: string;
 }
 
 export interface Meeting {
@@ -12,19 +13,32 @@ export interface Meeting {
   title: string;
   description: string;
   timeZone: string;
-  fromDate: string | Date; // ISO 8601 date string (e.g., "2025-06-05T19:54:12.866Z")
-  toDate: string | Date;
+  from: string | Date; // ISO 8601 date string (e.g., "2025-06-05T19:54:12.866Z")
+  to: string | Date;
   outcome: string;
   completed: boolean;
   completedDate: string;
   createdAt: string; // ISO 8601 date string
   updatedAt: string; // ISO 8601 date string
-  relatedTo: number[];
-  collaboratorsId: number[];
+  relatedLeadsIds: number[];
+  attendees: Array<{
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  }>;
   location: string;
   meetingNotes: string;
   allDay: boolean;
   videoConferencing: string;
+  relatedLeads: Array<{
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    mobile: string;
+  }>;
+  userName: string;
 }
 
 export interface UseMeetingsResponse {

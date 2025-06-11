@@ -11,14 +11,14 @@ import {
 import { toast } from "sonner";
 import { FiLogOut } from "react-icons/fi";
 import { logout } from "@/services/auth/auth";
+import { useUser } from "@/context/UserProvider";
 
 const Header = () => {
   const { isMobile } = useSidebar();
-
-  // Mock user data - replace with actual user data from your auth context/store
-  const userEmail = "subramanian@lincoln-edu.ae";
-  const userName = "Subramanian Iyer";
-  const userInitial = userName.charAt(0).toUpperCase(); // "S"
+  const { user } = useUser();
+  const userEmail = user.email;
+  const userName = user.name;
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const handleLogout = async () => {
     await logout();
@@ -36,7 +36,7 @@ const Header = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 h-10">
-              <div className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center text-white font-medium">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium hover:bg-none">
                 {userInitial}
               </div>
             </Button>
@@ -51,13 +51,6 @@ const Header = () => {
                 <p className="text-xs text-muted-foreground">{userEmail}</p>
               </div>
             </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Personal settings</DropdownMenuItem>
-            <DropdownMenuItem>Request demo</DropdownMenuItem>
-            <DropdownMenuItem>Knowledge base</DropdownMenuItem>
-            <DropdownMenuItem>Create support ticket</DropdownMenuItem>
-            <DropdownMenuItem>Privacy policy</DropdownMenuItem>
-            <DropdownMenuItem>Download mobile app</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleLogout}
