@@ -20,13 +20,29 @@ export const markAsCompleted = async (taskId: string) => {
   }
 };
 
-export const addOutCome = async (meetingId: string, outcome: string) => {
+export const addMeetingOutcome = async (
+  meetingId: string,
+  payload: { outcome: string; notes: string }
+) => {
   try {
     const response = await axiosInstance.put(
       `/api/v1/meetings/${meetingId}/outcome`,
-      {
-        outcome: outcome,
-      }
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const addTaskOutcome = async (
+  taskId: string,
+  payload: { outcome: string; description: string }
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `/api/tasks/${taskId}/outcome`,
+      payload
     );
     return response.data;
   } catch (error) {

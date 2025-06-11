@@ -17,7 +17,8 @@ import { FaEdit } from "react-icons/fa";
 import { getAvatarColors } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import {
-  addOutCome,
+  addMeetingOutcome,
+  addTaskOutcome,
   getActivityTimeline,
   markAsCompleted,
 } from "@/services/activities/activity-timeline";
@@ -37,6 +38,7 @@ export interface ActivityTimelineResponse {
         title: string;
         ownerId: string;
         ownerName: string;
+        completed?: boolean;
       };
     }[];
   };
@@ -49,6 +51,154 @@ export interface ActivityTimelineResponse {
     last: boolean;
   };
 }
+
+// Reusable Outcome Modal Component
+const OutcomeModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  title,
+  entityId,
+  entityType,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (entityId: string, outcome: string, notes?: string) => Promise<void>;
+  title: string;
+  entityId: string;
+  entityType: "meeting" | "task";
+}) => {
+  const [selectedOutcome, setSelectedOutcome] = useState("");
+  const [notes, setNotes] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const meetingOutcomes = [
+    "Interested",
+    "Left message",
+    "No response",
+    "Not interested",
+    "Not able to reach",
+  ];
+
+  const taskOutcomes = [
+    "Open House Invitation",
+    "Office Visit",
+    "Set Meetings",
+  ];
+
+  const outcomes = entityType === "meeting" ? meetingOutcomes : taskOutcomes;
+
+  const handleSave = async () => {
+    if (!selectedOutcome) return;
+
+    try {
+      await onSave(entityId, selectedOutcome, notes);
+      handleClose();
+    } catch (error) {
+      // Error handling is done in the parent component
+    }
+  };
+
+  const handleClose = () => {
+    setSelectedOutcome("");
+    setNotes("");
+    setIsDropdownOpen(false);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-md mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-4">
+          {/* Add outcome dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Add outcome
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-left bg-white flex items-center justify-between hover:bg-gray-50"
+              >
+                <span
+                  className={
+                    selectedOutcome ? "text-gray-900" : "text-gray-400"
+                  }
+                >
+                  {selectedOutcome || "Click to select"}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                  {outcomes.map((outcome) => (
+                    <button
+                      key={outcome}
+                      onClick={() => {
+                        setSelectedOutcome(outcome);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-50 first:rounded-t-md last:rounded-b-md"
+                    >
+                      {outcome}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {entityType === "meeting" ? "Meeting notes" : "Description"}
+            </label>
+            <div className="relative">
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={`Add ${entityType} notes...`}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none h-32 text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 p-4 border-t">
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!selectedOutcome}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-md"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Shared components
 const ActivityIcon = ({
@@ -82,9 +232,11 @@ const ActivityIcon = ({
 const ActivityHeader = ({
   activity,
   onRefresh,
+  onAddOutcome,
 }: {
   activity: any;
   onRefresh: () => void;
+  onAddOutcome?: () => void;
 }) => {
   const { details } = activity;
   const showMarkComplete =
@@ -92,12 +244,16 @@ const ActivityHeader = ({
     !activity.activityType.includes("complete") &&
     !activity.details.completed;
 
+  const showAddOutcome =
+    activity.entityType === "Task" &&
+    (activity.activityType.includes("complete") || activity.details.completed);
+
   const handleMarkAsCompleted = async () => {
     try {
       await markAsCompleted(activity.entityId);
       toast.success("Task marked as completed successfully");
       if (onRefresh) {
-        onRefresh(); // Call this to refresh the data
+        onRefresh();
       }
     } catch (error) {
       toast.error("Failed to mark task as completed");
@@ -129,9 +285,17 @@ const ActivityHeader = ({
             Mark complete
           </Button>
         )}
-        {/* <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-          <MoreHorizontal className="w-4 h-4" />
-        </Button> */}
+        {showAddOutcome && onAddOutcome && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={onAddOutcome}
+          >
+            <FileText className="w-3 h-3 mr-1" />
+            Add outcome
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -244,40 +408,62 @@ const TaskActivity = ({
   onRefresh?: () => void;
 }) => {
   const { details } = activity;
+  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
+
+  const handleSaveTaskOutcome = async (
+    entityId: string,
+    outcome: string,
+    notes?: string
+  ) => {
+    try {
+      await addTaskOutcome(entityId, { outcome, description: notes });
+      toast.success("Task outcome saved successfully");
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error("Failed to save task outcome");
+      throw error;
+    }
+  };
 
   return (
     <>
-      <ActivityHeader activity={activity} onRefresh={onRefresh} />
+      <ActivityHeader
+        activity={activity}
+        onRefresh={onRefresh}
+        onAddOutcome={() => setIsOutcomeModalOpen(true)}
+      />
       <p className="text-sm text-gray-600 mb-3">{activity.description}</p>
       <StatusBadges status={details.status} type={details.type} />
       <LeadsList leads={details.leads} color="red" />
+
+      <OutcomeModal
+        isOpen={isOutcomeModalOpen}
+        onClose={() => setIsOutcomeModalOpen(false)}
+        onSave={handleSaveTaskOutcome}
+        title="Add task outcome"
+        entityId={activity.entityId}
+        entityType="task"
+      />
     </>
   );
 };
 
 const MeetingActivity = ({ activity }: { activity: any }) => {
   const { details } = activity;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedOutcome, setSelectedOutcome] = useState("");
-  const [notes, setNotes] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
 
-  const outcomes = [
-    "Interested",
-    "Left message",
-    "No response",
-    "Not interested",
-    "Not able to reach",
-  ];
-
-  const handleOutcomeSave = async (entityId: number) => {
+  const handleSaveMeetingOutcome = async (
+    entityId: string,
+    outcome: string,
+    notes?: string
+  ) => {
     try {
-      await addOutCome(entityId.toString(), selectedOutcome);
+      await addMeetingOutcome(entityId, { outcome, notes: notes });
       toast.success("Meeting outcome saved successfully");
     } catch (error) {
       toast.error("Failed to save meeting outcome");
+      throw error;
     }
-    setIsDropdownOpen(false);
   };
 
   return (
@@ -304,14 +490,11 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
             variant="outline"
             size="sm"
             className="text-xs h-7"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsOutcomeModalOpen(true)}
           >
             <FileText className="w-3 h-3 mr-1" />
             Add outcome
           </Button>
-          {/* <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button> */}
         </div>
       </div>
       {/* Status badge */}
@@ -342,87 +525,15 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
           ))}
         </div>
       )}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-md mx-4">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Add outcome</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              {/* Add outcome dropdown */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Add outcome
-                </label>
-                <div className="relative">
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-left bg-white flex items-center justify-between hover:bg-gray-50"
-                  >
-                    <span
-                      className={
-                        selectedOutcome ? "text-gray-900" : "text-gray-400"
-                      }
-                    >
-                      {selectedOutcome || "Click to select"}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </button>
-
-                  {isDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                      {outcomes.map((outcome) => (
-                        <button
-                          key={outcome}
-                          onClick={() => {
-                            setSelectedOutcome(outcome);
-                            setIsDropdownOpen(false);
-                          }}
-                          className="w-full px-3 py-2 text-left hover:bg-gray-50 first:rounded-t-md last:rounded-b-md"
-                        >
-                          {outcome}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-4 border-t">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  console.log("Outcome:", selectedOutcome, "Notes:", notes);
-                  setIsModalOpen(false);
-                  setSelectedOutcome("");
-                  setNotes("");
-                  handleOutcomeSave(activity.entityId);
-                }}
-                disabled={!selectedOutcome}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-md"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <OutcomeModal
+        isOpen={isOutcomeModalOpen}
+        onClose={() => setIsOutcomeModalOpen(false)}
+        onSave={handleSaveMeetingOutcome}
+        title="Add meeting outcome"
+        entityId={activity.entityId}
+        entityType="meeting"
+      />
     </>
   );
 };
