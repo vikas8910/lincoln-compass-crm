@@ -79,7 +79,13 @@ const ActivityIcon = ({
   return <Settings className="w-4 h-4 text-gray-600" />;
 };
 
-const ActivityHeader = ({ activity }: { activity: any }) => {
+const ActivityHeader = ({
+  activity,
+  onRefresh,
+}: {
+  activity: any;
+  onRefresh: () => void;
+}) => {
   const { details } = activity;
   const showMarkComplete =
     activity.entityType === "Task" &&
@@ -90,6 +96,9 @@ const ActivityHeader = ({ activity }: { activity: any }) => {
     try {
       await markAsCompleted(activity.entityId);
       toast.success("Task marked as completed successfully");
+      if (onRefresh) {
+        onRefresh(); // Call this to refresh the data
+      }
     } catch (error) {
       toast.error("Failed to mark task as completed");
     }
@@ -227,12 +236,18 @@ const LeadsList = ({
 };
 
 // Activity type components
-const TaskActivity = ({ activity }: { activity: any }) => {
+const TaskActivity = ({
+  activity,
+  onRefresh,
+}: {
+  activity: any;
+  onRefresh?: () => void;
+}) => {
   const { details } = activity;
 
   return (
     <>
-      <ActivityHeader activity={activity} />
+      <ActivityHeader activity={activity} onRefresh={onRefresh} />
       <p className="text-sm text-gray-600 mb-3">{activity.description}</p>
       <StatusBadges status={details.status} type={details.type} />
       <LeadsList leads={details.leads} color="red" />
@@ -417,7 +432,7 @@ const LeadActivity = ({ activity }: { activity: any }) => {
 
   return (
     <>
-      <ActivityHeader activity={activity} />
+      <ActivityHeader activity={activity} onRefresh={() => {}} />
       <p className="text-sm text-gray-600 mb-3">{activity.description}</p>
 
       {/* Subscription types for newsletter activities */}
@@ -436,14 +451,16 @@ const LeadActivity = ({ activity }: { activity: any }) => {
 const ActivityItem = ({
   activity,
   isLast,
+  onRefresh,
 }: {
   activity: any;
   isLast: boolean;
+  onRefresh: () => void;
 }) => {
   const renderActivityContent = () => {
     switch (activity.entityType) {
       case "Task":
-        return <TaskActivity activity={activity} />;
+        return <TaskActivity activity={activity} onRefresh={onRefresh} />;
       case "Meeting":
         return <MeetingActivity activity={activity} />;
       case "Lead":
@@ -451,7 +468,7 @@ const ActivityItem = ({
       default:
         return (
           <>
-            <ActivityHeader activity={activity} />
+            <ActivityHeader activity={activity} onRefresh={() => {}} />
             <p className="text-sm text-gray-600">{activity.description}</p>
           </>
         );
@@ -523,6 +540,7 @@ const ActivityTimeline = () => {
                       key={activity.id}
                       activity={activity}
                       isLast={index === activities.length - 1}
+                      onRefresh={fetchActivities}
                     />
                   ))}
                 </div>
