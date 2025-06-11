@@ -185,3 +185,11 @@ export const bulkLeadDelete = async (leadIds: number[]) => {
     throw error;
   }
 };
+
+export const bulkLeadMerge = async (payload: {
+  targetLeadId: number;
+  sourceLeadIds: number[];
+}) => {
+  const response = await axiosInstance.post(`/api/leads/merge`, payload);
+  return response.data;
+};
