@@ -12,13 +12,16 @@ import { toast } from "sonner";
 import { FiLogOut } from "react-icons/fi";
 import { logout } from "@/services/auth/auth";
 import { useUser } from "@/context/UserProvider";
+import { getAvatarColors } from "@/lib/utils";
 
 const Header = () => {
   const { isMobile } = useSidebar();
   const { user } = useUser();
-  const userEmail = user.email;
-  const userName = user.name;
+  const userEmail = user?.email;
+  const userName = user?.name;
   const userInitial = userName.charAt(0).toUpperCase();
+
+  const { bg, text } = getAvatarColors(userInitial);
 
   const handleLogout = async () => {
     await logout();
@@ -36,14 +39,18 @@ const Header = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 h-10">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium hover:bg-none">
+              <div
+                className={`${bg} ${text} h-10 w-10 rounded-lg flex items-center justify-center font-semibold text-sm shrink-0`}
+              >
                 {userInitial}
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 shadow-md">
             <div className="flex items-center gap-3 p-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+              <div
+                className={`${bg} ${text} h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm shrink-0`}
+              >
                 {userInitial}
               </div>
               <div className="flex flex-col">

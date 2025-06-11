@@ -164,7 +164,7 @@ export const bulkAssignLeads = async (
     const queryParam = salesOwnerId ? `?salesOwnerId=${salesOwnerId}` : "";
     const response = await axiosInstance.post(
       `/api/v1/leads/bulk-assign${queryParam}`,
-      { leadIds: leadIds }
+      leadIds
     );
     return response.data;
   } catch (error) {
@@ -175,14 +175,10 @@ export const bulkAssignLeads = async (
 
 export const bulkLeadDelete = async (leadIds: number[]) => {
   try {
-    const payload = {
-      leadIds: leadIds,
-    };
-    const response = await axiosInstance.delete(`/api/v1/leads/bulk`, {
-      data: {
-        leadIds: leadIds,
-      },
-    });
+    const response = await axiosInstance.post(
+      `/api/v1/leads/bulk-delete`,
+      leadIds
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching roles:", error);
