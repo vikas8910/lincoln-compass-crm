@@ -1,7 +1,7 @@
 import { TaskForm } from "@/components/common/TaskForm";
 import TanStackBasicTable from "@/components/tablec/TanStackBasicTable";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/context/UserProvider";
+import { useLeadDetails } from "@/context/LeadsProvider";
 import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
 import { useGetTasks } from "@/hooks/useGetTasks";
 import { INITIAL_PAGINATION } from "@/lib/constants";
@@ -29,6 +29,7 @@ interface Tab {
 }
 
 export const Tasks = () => {
+  const { lead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -63,6 +64,7 @@ export const Tasks = () => {
     sorting,
     columnFilters: getModifiedColumnFilters(),
     pagination,
+    leadId: lead.id,
   });
 
   // Define tabs with dynamic counts (you can update these counts from API response)

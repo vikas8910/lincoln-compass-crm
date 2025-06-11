@@ -1,46 +1,156 @@
-import { type Table, flexRender } from "@tanstack/react-table";
+import { useState } from "react";
+import { type Table } from "@tanstack/react-table";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface TanStackBasicTableFilterComponentProps<TData> {
   table: Table<TData>;
+  setIsOffcanvasOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function TanStackBasicTableFilterComponent<TData>({
   table,
+  setIsOffcanvasOpen,
 }: TanStackBasicTableFilterComponentProps<TData>) {
+  const [selectedField, setSelectedField] = useState<string>("");
+  const [filterValue, setFilterValue] = useState<string>("");
+  const [error, setError] = useState<string>("");
+
+  // Define filter options
+  const filterOptions = [
+    { value: "firstName", label: "First Name" },
+    { value: "lastName", label: "Last Name" },
+    { value: "email", label: "Email" },
+    { value: "mobile", label: "Mobile" },
+    { value: "source", label: "Source" },
+    { value: "course", label: "Course" },
+    { value: "leadType", label: "Lead Type" },
+  ];
+
+  const handleApply = () => {
+    // Validate input
+    if (!selectedField) {
+      setError("Please select a field to filter");
+      return;
+    }
+
+    if (!filterValue || filterValue.trim().length < 2) {
+      setError("Please enter at least 2 characters");
+      return;
+    }
+
+    setError("");
+
+    // Clear all existing filters
+    table.getAllColumns().forEach((column) => {
+      if (column.getCanFilter()) {
+        column.setFilterValue(undefined);
+      }
+    });
+
+    // Apply new filter
+    // For firstName, lastName, email, mobile - all use "firstName" column for the combined search
+    const filterColumn = ["firstName", "lastName", "email", "mobile"].includes(
+      selectedField
+    )
+      ? "firstName"
+      : selectedField;
+
+    const column = table.getColumn(filterColumn);
+    if (column) {
+      column.setFilterValue(filterValue.trim());
+    }
+    setIsOffcanvasOpen(false);
+  };
+
+  const handleReset = () => {
+    // Clear local state
+    setSelectedField("");
+    setFilterValue("");
+    setError("");
+
+    // Clear all table filters
+    table.getAllColumns().forEach((column) => {
+      if (column.getCanFilter()) {
+        column.setFilterValue(undefined);
+      }
+    });
+  };
+
+  const handleFieldChange = (value: string) => {
+    setSelectedField(value);
+    setError("");
+  };
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilterValue(e.target.value);
+    if (error) setError("");
+  };
+
   return (
-    <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
-      {table.getHeaderGroups()[0].headers.map(
-        (header) =>
-          !header.isPlaceholder &&
-          header.column.getCanFilter() && (
-            <div key={header.id} className="flex flex-col gap-1">
-              <Label className="block font-semibold text-sm">
-                {header.column.columnDef.meta?.filterLabel ||
-                  `${flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}`}
-                :
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Add a field to filter</Label>
+            <Select value={selectedField} onValueChange={handleFieldChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a field..." />
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedField && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                {
+                  filterOptions.find((opt) => opt.value === selectedField)
+                    ?.label
+                }
               </Label>
               <Input
+                placeholder="Choose values"
+                value={filterValue}
+                onChange={handleValueChange}
                 className="w-full"
-                placeholder={
-                  header.column.columnDef.meta?.filterPlaceholder ||
-                  `Filter ${flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )} ...`
-                }
-                value={(header.column.getFilterValue() as string) || ""}
-                onChange={(e) => {
-                  header.column?.setFilterValue(e.target.value);
-                }}
               />
             </div>
-          )
-      )}
+          )}
+
+          {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-4 border-t mt-4">
+        <Button
+          variant="outline"
+          onClick={handleReset}
+          className="text-blue-600 border-0 p-0 h-auto hover:bg-transparent hover:text-blue-700"
+        >
+          Reset
+        </Button>
+        <Button
+          onClick={handleApply}
+          className="bg-slate-700 hover:bg-slate-800"
+        >
+          Apply
+        </Button>
+      </div>
     </div>
   );
 }

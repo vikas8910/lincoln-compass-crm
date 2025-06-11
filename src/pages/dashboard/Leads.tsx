@@ -832,22 +832,17 @@ const Leads = () => {
         onClose={handleCloseOffcanvas}
         title="Filters"
       >
-        <div className="space-y-6">
-          {/* Filters Section */}
+        <div className="h-full flex flex-col">
           {tableInstance ? (
-            <div className="bg-gray-50 rounded-lg">
-              <TanStackBasicTableFilterComponent table={tableInstance} />
-            </div>
+            <TanStackBasicTableFilterComponent
+              table={tableInstance}
+              setIsOffcanvasOpen={setIsOffcanvasOpen}
+            />
           ) : (
             <div className="flex items-center justify-center py-8">
               <p className="text-gray-500">Loading filters...</p>
             </div>
           )}
-
-          {/* Apply Filters Button */}
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={handleApplyFilters}>Close</Button>
-          </div>
         </div>
       </Offcanvas>
 

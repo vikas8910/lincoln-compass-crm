@@ -101,16 +101,16 @@ export const LEAD_OVERVIEW_FIELDS = (lead: Lead): any[] => {
       disabled: true,
     },
     {
-      key: "lastContactTime",
-      label: "Last contacted time",
-      validationType: "text",
-      disabled: true,
-    },
-    {
       key: "lastContactedMode",
       label: "Last contacted mode",
       validationType: "text",
       type: "date",
+      disabled: true,
+    },
+    {
+      key: "lastContactTime",
+      label: "Last contacted time",
+      validationType: "text",
       disabled: true,
     },
     {

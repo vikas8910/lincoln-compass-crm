@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { AxiosError } from "axios";
 import axiosInstance from "@/services/axios/axios-base-service";
-import { LEADS } from "@/lib/api-endpoints";
-import { tasks } from "@/data/data";
 import { UseTasksInput, UseTasksResponse } from "@/types/task";
 
 const getAllTasksfn = async ({
   pagination,
   sorting,
   columnFilters,
+  leadId,
 }: UseTasksInput): Promise<UseTasksResponse> => {
   // set pagination
   const page = pagination.pageIndex,
@@ -57,6 +56,8 @@ const getAllTasksfn = async ({
   // Build query string
   const queryParams = new URLSearchParams();
 
+  queryParams.append("leadId", leadId);
+
   // Add search parameters
   if (title) queryParams.append("search", title);
   if (description) queryParams.append("search", description);
@@ -100,6 +101,7 @@ export const useGetTasks = ({
   pagination,
   sorting,
   columnFilters,
+  leadId,
 }: UseTasksInput) => {
   const [allUsersData, setAllUsersData] = useState<UseTasksResponse | null>(
     null
@@ -122,6 +124,7 @@ export const useGetTasks = ({
           pagination,
           sorting,
           columnFilters,
+          leadId,
         });
 
         setAllUsersData(data);
@@ -155,6 +158,7 @@ export const useGetTasks = ({
           pagination,
           sorting,
           columnFilters,
+          leadId,
         });
 
         setAllUsersData(data);
