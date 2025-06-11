@@ -24,7 +24,6 @@ import {
   bulkLeadDelete,
   deleteLead,
 } from "@/services/lead/lead";
-import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { NoteForm } from "@/components/common/NoteForm";
@@ -46,6 +45,7 @@ import { createTask } from "@/services/activities/task";
 import { MergeLead } from "@/components/leads/MergeLead";
 import BulkAssignDialog from "@/components/leads/BulkAssignDialog";
 import BulkDeleteDialog from "@/components/leads/BulkDeleteDialog";
+import { toast } from "react-toastify";
 
 const Leads = () => {
   // Get everything from the LeadsProvider context
