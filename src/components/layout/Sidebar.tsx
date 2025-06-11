@@ -49,6 +49,15 @@ const MainSidebar = () => {
           },
         ]
       : []),
+    ...(authoritiesList.includes(PermissionsEnum.LEADS_CREATE)
+      ? [
+          {
+            title: "Master Data",
+            icon: Shield,
+            href: ["/master-data"],          
+          },
+        ]
+      : []),
   ];
 
   const toggleSidebar = () => {

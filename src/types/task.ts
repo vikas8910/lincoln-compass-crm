@@ -5,6 +5,7 @@ export interface UseTasksInput {
   sorting?: SortingState;
   columnFilters?: ColumnFiltersState;
   pagination: PaginationState;
+  leadId: string;
 }
 
 export interface Task {

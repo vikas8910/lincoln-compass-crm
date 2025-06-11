@@ -79,9 +79,11 @@ const getAllMeetingsFn = async ({
   // Add pagination parameters
   queryParams.append("page", page.toString());
   queryParams.append("size", per_page.toString());
-  const res = await axiosInstance.get(
-    `/api/v1/meetings?leadId=${leadId}&${queryParams.toString()}`
-  );
+  const res =
+    leadId &&
+    (await axiosInstance.get(
+      `/api/v1/meetings?leadId=${leadId}&${queryParams.toString()}`
+    ));
 
   const data = {
     data: res.data.meetings,

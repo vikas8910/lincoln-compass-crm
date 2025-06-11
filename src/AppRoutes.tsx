@@ -5,6 +5,7 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import Leads from "./pages/dashboard/Leads";
 import RolesPermissions from "./pages/dashboard/RolesPermissions";
 import SalesOfficerRoles from "./pages/dashboard/SalesOfficerRoles";
+import MasterDataManagement from "./pages/dashboard/MasterDataManagement";
 import LeadDetails from "./pages/lead/LeadDetails";
 import { LeadsProvider } from "./context/LeadsProvider";
 import Permissions from "./pages/dashboard/Permissions";
@@ -110,6 +111,11 @@ const AppRoutes = () => {
             element={<ProtectedRoute element={<SalesOfficerRoles />} />}
           />
         )}
+
+          <Route
+            path="/master-data"
+            element={<ProtectedRoute element={<MasterDataManagement />} />}
+          />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

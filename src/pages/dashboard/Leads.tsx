@@ -24,7 +24,6 @@ import {
   bulkLeadDelete,
   deleteLead,
 } from "@/services/lead/lead";
-import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
 import { NoteForm } from "@/components/common/NoteForm";
@@ -46,6 +45,7 @@ import { createTask } from "@/services/activities/task";
 import { MergeLead } from "@/components/leads/MergeLead";
 import BulkAssignDialog from "@/components/leads/BulkAssignDialog";
 import BulkDeleteDialog from "@/components/leads/BulkDeleteDialog";
+import { toast } from "react-toastify";
 import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
 
 const Leads = () => {
@@ -842,22 +842,17 @@ const Leads = () => {
         onClose={handleCloseOffcanvas}
         title="Filters"
       >
-        <div className="space-y-6">
-          {/* Filters Section */}
+        <div className="h-full flex flex-col">
           {tableInstance ? (
-            <div className="bg-gray-50 rounded-lg">
-              <TanStackBasicTableFilterComponent table={tableInstance} />
-            </div>
+            <TanStackBasicTableFilterComponent
+              table={tableInstance}
+              setIsOffcanvasOpen={setIsOffcanvasOpen}
+            />
           ) : (
             <div className="flex items-center justify-center py-8">
               <p className="text-gray-500">Loading filters...</p>
             </div>
           )}
-
-          {/* Apply Filters Button */}
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={handleApplyFilters}>Close</Button>
-          </div>
         </div>
       </Offcanvas>
 
