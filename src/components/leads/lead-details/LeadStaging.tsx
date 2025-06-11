@@ -353,11 +353,9 @@ const LeadStaging = () => {
         </h1>
         <div className="flex flex-1 w-full items-center overflow-x-auto scrollbar-hide -space-x-1">
           {getDisplayStages().map((stage, index) => (
-            <React.Fragment
-              key={stage?.id + (stage?.combinedChip ? "-combined" : "")}
-            >
+            <div key={index} data-lov-id={stage.id}>
               {renderStageChip(stage, index)}
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </div>

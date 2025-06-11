@@ -7,180 +7,48 @@ import {
   Mail,
   FileText,
   Settings,
-  MoreHorizontal,
+  ChevronDown,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FaEdit } from "react-icons/fa";
 import { getAvatarColors } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import {
+  addOutCome,
+  getActivityTimeline,
+  markAsCompleted,
+} from "@/services/activities/activity-timeline";
+import { useLeadDetails } from "@/context/LeadsProvider";
+import { toast } from "react-toastify";
 
-// Mock data with expanded activities
-const mockData = {
+export interface ActivityTimelineResponse {
   activitiesByDate: {
-    "Tue 10 Jun, 2025": [
-      {
-        id: 1,
-        entityType: "Task",
-        entityId: "1",
-        activityType: "Task added",
-        description: "Task 'Task Testing' added.",
-        timestamp: "Tue 10 Jun, 2025 04:58 PM",
-        details: {
-          title: "Task Testing",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          collaborators: [],
-          leads: [{ id: "1", name: "New TB Test" }],
-        },
-      },
-      {
-        id: 2,
-        entityType: "Task",
-        entityId: "2",
-        activityType: "Task marked as complete",
-        description: "Task 'Demo' marked as complete.",
-        timestamp: "Tue 16 Jun, 2025 04:37 PM",
-        details: {
-          title: "Demo",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          status: "Completed",
-          type: "Office Visit",
-          collaborators: [],
-          leads: [{ id: "1", name: "New TB Test" }],
-        },
-      },
-      {
-        id: 3,
-        entityType: "Task",
-        entityId: "3",
-        activityType: "Task updated",
-        description: "Task 'Demo' updated.",
-        timestamp: "Tue 10 Jun, 2025 04:37 PM",
-        details: {
-          title: "Demo",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          status: "Completed",
-          type: "Office Visit",
-          collaborators: [],
-          leads: [{ id: "1", name: "New TB Test" }],
-        },
-      },
-      {
-        id: 4,
-        entityType: "Task",
-        entityId: "4",
-        activityType: "Task marked as complete",
-        description: "Task 'test task Collaborators' marked as complete.",
-        timestamp: "Tue 10 Jun, 2025 04:13 PM",
-        details: {
-          title: "test task Collaborators",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          status: "Completed",
-          type: "Open House Invitation",
-          collaborators: [],
-          leads: [{ id: "2", name: "New TB Test" }],
-        },
-      },
-      {
-        id: 5,
-        entityType: "Task",
-        entityId: "5",
-        activityType: "Task added",
-        description: "Task 'test task Collaborators' added.",
-        timestamp: "Tue 10 Jun, 2025 02:50 PM",
-        details: {
-          title: "test task Collaborators",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          type: "Open House Invitation",
-          collaborators: [],
-          leads: [{ id: "2", name: "New TB Test" }],
-        },
-      },
-      {
-        id: 6,
-        entityType: "Lead",
-        entityId: "6",
-        activityType: "Panchal merged with this Leads",
-        description: "Lead merged successfully.",
-        timestamp: "Tue 10 Jun, 2025 11:13 AM",
-        details: {
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-        },
-      },
-    ],
-    "Tue 12 Jun, 2025": [
-      {
-        id: 1,
-        entityType: "Task",
-        entityId: "1",
-        activityType: "Task added",
-        description: "Task 'Task Testing' added.",
-        timestamp: "Tue 10 Jun, 2025 04:58 PM",
-        details: {
-          title: "Task Testing",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          collaborators: [],
-          leads: [{ id: "1", name: "New TB Test" }],
-        },
-      },
-      {
-        id: 7,
-        entityType: "Lead",
-        entityId: "7",
-        activityType: "Leads subscribed to Newsletter",
-        description: "Lead subscribed to newsletter with 4 subscription types.",
-        timestamp: "Tue 10 Jun, 2025 11:11 AM",
-        details: {
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          subscriptionTypes: 4,
-        },
-      },
-      {
-        id: 8,
-        entityType: "Lead",
-        entityId: "8",
-        activityType: "Leads created",
-        description: "New lead created in the system.",
-        timestamp: "Tue 10 Jun, 2025 11:11 AM",
-        details: {
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-        },
-      },
-      {
-        id: 9,
-        entityType: "Meeting",
-        entityId: "9",
-        activityType: "Meeting updated",
-        description: "Meeting 'test' updated.",
-        timestamp: "Tue 10 Jun, 2025 09:59 AM",
-        details: {
-          title: "test",
-          ownerId: "1",
-          ownerName: "Subramanian Iyer",
-          status: "Interested",
-          leads: [{ id: "1", name: "New TB Test" }],
-        },
-      },
-    ],
-  },
+    [date: string]: {
+      id: number;
+      entityType: string;
+      entityId: string;
+      activityType: string;
+      description: string;
+      timestamp: string;
+      details: {
+        title: string;
+        ownerId: string;
+        ownerName: string;
+      };
+    }[];
+  };
   pageInfo: {
-    pageNumber: 0,
-    pageSize: 20,
-    totalElements: 9,
-    totalPages: 1,
-    first: true,
-    last: true,
-  },
-};
+    pageNumber: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+  };
+}
 
 // Shared components
 const ActivityIcon = ({
@@ -215,7 +83,17 @@ const ActivityHeader = ({ activity }: { activity: any }) => {
   const { details } = activity;
   const showMarkComplete =
     activity.entityType === "Task" &&
-    !activity.activityType.includes("complete");
+    !activity.activityType.includes("complete") &&
+    !activity.details.completed;
+
+  const handleMarkAsCompleted = async () => {
+    try {
+      await markAsCompleted(activity.entityId);
+      toast.success("Task marked as completed successfully");
+    } catch (error) {
+      toast.error("Failed to mark task as completed");
+    }
+  };
 
   return (
     <div className="flex items-center justify-between mb-2">
@@ -232,14 +110,19 @@ const ActivityHeader = ({ activity }: { activity: any }) => {
       </div>
       <div className="flex items-center gap-2">
         {showMarkComplete && (
-          <Button variant="outline" size="sm" className="text-xs h-7">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={handleMarkAsCompleted}
+          >
             <CheckCircle className="w-3 h-3 mr-1" />
             Mark complete
           </Button>
         )}
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+        {/* <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
           <MoreHorizontal className="w-4 h-4" />
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
@@ -359,6 +242,28 @@ const TaskActivity = ({ activity }: { activity: any }) => {
 
 const MeetingActivity = ({ activity }: { activity: any }) => {
   const { details } = activity;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOutcome, setSelectedOutcome] = useState("");
+  const [notes, setNotes] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const outcomes = [
+    "Interested",
+    "Left message",
+    "No response",
+    "Not interested",
+    "Not able to reach",
+  ];
+
+  const handleOutcomeSave = async (entityId: number) => {
+    try {
+      await addOutCome(entityId.toString(), selectedOutcome);
+      toast.success("Meeting outcome saved successfully");
+    } catch (error) {
+      toast.error("Failed to save meeting outcome");
+    }
+    setIsDropdownOpen(false);
+  };
 
   return (
     <>
@@ -380,16 +285,20 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
           <span className="text-sm text-gray-500">{activity.timestamp}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="text-xs h-7">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setIsModalOpen(true)}
+          >
             <FileText className="w-3 h-3 mr-1" />
             Add outcome
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+          {/* <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
             <MoreHorizontal className="w-4 h-4" />
-          </Button>
+          </Button> */}
         </div>
       </div>
-
       {/* Status badge */}
       {details.status && (
         <div className="mb-3">
@@ -401,10 +310,8 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
           </Badge>
         </div>
       )}
-
       {/* Related leads */}
       <LeadsList leads={details.leads || details.relatedLeads} color="red" />
-
       {/* Attendees */}
       {details.attendees?.length > 0 && (
         <div className="flex items-center gap-2 mt-2">
@@ -418,6 +325,87 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
               <span className="text-blue-600 text-sm">{attendee.name}</span>
             </div>
           ))}
+        </div>
+      )}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Add outcome</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Add outcome dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Add outcome
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-left bg-white flex items-center justify-between hover:bg-gray-50"
+                  >
+                    <span
+                      className={
+                        selectedOutcome ? "text-gray-900" : "text-gray-400"
+                      }
+                    >
+                      {selectedOutcome || "Click to select"}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  </button>
+
+                  {isDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                      {outcomes.map((outcome) => (
+                        <button
+                          key={outcome}
+                          onClick={() => {
+                            setSelectedOutcome(outcome);
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-gray-50 first:rounded-t-md last:rounded-b-md"
+                        >
+                          {outcome}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  console.log("Outcome:", selectedOutcome, "Notes:", notes);
+                  setIsModalOpen(false);
+                  setSelectedOutcome("");
+                  setNotes("");
+                  handleOutcomeSave(activity.entityId);
+                }}
+                disabled={!selectedOutcome}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-md"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
@@ -496,8 +484,19 @@ const ActivityItem = ({
 };
 
 const ActivityTimeline = () => {
+  const [activities, setActivities] = useState<ActivityTimelineResponse>(
+    {} as ActivityTimelineResponse
+  );
+  const { lead } = useLeadDetails();
+  const fetchActivities = async () => {
+    const res = await getActivityTimeline(lead.id);
+    setActivities(res);
+  };
+  useEffect(() => {
+    fetchActivities();
+  }, []);
   return (
-    <div className="w-full p-6 bg-gray-50 min-h-screen">
+    <div className="w-full p-6 bg-gray-50">
       <div className="mb-6 w-full max-w-5xl">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -510,22 +509,25 @@ const ActivityTimeline = () => {
       </div>
 
       <div className="space-y-8 max-w-5xl">
-        {Object.entries(mockData.activitiesByDate).map(([date, activities]) => (
-          <div key={date}>
-            <div className="sticky top-0 bg-gray-50 py-2 mb-4 z-10">
-              <h3 className="font-medium text-gray-900">{date}</h3>
-            </div>
-            <div className="ml-4">
-              {activities.map((activity, index) => (
-                <ActivityItem
-                  key={activity.id}
-                  activity={activity}
-                  isLast={index === activities.length - 1}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+        {activities?.activitiesByDate &&
+          Object.entries(activities.activitiesByDate).map(
+            ([date, activities]) => (
+              <div key={date}>
+                <div className="sticky top-0 bg-gray-50 py-2 mb-4 z-10">
+                  <h3 className="font-medium text-gray-900">{date}</h3>
+                </div>
+                <div className="ml-4">
+                  {activities.map((activity, index) => (
+                    <ActivityItem
+                      key={activity.id}
+                      activity={activity}
+                      isLast={index === activities.length - 1}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          )}
       </div>
     </div>
   );
