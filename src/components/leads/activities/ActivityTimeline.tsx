@@ -510,6 +510,7 @@ const ActivityTimeline = () => {
 
       <div className="space-y-8 max-w-5xl">
         {activities?.activitiesByDate &&
+        Object.keys(activities.activitiesByDate).length > 0 ? (
           Object.entries(activities.activitiesByDate).map(
             ([date, activities]) => (
               <div key={date}>
@@ -527,7 +528,10 @@ const ActivityTimeline = () => {
                 </div>
               </div>
             )
-          )}
+          )
+        ) : (
+          <p className="text-center text-gray-600">No activities found</p>
+        )}
       </div>
     </div>
   );
