@@ -46,6 +46,7 @@ import { createTask } from "@/services/activities/task";
 import { MergeLead } from "@/components/leads/MergeLead";
 import BulkAssignDialog from "@/components/leads/BulkAssignDialog";
 import BulkDeleteDialog from "@/components/leads/BulkDeleteDialog";
+import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
 
 const Leads = () => {
   // Get everything from the LeadsProvider context
@@ -109,6 +110,7 @@ const Leads = () => {
   const [isBulkDeleteLoading, setIsBulkDeleteLoading] = useState(false);
 
   const leadPermissions = useLeadPermissions();
+  const activityPermissions = useActivitiesPermissions();
   const { authoritiesList } = useAuthoritiesList();
 
   // Get selected leads data
@@ -752,21 +754,25 @@ const Leads = () => {
       {/* Merge Button Section - Appears before table when leads are selected */}
       {selectedLeadIds.size > 0 && (
         <div className="p-2 rounded-md bg-gray-200 mb-2 flex items-center gap-2">
-          <Button className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300">
+          {/* <Button className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300">
             Bulk Email
-          </Button>
-          <Button
-            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
-            onClick={handleBulkTaskCreate} // Use the new handler
-          >
-            Add Task
-          </Button>
-          <Button
-            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
-            onClick={() => setIsBulkAssignDialogOpen(true)}
-          >
-            Assign To
-          </Button>
+          </Button> */}
+          {activityPermissions.canCreateTasks && (
+            <Button
+              className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+              onClick={handleBulkTaskCreate} // Use the new handler
+            >
+              Add Task
+            </Button>
+          )}
+          {leadPermissions.canAssignLeads && (
+            <Button
+              className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+              onClick={() => setIsBulkAssignDialogOpen(true)}
+            >
+              Assign To
+            </Button>
+          )}
           <Button
             className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
             onClick={() => {
@@ -779,12 +785,16 @@ const Leads = () => {
           >
             Merge
           </Button>
-          <Button
-            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
-            onClick={() => setIsBulkDeleteDialogOpen(true)} // Use the new handler
-          >
-            Delete
-          </Button>
+          {authoritiesList.some((authority) =>
+            authority.startsWith("leads:delete")
+          ) && (
+            <Button
+              className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+              onClick={() => setIsBulkDeleteDialogOpen(true)}
+            >
+              Delete
+            </Button>
+          )}
           <Button
             onClick={() => {
               setSelectedLeadIds(new Set());
