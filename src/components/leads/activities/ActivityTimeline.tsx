@@ -625,7 +625,7 @@ const ActivityTimeline = () => {
   }, []);
   return (
     <div className="w-full p-6 bg-gray-50">
-      <div className="mb-6 w-full max-w-5xl">
+      {/* <div className="mb-6 w-full max-w-5xl">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             Overdue and upcoming activities
@@ -634,7 +634,7 @@ const ActivityTimeline = () => {
             Show <Clock className="w-4 h-4 ml-1" />
           </Button>
         </div>
-      </div>
+      </div> */}
 
       <div className="space-y-8 max-w-5xl">
         {activities?.activitiesByDate &&
