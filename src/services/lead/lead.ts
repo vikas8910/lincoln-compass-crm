@@ -155,3 +155,37 @@ export const deleteLead = (leadId: string) => {
     throw error;
   }
 };
+
+export const bulkAssignLeads = async (
+  salesOwnerId: string,
+  leadIds: number[]
+) => {
+  try {
+    const queryParam = salesOwnerId ? `?salesOwnerId=${salesOwnerId}` : "";
+    const response = await axiosInstance.post(
+      `/api/v1/leads/bulk-assign${queryParam}`,
+      { leadIds: leadIds }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    throw error;
+  }
+};
+
+export const bulkLeadDelete = async (leadIds: number[]) => {
+  try {
+    const payload = {
+      leadIds: leadIds,
+    };
+    const response = await axiosInstance.delete(`/api/v1/leads/bulk`, {
+      data: {
+        leadIds: leadIds,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    throw error;
+  }
+};

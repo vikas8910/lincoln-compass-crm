@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Filter, X } from "lucide-react";
 import { FiUserPlus } from "react-icons/fi";
-import { FiMail, FiPhone, FiCheckSquare, FiFileText } from "react-icons/fi";
+import { FiMail, FiCheckSquare, FiFileText } from "react-icons/fi";
 import { MdInfoOutline } from "react-icons/md";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 
@@ -20,20 +20,13 @@ import { Lead, Tab, TabType } from "@/types/lead";
 import { formatDateTime, getAvatarColors } from "@/lib/utils";
 import { EditableCell } from "@/components/tablec/EditableCell";
 import {
-  assignLeadToOfficer,
-  createLead,
+  bulkAssignLeads,
+  bulkLeadDelete,
   deleteLead,
-  updateLead,
 } from "@/services/lead/lead";
 import { toast } from "sonner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
-import {
-  DEBOUNCE_DELAY,
-  INITIAL_PAGINATION,
-  PermissionsEnum,
-} from "@/lib/constants";
 import CreateLeadDialog from "@/components/leads/CreateLeadDialog";
-import { createLeadFormValues } from "@/schemas/lead";
 import { NoteForm } from "@/components/common/NoteForm";
 import { TaskForm } from "@/components/common/TaskForm";
 import {
@@ -46,12 +39,13 @@ import {
 } from "@/components/ui/select";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { useLeads } from "@/context/LeadsProvider";
-import { FaTrash } from "react-icons/fa";
-import { useUser } from "@/context/UserProvider";
+import { FaTimes, FaTrash } from "react-icons/fa";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
-
-// Context// Import the context hook
+import { createTask } from "@/services/activities/task";
+import { MergeLead } from "@/components/leads/MergeLead";
+import BulkAssignDialog from "@/components/leads/BulkAssignDialog";
+import BulkDeleteDialog from "@/components/leads/BulkDeleteDialog";
 
 const Leads = () => {
   // Get everything from the LeadsProvider context
@@ -98,19 +92,201 @@ const Leads = () => {
     null
   );
   const [deleteLeadId, setDeleteLeadId] = useState<string | null>(null);
-  const leadPermissions = useLeadPermissions();
 
+  // Merge functionality state
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
+  const [primaryLeadId, setPrimaryLeadId] = useState<string>("");
+  const [mergeSearchTerm, setMergeSearchTerm] = useState("");
+  const [preSelectedLeadsForTask, setPreSelectedLeadsForTask] = useState<
+    Lead[]
+  >([]);
+  const [isBulkAssignDialogOpen, setIsBulkAssignDialogOpen] = useState(false);
+  const [isBulkAssignLoading, setIsBulkAssignLoading] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteLoading, setIsBulkDeleteLoading] = useState(false);
+
+  const leadPermissions = useLeadPermissions();
   const { authoritiesList } = useAuthoritiesList();
+
+  // Get selected leads data
+  const selectedLeads =
+    allUsersData?.data?.filter((lead) =>
+      selectedLeadIds.has(lead.id.toString())
+    ) || [];
+
+  const handleBulkTaskCreate = () => {
+    // Get selected leads data
+    const selectedLeadsData =
+      allUsersData?.data?.filter((lead) =>
+        selectedLeadIds.has(lead.id.toString())
+      ) || [];
+
+    // Open task form with pre-selected leads
+    setIsTaskFormOpen(true);
+    setPreSelectedLeadsForTask(selectedLeadsData); // You'll need this state
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      setIsBulkDeleteLoading(true);
+
+      const leadIds = Array.from(selectedLeadIds).map((id) => parseInt(id));
+
+      await bulkLeadDelete(leadIds);
+
+      toast.success(`Successfully deleted ${leadIds.length} leads`);
+
+      // Reset selections and close dialog
+      setSelectedLeadIds(new Set());
+      setPrimaryLeadId("");
+      setIsBulkDeleteDialogOpen(false);
+
+      // Refetch data to show updated list
+      refetch();
+    } catch (error) {
+      console.error("Bulk delete error:", error);
+      toast.error(error.message || "Failed to delete leads");
+    } finally {
+      setIsBulkDeleteLoading(false);
+    }
+  };
+
+  // Filter leads for merge dialog search
+  const filteredMergeLeads = selectedLeads.filter((lead) => {
+    const searchLower = mergeSearchTerm.toLowerCase();
+    const fullName = `${lead.firstName} ${lead.lastName}`.toLowerCase();
+    const email = lead.email?.toLowerCase() || "";
+    return fullName.includes(searchLower) || email.includes(searchLower);
+  });
+
+  // Handle checkbox selection
+  const handleLeadSelection = (leadId: string, isSelected: boolean) => {
+    const newSelection = new Set(selectedLeadIds);
+    if (isSelected) {
+      newSelection.add(leadId);
+    } else {
+      newSelection.delete(leadId);
+      // If this was the primary lead, reset primary selection
+      if (primaryLeadId === leadId) {
+        setPrimaryLeadId("");
+      }
+    }
+    setSelectedLeadIds(newSelection);
+  };
+
+  const handleBulkAssign = async (
+    salesOwnerId: string,
+    reassignActivities: boolean
+  ) => {
+    try {
+      setIsBulkAssignLoading(true);
+
+      const leadIds = Array.from(selectedLeadIds).map((id) => parseInt(id));
+
+      await bulkAssignLeads(salesOwnerId, leadIds);
+
+      toast.success(`Successfully assigned ${leadIds.length} leads`);
+
+      // Reset selections and close dialog
+      setSelectedLeadIds(new Set());
+      setPrimaryLeadId("");
+      setIsBulkAssignDialogOpen(false);
+
+      // Refetch data to show updated assignments
+      refetch();
+    } catch (error) {
+      console.error("Bulk assign error:", error);
+      toast.error(error.message || "Failed to assign leads");
+    } finally {
+      setIsBulkAssignLoading(false);
+    }
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = (isSelected: boolean) => {
+    if (isSelected) {
+      const allIds = new Set(
+        allUsersData?.data?.map((lead) => lead.id.toString()) || []
+      );
+      setSelectedLeadIds(allIds);
+    } else {
+      setSelectedLeadIds(new Set());
+      setPrimaryLeadId("");
+    }
+  };
+
+  // Check if all leads are selected
+  const isAllSelected =
+    allUsersData?.data?.length > 0 &&
+    selectedLeadIds.size === allUsersData.data.length;
+
+  // Check if some leads are selected (for indeterminate state)
+  const isSomeSelected =
+    selectedLeadIds.size > 0 &&
+    selectedLeadIds.size < (allUsersData?.data?.length || 0);
+
+  // Handle merge operation
+  const handleMergeLeads = () => {
+    if (selectedLeadIds.size < 2) {
+      toast.error("Please select at least 2 leads to merge");
+      return;
+    }
+
+    if (!primaryLeadId) {
+      toast.error("Please select a primary lead");
+      return;
+    }
+
+    const primaryLead = selectedLeads.find(
+      (lead) => lead.id.toString() === primaryLeadId
+    );
+    const secondaryLeads = selectedLeads.filter(
+      (lead) => lead.id.toString() !== primaryLeadId
+    );
+
+    // Create merged lead object
+    const mergedLead = { ...primaryLead };
+
+    // Merge data from secondary leads into primary lead (only fill null/empty fields)
+    secondaryLeads.forEach((secondaryLead) => {
+      Object.keys(secondaryLead).forEach((key) => {
+        if (
+          mergedLead[key] === null ||
+          mergedLead[key] === "" ||
+          mergedLead[key] === undefined
+        ) {
+          if (
+            secondaryLead[key] !== null &&
+            secondaryLead[key] !== "" &&
+            secondaryLead[key] !== undefined
+          ) {
+            mergedLead[key] = secondaryLead[key];
+          }
+        }
+      });
+    });
+
+    handleSaveField(mergedLead);
+
+    // Close dialog and reset state
+    setIsMergeDialogOpen(false);
+    setSelectedLeadIds(new Set());
+    setPrimaryLeadId("");
+    setMergeSearchTerm("");
+
+    toast.success(`Successfully merged ${selectedLeadIds.size} leads`);
+  };
 
   // Define tabs with dynamic counts
   const tabs: Tab[] = [
     { id: "all", label: "All Leads", count: allUsersData?.total },
-    { id: "my", label: "My Leads", count: undefined }, // You can add count from API if available
-    // { id: "new", label: "New Leads", count: undefined }, // You can add count from API if available
+    { id: "my", label: "My Leads", count: undefined },
   ];
 
   const getAppliedFiltersCount = () => {
-    // Don't count the assignedTo filter for My Leads tab as it's automatically applied
     const filtersToCount =
       activeTab === "my"
         ? Object.keys(appliedFilters).filter((key) => key !== "assignedTo")
@@ -118,14 +294,16 @@ const Leads = () => {
     return filtersToCount.length;
   };
 
-  // Tab change handler - now uses context
+  // Tab change handler
   const handleTabChange = (tabId: TabType) => {
     setActiveTab(tabId);
-    // Reset pagination when switching tabs
-    setPagination({ pageIndex: 0, pageSize: 10 }); // Use INITIAL_PAGINATION value
+    setPagination({ pageIndex: 0, pageSize: 10 });
+    // Clear selections when changing tabs
+    setSelectedLeadIds(new Set());
+    setPrimaryLeadId("");
   };
 
-  // Add this handler for resetting filters
+  // Reset filters handler
   const handleResetFilters = () => {
     setColumnFilters([]);
     setSorting([]);
@@ -145,15 +323,22 @@ const Leads = () => {
       throw error;
     }
   };
+
+  const handleSubmit = async (data) => {
+    try {
+      await createTask(data);
+      toast.success("Task created successfully");
+    } catch (error) {
+      toast.error("Failed to create task");
+    }
+  };
+
   // Assign To Dropdown Component
   const AssignToDropdown = ({ lead }: { lead: Lead }) => {
     const selectedUserId = lead?.assignedTo || "";
 
     const handleValueChange = (value: string) => {
-      if (!value) {
-        return;
-      }
-
+      if (!value) return;
       handleAssignToChange(String(lead.id), value);
     };
 
@@ -164,7 +349,7 @@ const Leads = () => {
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {users.map((user) => (
+            {users?.map((user) => (
               <SelectItem key={user.id} value={user.id}>
                 {user.name}
               </SelectItem>
@@ -177,6 +362,34 @@ const Leads = () => {
 
   // Column definitions
   const userColumns: ColumnDef<Lead>[] = [
+    // Checkbox column
+    {
+      id: "select",
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          checked={isAllSelected}
+          ref={(el) => {
+            if (el) el.indeterminate = isSomeSelected;
+          }}
+          onChange={(e) => handleSelectAll(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={selectedLeadIds.has(row.original.id.toString())}
+          onChange={(e) =>
+            handleLeadSelection(row.original.id.toString(), e.target.checked)
+          }
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      ),
+      enableSorting: false,
+      enableColumnFilter: false,
+      size: 50,
+    },
     {
       header: "Name",
       accessorKey: "username",
@@ -207,18 +420,16 @@ const Leads = () => {
                 to={`/lead-details/${user.id}`}
                 onClick={() => setAssignedTo(user.assignedTo)}
               >
-                <MdInfoOutline /> {/* Details */}
+                <MdInfoOutline />
               </Link>
-              <FiMail /> {/* Email */}
-              <FiCheckSquare onClick={() => setIsTaskFormOpen(true)} />{" "}
-              {/* Task */}
+              <FiMail />
+              <FiCheckSquare onClick={() => setIsTaskFormOpen(true)} />
               <FiFileText
                 onClick={() => {
                   setSelectedLeadForNote(user);
                   setIsCreateNoteFormOpen(true);
                 }}
               />
-              {/* Note */}
             </div>
           </div>
         );
@@ -249,7 +460,6 @@ const Leads = () => {
           disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
-      // Add custom meta for filtering
       meta: {
         filterLabel: "Search First Name/Last Name/Email/Mobile",
         filterPlaceholder: "Search by name, email, or mobile...",
@@ -403,7 +613,6 @@ const Leads = () => {
           },
         ]
       : []),
-
     ...(authoritiesList.some((authority) =>
       authority.startsWith("leads:delete")
     )
@@ -433,7 +642,6 @@ const Leads = () => {
           },
         ]
       : []),
-    ,
   ];
 
   // Error state
@@ -513,7 +721,7 @@ const Leads = () => {
       <div className="mb-6">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
-            {tabs.map((tab) => (
+            {tabs?.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
@@ -541,6 +749,56 @@ const Leads = () => {
         </div>
       </div>
 
+      {/* Merge Button Section - Appears before table when leads are selected */}
+      {selectedLeadIds.size > 0 && (
+        <div className="p-2 rounded-md bg-gray-200 mb-2 flex items-center gap-2">
+          <Button className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300">
+            Bulk Email
+          </Button>
+          <Button
+            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+            onClick={handleBulkTaskCreate} // Use the new handler
+          >
+            Add Task
+          </Button>
+          <Button
+            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+            onClick={() => setIsBulkAssignDialogOpen(true)}
+          >
+            Assign To
+          </Button>
+          <Button
+            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+            onClick={() => {
+              setIsMergeDialogOpen(true);
+              if (filteredMergeLeads?.length > 0) {
+                setPrimaryLeadId(filteredMergeLeads[0].id.toString());
+              }
+            }}
+            disabled={selectedLeadIds.size < 2}
+          >
+            Merge
+          </Button>
+          <Button
+            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+            onClick={() => setIsBulkDeleteDialogOpen(true)} // Use the new handler
+          >
+            Delete
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedLeadIds(new Set());
+              setPrimaryLeadId("");
+            }}
+            variant="outline"
+            className="bg-transparent"
+          >
+            <FaTimes className="text-gray-500" />
+            Cancel Bulk Selection
+          </Button>
+        </div>
+      )}
+
       {/* Main Table */}
       <TanStackBasicTable
         isTableDataLoading={isAllUsersDataLoading}
@@ -555,6 +813,19 @@ const Leads = () => {
         onTableInstanceChange={setTableInstance}
       />
 
+      {/* Merge Dialog */}
+
+      <MergeLead
+        isMergeDialogOpen={isMergeDialogOpen}
+        setIsMergeDialogOpen={setIsMergeDialogOpen}
+        selectedLeadIds={selectedLeadIds}
+        mergeSearchTerm={mergeSearchTerm}
+        setMergeSearchTerm={setMergeSearchTerm}
+        filteredMergeLeads={filteredMergeLeads}
+        primaryLeadId={primaryLeadId}
+        setPrimaryLeadId={setPrimaryLeadId}
+        handleMergeLeads={handleMergeLeads}
+      />
       {/* Filters Offcanvas */}
       <Offcanvas
         isOpen={isOffcanvasOpen}
@@ -621,8 +892,31 @@ const Leads = () => {
 
       <TaskForm
         isOpen={isTaskFormOpen}
-        setIsOpen={setIsTaskFormOpen}
-        onSubmit={(values) => console.log(values)}
+        setIsOpen={(isOpen) => {
+          setIsTaskFormOpen(isOpen);
+          if (!isOpen) {
+            setPreSelectedLeadsForTask([]); // Clear when closing
+          }
+        }}
+        onSubmit={handleSubmit}
+        preSelectedLeads={preSelectedLeadsForTask} // Pass pre-selected leads
+      />
+
+      <BulkAssignDialog
+        isOpen={isBulkAssignDialogOpen}
+        onClose={() => setIsBulkAssignDialogOpen(false)}
+        onSave={handleBulkAssign}
+        users={users}
+        selectedCount={selectedLeadIds.size}
+        isLoading={isBulkAssignLoading}
+      />
+
+      <BulkDeleteDialog
+        isOpen={isBulkDeleteDialogOpen}
+        onClose={() => setIsBulkDeleteDialogOpen(false)}
+        onConfirm={handleBulkDelete}
+        selectedCount={selectedLeadIds.size}
+        isLoading={isBulkDeleteLoading}
       />
     </MainLayout>
   );

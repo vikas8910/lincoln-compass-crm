@@ -4,14 +4,7 @@ import { Tasks } from "./Tasks";
 import { Meetings } from "./Meetings";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
-
-// Mock components - replace these with your actual components
-const ActivityTimeline = () => (
-  <div className="p-4">
-    <h3 className="text-lg font-medium mb-2">Activity Timeline</h3>
-    <p className="text-gray-600">Activity timeline content goes here...</p>
-  </div>
-);
+import ActivityTimeline from "./ActivityTimeline";
 
 export const Activities = () => {
   const [activeTab, setActiveTab] = useState("timeline");
