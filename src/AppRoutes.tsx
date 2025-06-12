@@ -106,16 +106,17 @@ const AppRoutes = () => {
         )}
 
         {authoritiesList.includes(PermissionsEnum.MANAGE_USERS) && (
-          <Route
-            path="/sales-officer-roles"
-            element={<ProtectedRoute element={<SalesOfficerRoles />} />}
-          />
+          <>
+            <Route
+              path="/sales-officer-roles"
+              element={<ProtectedRoute element={<SalesOfficerRoles />} />}
+            />
+            <Route
+              path="/master-data"
+              element={<ProtectedRoute element={<MasterDataManagement />} />}
+            />
+          </>
         )}
-
-          <Route
-            path="/master-data"
-            element={<ProtectedRoute element={<MasterDataManagement />} />}
-          />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

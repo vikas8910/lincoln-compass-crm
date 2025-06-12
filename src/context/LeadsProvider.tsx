@@ -6,7 +6,6 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
-import { toast } from "sonner";
 import type {
   ColumnFiltersState,
   PaginationState,
@@ -52,6 +51,7 @@ import { createLeadFormValues } from "@/schemas/lead";
 // Constants
 import { DROPDOWN_OPTIONS, INITIAL_PAGINATION } from "@/lib/constants";
 import { useGetMeetings } from "@/hooks/useGetMeetings";
+import { toast } from "react-toastify";
 
 // Types
 interface LeadsContextType {

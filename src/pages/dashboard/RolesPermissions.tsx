@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
 import { FiPlus, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import {
   createRole,
@@ -47,6 +46,7 @@ import {
 } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 import { useRolePermissions } from "@/hooks/useRolePermissions";
+import { toast } from "react-toastify";
 
 // Define types
 export interface Permission {
@@ -94,11 +94,7 @@ const RolesPermissions = () => {
         setRoles(roles.content);
       } catch (error) {
         console.error("Error fetching roles:", error);
-        toast({
-          title: "Failed to load roles",
-          description: "Could not retrieve roles. Please try again later.",
-          variant: "destructive",
-        });
+        toast.error("Could not retrieve roles. Please try again later.");
       }
     };
     fetchRoles();
@@ -146,22 +142,24 @@ const RolesPermissions = () => {
           permissionIds: [],
         });
 
-        setRoles(
-          roles.map((role) =>
-            role.id === editingRole.id
-              ? {
-                  ...role,
-                  name: data.name,
-                  description: data.description,
-                }
-              : role
-          )
-        );
+        try {
+          setRoles(
+            roles.map((role) =>
+              role.id === editingRole.id
+                ? {
+                    ...role,
+                    name: data.name,
+                    description: data.description,
+                  }
+                : role
+            )
+          );
 
-        toast({
-          title: "Success",
-          description: "Role updated successfully",
-        });
+          toast.success("Role updated successfully");
+        } catch (error) {
+          console.error("Error updating role:", error);
+          toast.error("Failed to update role. Please try again later.");
+        }
       } else {
         // Create new role
         const newRole = {
@@ -172,14 +170,16 @@ const RolesPermissions = () => {
           permissionIds: [],
         };
 
-        const res = await createRole(newRole);
-        newRole.id = res.id;
-        setRoles([...roles, newRole]);
+        try {
+          const res = await createRole(newRole);
+          newRole.id = res.id;
+          setRoles([...roles, newRole]);
 
-        toast({
-          title: "Success",
-          description: "Role created successfully",
-        });
+          toast.success("Role created successfully");
+        } catch (error) {
+          console.error("Error creating role:", error);
+          toast.error("Failed to create role. Please try again later.");
+        }
       }
 
       roleForm.reset();
@@ -214,11 +214,7 @@ const RolesPermissions = () => {
           "Network error. Please check your connection and try again.";
       }
 
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -239,10 +235,7 @@ const RolesPermissions = () => {
     try {
       await deleteRole(selectedRole.id);
       setRoles(roles.filter((role) => role.id !== selectedRole.id));
-      toast({
-        title: "Success",
-        description: "Role deleted successfully",
-      });
+      toast.success("Role deleted successfully");
       setIsRoleDeleteDialogOpen(false);
     } catch (error: any) {
       console.error("Error deleting role:", error);
@@ -269,11 +262,7 @@ const RolesPermissions = () => {
           "Network error. Please check your connection and try again.";
       }
 
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

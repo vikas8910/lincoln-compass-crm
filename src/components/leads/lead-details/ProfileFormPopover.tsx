@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { Edit2 } from "lucide-react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,12 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useLeadDetails } from "@/context/LeadsProvider";
-import { toast } from "sonner";
 import { updateLeadFullDetails } from "@/services/lead/lead";
-import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
-import { PermissionsEnum } from "@/lib/constants";
-import { useUser } from "@/context/UserProvider";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
+import { toast } from "react-toastify";
 
 // Zod schema
 const profileSchema = z.object({
