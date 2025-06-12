@@ -86,12 +86,12 @@ interface LeadsContextType {
   // Lead Details State (for lead details page)
   lead: Lead | null;
   isLeadDetailsLoading: boolean;
-  activeDetailsTab: "details" | "activities";
+  activeDetailsTab: "details" | "activities" | "files";
   allTags: Tag[];
   selectedTagIds: number[];
 
   // Actions
-  setActiveDetailsTab: (tab: "details" | "activities") => void;
+  setActiveDetailsTab: (tab: "details" | "activities" | "files") => void;
   setAllTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   setSelectedTagIds: React.Dispatch<React.SetStateAction<number[]>>;
   setLead: React.Dispatch<React.SetStateAction<Lead>>;
@@ -140,7 +140,7 @@ export const LeadsProvider: React.FC<LeadsProviderProps> = ({ children }) => {
   const [lead, setLead] = useState<Lead | null>(null);
   const [isLeadDetailsLoading, setIsLeadDetailsLoading] = useState(true);
   const [activeDetailsTab, setActiveDetailsTab] = useState<
-    "details" | "activities"
+    "details" | "activities" | "files"
   >("details");
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
@@ -190,8 +190,6 @@ export const LeadsProvider: React.FC<LeadsProviderProps> = ({ children }) => {
     columnFilters: getModifiedColumnFilters(),
     pagination,
   });
-
-  console.log("All Meetings => ", allMeetingsData);
 
   // Fetch all dropdown data
   useEffect(() => {

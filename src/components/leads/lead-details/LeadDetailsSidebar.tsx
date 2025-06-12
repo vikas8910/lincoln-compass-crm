@@ -16,10 +16,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Files } from "./Files";
 
 export const LeadDetailsSidebar: React.FC<{
-  activeTab: "details" | "activities";
-  onTabChange: (tab: "details" | "activities") => void;
+  activeTab: "details" | "activities" | "files";
+  onTabChange: (tab: "details" | "activities" | "files") => void;
   lead: Lead;
   onSave: (key: string, value: string) => Promise<void>;
 }> = ({ activeTab, onTabChange, lead, onSave }) => {
@@ -35,7 +36,9 @@ export const LeadDetailsSidebar: React.FC<{
               id={item.id}
               label={item.label}
               isActive={activeTab === item.id}
-              onClick={(id) => onTabChange(id as "details" | "activities")}
+              onClick={(id) =>
+                onTabChange(id as "details" | "activities" | "files")
+              }
               Icon={item.Icon}
             />
           ))}
@@ -122,6 +125,12 @@ export const LeadDetailsSidebar: React.FC<{
         {activeTab === "activities" && (
           <div className="w-full min-w-0">
             <Activities />
+          </div>
+        )}
+
+        {activeTab === "files" && (
+          <div className="w-full min-w-0">
+            <Files />
           </div>
         )}
       </Card>

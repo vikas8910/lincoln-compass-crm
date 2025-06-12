@@ -15,6 +15,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import clsx from "clsx";
+import { Undo2Icon } from "lucide-react";
 import { useState, useMemo } from "react";
 import { FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -115,18 +116,20 @@ export const Tasks = () => {
     setIsEditMode(false);
   };
 
-  const handleMarkComplete = async (id: number, data) => {
+  const handleMarkComplete = async (id: number, data, status) => {
     try {
       const relatedLeadIds = data?.relatedLeadIds.map((item) => item.id);
       const collaboratorIds = data?.collaboratorIds.map((item) => item.id);
       await updateTask(id, {
         ...data,
-        completed: true,
+        completed: status,
         relatedLeadIds,
         collaboratorIds,
       });
       refetch();
-      toast.success("Task updated successfully");
+      toast.success(
+        status ? "Task marked as complete." : "Task marked as open"
+      );
     } catch (error) {
       toast.error("Failed to update task");
     }
@@ -212,13 +215,24 @@ export const Tasks = () => {
             <Button
               variant="outline"
               className="flex items-center gap-2"
-              onClick={() => handleMarkComplete(row.original.id, row.original)}
+              onClick={() =>
+                handleMarkComplete(row.original.id, row.original, true)
+              }
             >
               <FaCheck />
               Mark Complete
             </Button>
           ) : (
-            "-"
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() =>
+                handleMarkComplete(row.original.id, row.original, false)
+              }
+            >
+              <Undo2Icon />
+              Mark as open
+            </Button>
           ),
       },
     ],
@@ -226,7 +240,6 @@ export const Tasks = () => {
   );
 
   const handleSubmit = async (data) => {
-    // alert(data.dueDate);
     try {
       if (isEditMode && selectedTask) {
         // Update existing task
