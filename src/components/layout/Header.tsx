@@ -20,7 +20,7 @@ const Header = () => {
   const { user } = useUser();
   const userEmail = user?.email;
   const userName = user?.name;
-  const userInitial = userName.charAt(0).toUpperCase();
+  const userInitial = userName?.charAt(0).toUpperCase();
 
   const { bg, text } = getAvatarColors(userInitial);
   const navigate = useNavigate();
