@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { AXIOS_TIMEOUT } from "@/lib/constants";
+import { toast } from "react-toastify";
 // Remove the toast import here as it's causing duplicate toasts
 // import { toast } from "@/hooks/use-toast";
 
@@ -26,7 +27,14 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // We'll handle all error toasts in the service layer
+    if (
+      error.message === "Network Error" ||
+      error.message === "net::ERR_CONNECTION_REFUSED"
+    ) {
+      toast.error("Network Error. Please check your internet connection.");
+      localStorage.removeItem("accessToken");
+    }
+
     return Promise.reject(error);
   }
 );
