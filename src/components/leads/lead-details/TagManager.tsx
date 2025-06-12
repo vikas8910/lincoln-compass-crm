@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createNewTag, updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadDetails } from "@/context/LeadsProvider";
-import { toast } from "sonner";
-import { PermissionsEnum } from "@/lib/constants";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
+import { toast } from "react-toastify";
 
 interface Color {
   id: number;
