@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FaEdit } from "react-icons/fa";
 import { getAvatarColors } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { act, useEffect, useState } from "react";
 import {
   addMeetingOutcome,
   addTaskOutcome,
@@ -233,20 +233,23 @@ const ActivityHeader = ({
   activity,
   onRefresh,
   onAddOutcome,
+  markCompleteButton,
 }: {
   activity: any;
   onRefresh: () => void;
   onAddOutcome?: () => void;
+  markCompleteButton: Record<string, boolean>;
 }) => {
   const { details } = activity;
   const showMarkComplete =
     activity.entityType === "Task" &&
     !activity.activityType.includes("complete") &&
-    !activity.details.completed;
+    !markCompleteButton[activity.entityId];
 
   const showAddOutcome =
     activity.entityType === "Task" &&
-    (activity.activityType.includes("complete") || activity.details.completed);
+    activity.activityType.includes("add") &&
+    markCompleteButton[activity.entityId];
 
   const handleMarkAsCompleted = async () => {
     try {
@@ -403,9 +406,11 @@ const LeadsList = ({
 const TaskActivity = ({
   activity,
   onRefresh,
+  markCompleteButton,
 }: {
   activity: any;
   onRefresh?: () => void;
+  markCompleteButton: { [key: string]: boolean };
 }) => {
   const { details } = activity;
   const [isOutcomeModalOpen, setIsOutcomeModalOpen] = useState(false);
@@ -431,6 +436,7 @@ const TaskActivity = ({
         activity={activity}
         onRefresh={onRefresh}
         onAddOutcome={() => setIsOutcomeModalOpen(true)}
+        markCompleteButton={markCompleteButton}
       />
       <p className="text-sm text-gray-600 mb-3">{activity.description}</p>
       <StatusBadges status={details.status} type={details.type} />
@@ -486,15 +492,17 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
           <span className="text-sm text-gray-500">{activity.timestamp}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs h-7"
-            onClick={() => setIsOutcomeModalOpen(true)}
-          >
-            <FileText className="w-3 h-3 mr-1" />
-            Add outcome
-          </Button>
+          {activity.activityType.includes("add") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => setIsOutcomeModalOpen(true)}
+            >
+              <FileText className="w-3 h-3 mr-1" />
+              Add outcome
+            </Button>
+          )}
         </div>
       </div>
       {/* Status badge */}
@@ -538,12 +546,22 @@ const MeetingActivity = ({ activity }: { activity: any }) => {
   );
 };
 
-const LeadActivity = ({ activity }: { activity: any }) => {
+const LeadActivity = ({
+  activity,
+  markCompleteButton,
+}: {
+  activity: any;
+  markCompleteButton: { [key: string]: boolean };
+}) => {
   const { details } = activity;
 
   return (
     <>
-      <ActivityHeader activity={activity} onRefresh={() => {}} />
+      <ActivityHeader
+        activity={activity}
+        onRefresh={() => {}}
+        markCompleteButton={markCompleteButton}
+      />
       <p className="text-sm text-gray-600 mb-3">{activity.description}</p>
 
       {/* Subscription types for newsletter activities */}
@@ -563,23 +581,40 @@ const ActivityItem = ({
   activity,
   isLast,
   onRefresh,
+  markCompleteButton,
 }: {
   activity: any;
   isLast: boolean;
   onRefresh: () => void;
+  markCompleteButton: { [key: string]: boolean };
 }) => {
   const renderActivityContent = () => {
     switch (activity.entityType) {
       case "Task":
-        return <TaskActivity activity={activity} onRefresh={onRefresh} />;
+        return (
+          <TaskActivity
+            activity={activity}
+            onRefresh={onRefresh}
+            markCompleteButton={markCompleteButton}
+          />
+        );
       case "Meeting":
         return <MeetingActivity activity={activity} />;
       case "Lead":
-        return <LeadActivity activity={activity} />;
+        return (
+          <LeadActivity
+            activity={activity}
+            markCompleteButton={markCompleteButton}
+          />
+        );
       default:
         return (
           <>
-            <ActivityHeader activity={activity} onRefresh={() => {}} />
+            <ActivityHeader
+              activity={activity}
+              onRefresh={() => {}}
+              markCompleteButton={markCompleteButton}
+            />
             <p className="text-sm text-gray-600">{activity.description}</p>
           </>
         );
@@ -615,6 +650,9 @@ const ActivityTimeline = () => {
   const [activities, setActivities] = useState<ActivityTimelineResponse>(
     {} as ActivityTimelineResponse
   );
+  const [markCompleteButton, setMarkCompleteButton] = useState<{
+    [key: string]: boolean;
+  }>({});
   const { lead } = useLeadDetails();
   const fetchActivities = async () => {
     const res = await getActivityTimeline(lead.id);
@@ -623,8 +661,32 @@ const ActivityTimeline = () => {
   useEffect(() => {
     fetchActivities();
   }, []);
+
+  useEffect(() => {
+    // Iterate through each date
+    if (activities.activitiesByDate) {
+      Object.values(activities.activitiesByDate).forEach((activities) => {
+        // Filter only Task entities and process them
+        activities
+          .filter((activity) => activity.entityType === "Task")
+          .forEach((task) => {
+            const entityId = task.entityId;
+            const isCompleted = task.details.completed;
+            setMarkCompleteButton((prevState) => ({
+              ...prevState,
+              [entityId]: prevState[entityId] || isCompleted,
+            }));
+          });
+      });
+    }
+
+    console.log("markCompleteButton", markCompleteButton);
+  }, [activities]);
   return (
-    <div className="w-full p-6 bg-gray-50">
+    <div
+      className="overflow-y-auto w-full p-6 bg-gray-50"
+      style={{ maxHeight: "calc(100vh - 16rem)" }}
+    >
       {/* <div className="mb-6 w-full max-w-5xl">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -652,6 +714,7 @@ const ActivityTimeline = () => {
                       activity={activity}
                       isLast={index === activities.length - 1}
                       onRefresh={fetchActivities}
+                      markCompleteButton={markCompleteButton}
                     />
                   ))}
                 </div>
