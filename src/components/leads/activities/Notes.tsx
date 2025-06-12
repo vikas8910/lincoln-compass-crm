@@ -11,6 +11,7 @@ import {
 } from "@/services/activities/notes";
 import { CalendarDays, Edit, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export interface NoteData {
   id: number;
@@ -71,29 +72,44 @@ export const Notes = () => {
   };
 
   const handleDeleteNote = async (noteId: number) => {
-    await deleteNote(noteId, user.id);
-    setNotes(
-      notes.map((note) =>
-        note.id === noteId ? { ...note, active: false } : note
-      )
-    );
+    try {
+      await deleteNote(noteId, user.id);
+      setNotes(
+        notes.map((note) =>
+          note.id === noteId ? { ...note, active: false } : note
+        )
+      );
+      toast.success("Note deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete note");
+    }
   };
 
   const handleSaveNote = async (noteData: NoteData, isEdit: boolean) => {
     if (isEdit) {
-      await updateNote(noteData.id, user.id, {
-        description: noteData.description,
-        leadId: lead.id,
-      });
+      try {
+        await updateNote(noteData.id, user.id, {
+          description: noteData.description,
+          leadId: lead.id,
+        });
+        toast.success("Note updated successfully");
+      } catch (error) {
+        toast.error("Failed to update note");
+      }
       setNotes(
         notes.map((note) => (note.id === noteData.id ? noteData : note))
       );
     } else {
-      const data = await createNote(user.id, {
-        description: noteData.description,
-        leadId: lead.id,
-      });
-      setNotes([data, ...notes]);
+      try {
+        const data = await createNote(user.id, {
+          description: noteData.description,
+          leadId: lead.id,
+        });
+        setNotes([data, ...notes]);
+        toast.success("Note added successfully");
+      } catch (error) {
+        toast.error("Failed to add note");
+      }
     }
   };
 

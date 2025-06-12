@@ -1,4 +1,3 @@
-import React from "react";
 import { LeadStagingForm } from "./LeadStagingForm";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import {
@@ -14,10 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { StageOption } from "@/types/lead";
 import { updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
+import { toast } from "react-toastify";
 
 const LeadStaging = () => {
   const { lead, setLead, stageOptions } = useLeadDetails();

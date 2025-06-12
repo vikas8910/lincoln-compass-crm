@@ -1,7 +1,5 @@
 import { Card } from "../../ui/card";
 import { useLeadDetails } from "@/context/LeadsProvider";
-import { Button } from "@/components/ui/button";
-import { EditIcon } from "lucide-react";
 import { NoteForm } from "@/components/common/NoteForm";
 import { useState } from "react";
 import { EditableFieldGrid } from "./EditableFieldGrid";
@@ -9,6 +7,7 @@ import { LEAD_OVERVIEW_FIELDS } from "@/lib/constants";
 import { NoteData } from "../activities/Notes";
 import { createNote, updateNote } from "@/services/activities/notes";
 import { useUser } from "@/context/UserProvider";
+import { toast } from "react-toastify";
 
 export const LeadOverview: React.FC<{
   onSave: (key: string, value: string | string[] | Date) => Promise<void>;
@@ -18,15 +17,25 @@ export const LeadOverview: React.FC<{
   const { user } = useUser();
   const handleSaveNote = async (noteData: NoteData, isEdit: boolean) => {
     if (isEdit) {
-      await updateNote(noteData.id, user.id, {
-        description: noteData.description,
-        leadId: lead.id,
-      });
+      try {
+        await updateNote(noteData.id, user.id, {
+          description: noteData.description,
+          leadId: lead.id,
+        });
+        toast.success("Note updated successfully");
+      } catch (error) {
+        toast.error("Failed to update note");
+      }
     } else {
-      await createNote(user.id, {
-        description: noteData.description,
-        leadId: lead.id,
-      });
+      try {
+        const data = await createNote(user.id, {
+          description: noteData.description,
+          leadId: lead.id,
+        });
+        toast.success("Note added successfully");
+      } catch (error) {
+        toast.error("Failed to add note");
+      }
     }
   };
   return (

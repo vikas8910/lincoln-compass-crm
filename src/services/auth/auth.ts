@@ -17,7 +17,6 @@ export const logout = async () => {
   try {
     const response = await axiosInstance.post(LOGOUT_ENDPOINT);
     localStorage.removeItem("accessToken");
-    window.location.href = "/login";
     return response.data;
   } catch (error) {
     throw error;

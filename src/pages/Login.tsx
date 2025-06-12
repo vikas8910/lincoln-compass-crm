@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,11 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { FiEye, FiEyeOff, FiLock, FiUser } from "react-icons/fi";
 import { login } from "@/services/auth/auth";
 import { useUser } from "@/context/UserProvider";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
+import { toast } from "react-toastify";
 
 type UserType = "admin" | "sales";
 

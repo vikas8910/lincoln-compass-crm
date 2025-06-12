@@ -6,6 +6,7 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
+  Database,
 } from "lucide-react";
 import { useAuthoritiesList } from "@/hooks/useAuthoritiesList";
 import { PermissionsEnum } from "@/lib/constants";
@@ -49,12 +50,12 @@ const MainSidebar = () => {
           },
         ]
       : []),
-    ...(authoritiesList.includes(PermissionsEnum.LEADS_CREATE)
+    ...(authoritiesList.includes(PermissionsEnum.MANAGE_USERS)
       ? [
           {
             title: "Master Data",
-            icon: Shield,
-            href: ["/master-data"],          
+            icon: Database,
+            href: ["/master-data"],
           },
         ]
       : []),

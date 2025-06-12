@@ -1,6 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -16,6 +15,7 @@ import {
 } from "@/services/permission-service/permission-service";
 import { ChangeEvent, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // Type definitions based on API response
 interface ScopeOption {
@@ -292,11 +292,7 @@ const Permissions = () => {
       permissions: permissions,
     });
     if (res.success) {
-      toast({
-        title: "Success",
-        description: "Permissions updated successfully",
-        variant: "default",
-      });
+      toast.success("Permissions updated successfully");
     }
   };
 

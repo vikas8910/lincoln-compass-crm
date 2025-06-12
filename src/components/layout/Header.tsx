@@ -8,11 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
 import { FiLogOut } from "react-icons/fi";
 import { logout } from "@/services/auth/auth";
 import { useUser } from "@/context/UserProvider";
 import { getAvatarColors } from "@/lib/utils";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const { isMobile } = useSidebar();
@@ -22,9 +23,11 @@ const Header = () => {
   const userInitial = userName.charAt(0).toUpperCase();
 
   const { bg, text } = getAvatarColors(userInitial);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
+    navigate("/login");
     toast.success("Logged out successfully");
   };
 

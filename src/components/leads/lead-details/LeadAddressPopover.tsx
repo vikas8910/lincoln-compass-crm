@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLeadDetails } from "@/context/LeadsProvider";
 import { updateLeadFullDetails } from "@/services/lead/lead";
-import { toast } from "sonner";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
+import { toast } from "react-toastify";
 
 interface AddressFormData {
   address: string;
