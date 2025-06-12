@@ -56,15 +56,7 @@ export default function TanStackBasicTableFilterComponent<TData>({
       }
     });
 
-    // Apply new filter
-    // For firstName, lastName, email, mobile - all use "firstName" column for the combined search
-    const filterColumn = ["firstName", "lastName", "email", "mobile"].includes(
-      selectedField
-    )
-      ? "firstName"
-      : selectedField;
-
-    const column = table.getColumn(filterColumn);
+    const column = table.getColumn(selectedField);
     if (column) {
       column.setFilterValue(filterValue.trim());
     }

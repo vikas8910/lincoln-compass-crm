@@ -274,6 +274,30 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               )}
             />
 
+            {/* Remaining Inputs */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Email <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="Enter email"
+                      className={
+                        form.formState.errors.email ? "border-red-500" : ""
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Country Code Dropdown - NEW */}
             <FormField
               control={form.control}
@@ -308,41 +332,18 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               )}
             />
 
-            {/* Remaining Inputs */}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Email <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Enter email"
-                      className={
-                        form.formState.errors.email ? "border-red-500" : ""
-                      }
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="mobile"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Mobile <span className="text-red-500">*</span>
+                    Primary Mobile Number{" "}
+                    <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter mobile"
+                      placeholder="Enter primary mobile number"
                       className={
                         form.formState.errors.mobile ? "border-red-500" : ""
                       }
@@ -359,10 +360,10 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               name="backupMobileNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mobile number Backup</FormLabel>
+                  <FormLabel>Secondary Mobile Number</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter backup mobile"
+                      placeholder="Enter secondary mobile number"
                       className={
                         form.formState.errors.backupMobileNumber
                           ? "border-red-500"

@@ -352,7 +352,7 @@ const LeadStaging = () => {
         </h1>
         <div className="flex flex-1 w-full items-center overflow-x-auto scrollbar-hide -space-x-1">
           {getDisplayStages().map((stage, index) => (
-            <div key={index} data-lov-id={stage.id}>
+            <div key={index} data-lov-id={stage.id} className="w-full">
               {renderStageChip(stage, index)}
             </div>
           ))}

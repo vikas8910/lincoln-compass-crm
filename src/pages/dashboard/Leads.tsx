@@ -502,7 +502,6 @@ const Leads = () => {
           disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
-      enableColumnFilter: false,
     },
     {
       header: "Mobile",
@@ -519,7 +518,6 @@ const Leads = () => {
           disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
-      enableColumnFilter: false,
     },
     {
       header: "Email",
@@ -534,7 +532,6 @@ const Leads = () => {
           disabled={!leadPermissions.canEditLead(row.original.assignedTo)}
         />
       ),
-      enableColumnFilter: false,
     },
     {
       header: "Source",

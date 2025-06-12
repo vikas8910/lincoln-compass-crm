@@ -36,7 +36,7 @@ const getAllUsersFn = async ({
       case "email":
         email = value as string;
         break;
-      case "phone":
+      case "mobile":
         phone = value as string;
         break;
       case "source":
@@ -69,10 +69,10 @@ const getAllUsersFn = async ({
   const queryParams = new URLSearchParams();
 
   // Add search parameters
-  if (firstName) queryParams.append("search", firstName);
-  if (lastName) queryParams.append("search", lastName);
-  if (email) queryParams.append("search", email);
-  if (phone) queryParams.append("search", phone);
+  if (firstName) queryParams.append("firstName", firstName);
+  if (lastName) queryParams.append("lastName", lastName);
+  if (email) queryParams.append("email", email);
+  if (phone) queryParams.append("mobile", phone);
 
   // Add filter parameters
   if (source) queryParams.append("source", source);
