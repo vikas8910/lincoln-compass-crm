@@ -1,3 +1,5 @@
+import { MeetingForm } from "@/components/common/MeetingForm";
+import { TaskForm } from "@/components/common/TaskForm";
 import MainLayout from "@/components/layout/MainLayout";
 import { LeadDetailsSidebar } from "@/components/leads/lead-details/LeadDetailsSidebar";
 import { LeadHeader } from "@/components/leads/lead-details/LeadHeader";
@@ -13,16 +15,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLeadDetails } from "@/context/LeadsProvider";
-import { useEffect } from "react";
+import { useUser } from "@/context/UserProvider";
+import { saveMeeting } from "@/services/activities/meetings";
+import { createTask } from "@/services/activities/task";
+import { useEffect, useState } from "react";
 import { FaCalendar, FaEnvelope } from "react-icons/fa";
 import { MdChecklist } from "react-icons/md";
 import { Link, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const LeadDetails: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const { lead, isLoading, activeTab, setActiveTab, fetchLead, handleSave } =
     useLeadDetails();
-
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [isMeetingFormOpen, setIsMeetingFormOpen] = useState(false);
+  const { user } = useUser();
   // Fetch lead data when component mounts or leadId changes
   useEffect(() => {
     if (leadId) {
@@ -34,6 +42,37 @@ const LeadDetails: React.FC = () => {
   const onSave = async (key: string, value: string) => {
     if (!leadId) return;
     await handleSave(leadId, key, value);
+  };
+
+  const handleTaskFormClose = () => {
+    setIsTaskFormOpen(false);
+  };
+
+  const handleMeetingFormClose = () => {
+    setIsMeetingFormOpen(false);
+  };
+
+  const handleTaskSubmit = async (data) => {
+    try {
+      await createTask(data);
+      toast.success("Task created successfully");
+      setIsTaskFormOpen(false);
+    } catch (error) {
+      console.log("Error => ", error);
+      toast.error("Failed to create task");
+    }
+  };
+
+  const handleMeetingSubmit = async (data) => {
+    data.userId = user?.id;
+    try {
+      await saveMeeting(data);
+      toast.success("Meeting created successfully");
+      setIsMeetingFormOpen(false);
+    } catch (error) {
+      console.log("Error => ", error);
+      toast.error("Failed to create Meeting");
+    }
   };
 
   if (isLoading) {
@@ -75,15 +114,21 @@ const LeadDetails: React.FC = () => {
         </Breadcrumb>
 
         <div className="flex items-center gap-4">
-          <Button className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300">
+          {/* <Button className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300">
             <FaEnvelope className="text-gray-500" />
             Email
-          </Button>
-          <Button className="bg-white text-black py-1 px-4 border border-gray-300  hover:bg-gray-300">
+          </Button> */}
+          <Button
+            onClick={() => setIsTaskFormOpen(true)}
+            className="bg-white text-black py-1 px-4 border border-gray-300  hover:bg-gray-300"
+          >
             <MdChecklist className="text-gray-500" />
             Task
           </Button>
-          <Button className="bg-white text-black py-1 px-4 border border-gray-300  hover:bg-gray-300">
+          <Button
+            onClick={() => setIsMeetingFormOpen(true)}
+            className="bg-white text-black py-1 px-4 border border-gray-300  hover:bg-gray-300"
+          >
             <FaCalendar className="text-gray-500" />
             Meetings
           </Button>
@@ -108,6 +153,16 @@ const LeadDetails: React.FC = () => {
           onSave={onSave}
         />
       </div>
+      <TaskForm
+        isOpen={isTaskFormOpen}
+        setIsOpen={handleTaskFormClose}
+        onSubmit={handleTaskSubmit}
+      />
+      <MeetingForm
+        isOpen={isMeetingFormOpen}
+        setIsOpen={handleMeetingFormClose}
+        onSubmit={handleMeetingSubmit}
+      />
     </MainLayout>
   );
 };

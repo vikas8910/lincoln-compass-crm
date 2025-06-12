@@ -226,7 +226,6 @@ export const Tasks = () => {
   );
 
   const handleSubmit = async (data) => {
-    // alert(data.dueDate);
     try {
       if (isEditMode && selectedTask) {
         // Update existing task
