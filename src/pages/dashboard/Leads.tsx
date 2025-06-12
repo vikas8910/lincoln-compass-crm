@@ -22,6 +22,7 @@ import { EditableCell } from "@/components/tablec/EditableCell";
 import {
   bulkAssignLeads,
   bulkLeadDelete,
+  bulkLeadMerge,
   deleteLead,
 } from "@/services/lead/lead";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
@@ -231,7 +232,7 @@ const Leads = () => {
     selectedLeadIds.size < (allUsersData?.data?.length || 0);
 
   // Handle merge operation
-  const handleMergeLeads = () => {
+  const handleMergeLeads = async () => {
     if (selectedLeadIds.size < 2) {
       toast.error("Please select at least 2 leads to merge");
       return;
@@ -249,29 +250,49 @@ const Leads = () => {
       (lead) => lead.id.toString() !== primaryLeadId
     );
 
-    // Create merged lead object
-    const mergedLead = { ...primaryLead };
+    const primaryLeadIds = [primaryLeadId];
+    const secondaryLeadIds = selectedLeads
+      .filter((lead) => lead.id.toString() !== primaryLeadId)
+      .map((lead) => lead.id.toString());
 
-    // Merge data from secondary leads into primary lead (only fill null/empty fields)
-    secondaryLeads.forEach((secondaryLead) => {
-      Object.keys(secondaryLead).forEach((key) => {
-        if (
-          mergedLead[key] === null ||
-          mergedLead[key] === "" ||
-          mergedLead[key] === undefined
-        ) {
-          if (
-            secondaryLead[key] !== null &&
-            secondaryLead[key] !== "" &&
-            secondaryLead[key] !== undefined
-          ) {
-            mergedLead[key] = secondaryLead[key];
-          }
-        }
+    console.log("primaryLeadIds => ", primaryLeadIds[0]);
+    console.log("secondaryLeadIds => ", secondaryLeadIds);
+
+    try {
+      await bulkLeadMerge({
+        targetLeadId: parseInt(primaryLeadIds[0]),
+        sourceLeadIds: secondaryLeadIds.map((id) => parseInt(id)),
       });
-    });
+      toast.success(
+        "Lead merged successfully! Please refresh the page after some time."
+      );
+    } catch (error) {
+      console.error("Error merging leads:", error);
+      toast.error(error.message || "Failed to merge leads");
+    }
+    // // Create merged lead object
+    // const mergedLead = { ...primaryLead };
 
-    handleSaveField(mergedLead);
+    // // Merge data from secondary leads into primary lead (only fill null/empty fields)
+    // secondaryLeads.forEach((secondaryLead) => {
+    //   Object.keys(secondaryLead).forEach((key) => {
+    //     if (
+    //       mergedLead[key] === null ||
+    //       mergedLead[key] === "" ||
+    //       mergedLead[key] === undefined
+    //     ) {
+    //       if (
+    //         secondaryLead[key] !== null &&
+    //         secondaryLead[key] !== "" &&
+    //         secondaryLead[key] !== undefined
+    //       ) {
+    //         mergedLead[key] = secondaryLead[key];
+    //       }
+    //     }
+    //   });
+    // });
+
+    // handleSaveField(mergedLead);
 
     // Close dialog and reset state
     setIsMergeDialogOpen(false);
@@ -279,7 +300,7 @@ const Leads = () => {
     setPrimaryLeadId("");
     setMergeSearchTerm("");
 
-    toast.success(`Successfully merged ${selectedLeadIds.size} leads`);
+    // toast.success(`Successfully merged ${selectedLeadIds.size} leads`);
   };
 
   // Define tabs with dynamic counts
