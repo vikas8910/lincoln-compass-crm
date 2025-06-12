@@ -30,7 +30,7 @@ const MainSidebar = () => {
     {
       title: "Leads",
       icon: Users,
-      href: ["/leads", "/leads-details"],
+      href: ["/leads", "/lead-details"],
     },
     ...(authoritiesList.includes(PermissionsEnum.MANAGE_USERS)
       ? [
@@ -92,13 +92,10 @@ const MainSidebar = () => {
 
         <nav className="space-y-2">
           {menuItems.map((item) => {
-            const isActive = item.href.some(
-              (href) =>
-                location.pathname === href ||
-                (location.pathname.startsWith(href) &&
-                  href !== "/dashboard" &&
-                  href !== "/leads")
-            );
+            const isActive = item.href.some((href) => {
+              const pattern = new RegExp(`^${href}(\\/|$)`);
+              return pattern.test(location.pathname);
+            });
 
             return (
               <div key={item.title} className="relative group">

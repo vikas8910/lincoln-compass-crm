@@ -28,6 +28,7 @@ import { UserMultiSelect } from "./form/UserMultiSelect";
 import { Textarea } from "../ui/textarea";
 import { useUser } from "@/context/UserProvider";
 import { Lead } from "@/types/lead";
+import { taskOutcomes } from "../leads/activities/ActivityTimeline";
 
 // Custom hook for form data transformation
 const useTaskFormData = (
@@ -145,8 +146,7 @@ const useTaskFormData = (
 };
 
 // Constants
-const taskTypeOptions = ["Call", "Email", "Meeting", "Task", "Follow-up"];
-const outcomeOptions = ["Successful", "Pending", "Failed", "Rescheduled"];
+const taskTypeOptions = ["Follow-up", "Call Reminder"];
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -430,7 +430,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {outcomeOptions.map((outcome) => (
+                          {taskOutcomes.map((outcome) => (
                             <SelectItem key={outcome} value={outcome}>
                               {outcome}
                             </SelectItem>
