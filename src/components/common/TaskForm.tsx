@@ -516,7 +516,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 
             {/* Footer */}
             <div className="flex justify-end gap-3 p-4 border-t border-gray-200 bg-white flex-shrink-0">
-              <Button variant="outline" onClick={handleClose}>
+              <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
               <Button type="submit">{isEdit ? "Update" : "Save"}</Button>
