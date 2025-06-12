@@ -51,6 +51,19 @@ export interface ActivityTimelineResponse {
     last: boolean;
   };
 }
+export const meetingOutcomes = [
+  "Interested",
+  "Left message",
+  "No response",
+  "Not interested",
+  "Not able to reach",
+];
+
+export const taskOutcomes = [
+  "Open House Invitation",
+  "Office Visit",
+  "Set Meetings",
+];
 
 // Reusable Outcome Modal Component
 const OutcomeModal = ({
@@ -71,20 +84,6 @@ const OutcomeModal = ({
   const [selectedOutcome, setSelectedOutcome] = useState("");
   const [notes, setNotes] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const meetingOutcomes = [
-    "Interested",
-    "Left message",
-    "No response",
-    "Not interested",
-    "Not able to reach",
-  ];
-
-  const taskOutcomes = [
-    "Open House Invitation",
-    "Office Visit",
-    "Set Meetings",
-  ];
 
   const outcomes = entityType === "meeting" ? meetingOutcomes : taskOutcomes;
 
