@@ -26,9 +26,14 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-    toast.success("Logged out successfully");
+    try {
+      await logout();
+      navigate("/login");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
+    }
   };
 
   return (
