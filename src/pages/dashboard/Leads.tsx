@@ -49,6 +49,7 @@ import BulkDeleteDialog from "@/components/leads/BulkDeleteDialog";
 import { toast } from "react-toastify";
 import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
 import CreateLeadForm from "@/components/leads/CreateLeadDialog";
+import WithTooltip from "@/components/common/WithTooltip";
 
 const Leads = () => {
   // Get everything from the LeadsProvider context
@@ -440,20 +441,37 @@ const Leads = () => {
               </Link>
             </div>
             <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <Link
-                to={`/lead-details/${user.id}`}
-                onClick={() => setAssignedTo(user.assignedTo)}
-              >
-                <MdInfoOutline />
-              </Link>
-              <FiMail />
-              <FiCheckSquare onClick={() => setIsTaskFormOpen(true)} />
-              <FiFileText
-                onClick={() => {
-                  setSelectedLeadForNote(user);
-                  setIsCreateNoteFormOpen(true);
-                }}
-              />
+              <WithTooltip tooltip="See all details">
+                <Link
+                  to={`/lead-details/${user.id}`}
+                  onClick={() => setAssignedTo(user.assignedTo)}
+                  className="cursor-pointer"
+                >
+                  <MdInfoOutline />
+                </Link>
+              </WithTooltip>
+
+              <WithTooltip tooltip="Send mail">
+                <button>
+                  <FiMail />
+                </button>
+              </WithTooltip>
+              <WithTooltip tooltip="Add task">
+                <button>
+                  <FiCheckSquare onClick={() => setIsTaskFormOpen(true)} />
+                </button>
+              </WithTooltip>
+
+              <WithTooltip tooltip="Add note">
+                <button>
+                  <FiFileText
+                    onClick={() => {
+                      setSelectedLeadForNote(user);
+                      setIsCreateNoteFormOpen(true);
+                    }}
+                  />
+                </button>
+              </WithTooltip>
             </div>
           </div>
         );
