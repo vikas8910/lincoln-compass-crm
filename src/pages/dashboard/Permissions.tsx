@@ -790,14 +790,11 @@ const Permissions = () => {
                     </span>
                     <Input
                       type="number"
-                      min={uiConfig.numeric_config.min}
-                      max={uiConfig.numeric_config.max}
-                      value={
-                        currentPerm.numericValue ||
-                        uiConfig.numeric_config.default
-                      }
+                      value={currentPerm.numericValue}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value);
+                        const value = parseInt(
+                          e.target.value.replace(/^0+/, "")
+                        );
                         const maxValue = uiConfig.numeric_config?.max || 0;
 
                         if (value > maxValue) {
@@ -805,6 +802,17 @@ const Permissions = () => {
                             ...prev,
                             [errorKey]: `Value cannot exceed ${maxValue}`,
                           }));
+                          updatePermission(categoryId, permission.id, {
+                            numericValue: value,
+                          });
+                        } else if (value <= 0 || isNaN(value)) {
+                          setNumericErrors((prev) => ({
+                            ...prev,
+                            [errorKey]: `Value must be greater than 0`,
+                          }));
+                          updatePermission(categoryId, permission.id, {
+                            numericValue: value,
+                          });
                         } else {
                           setNumericErrors((prev) => {
                             const newErrors = { ...prev };
@@ -816,11 +824,11 @@ const Permissions = () => {
                           });
                         }
                       }}
-                      className={`w-20 ${
+                      className={`w-20 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
                         numericErrors[errorKey] ? "border-red-500" : ""
                       }`}
                     />
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 py-2">
                       {uiConfig.numeric_config.suffix}
                     </span>
                   </div>
@@ -1061,7 +1069,8 @@ const Permissions = () => {
 
           <Button
             onClick={handleSaveChanges}
-            className="fixed bottom-5 right-5 bg-blue-600 text-white"
+            className="fixed bottom-5 right-20 bg-blue-600 text-white"
+            disabled={Object.keys(numericErrors).length > 0}
           >
             Save Changes
           </Button>
