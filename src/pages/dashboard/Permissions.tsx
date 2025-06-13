@@ -151,6 +151,28 @@ const Permissions = () => {
   };
 
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+
+      // Close all dropdowns if clicking outside
+      if (
+        !target.closest('[id^="dropdown-"]') &&
+        !target.closest('button[onclick*="dropdown-"]')
+      ) {
+        const dropdowns = document.querySelectorAll('[id^="dropdown-"]');
+        dropdowns.forEach((dropdown) => {
+          (dropdown as HTMLElement).style.display = "none";
+        });
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchPermissionsData = async () => {
       try {
         setLoading(true);
@@ -618,6 +640,24 @@ const Permissions = () => {
                                   updatePermission(categoryId, permission.id, {
                                     applicableModules: updatedModules,
                                   });
+                                }
+
+                                // Check if dropdown should be closed (no more options available)
+                                const remainingOptions =
+                                  uiConfig.multiselect_options?.filter(
+                                    (opt) => !updatedModules.includes(opt.value)
+                                  );
+
+                                if (
+                                  remainingOptions &&
+                                  remainingOptions.length === 0
+                                ) {
+                                  const dropdownId = `dropdown-${categoryId}-${permission.id}`;
+                                  const dropdown =
+                                    document.getElementById(dropdownId);
+                                  if (dropdown) {
+                                    dropdown.style.display = "none";
+                                  }
                                 }
                               }}
                               className="text-blue-600 hover:text-blue-800 ml-1"
