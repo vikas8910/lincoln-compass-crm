@@ -20,6 +20,7 @@ import { toast } from "react-toastify";
 import { format } from "date-fns";
 import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
 import clsx from "clsx";
+import { ActivityTabProps } from "./Notes";
 
 // Define tab types
 type TabType = "all" | "upcoming" | "completed" | "overdue";
@@ -30,7 +31,7 @@ interface Tab {
   count?: number;
 }
 
-export const Meetings = () => {
+export const Meetings: React.FC<ActivityTabProps> = ({ onActivityChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -237,6 +238,7 @@ export const Meetings = () => {
       } else {
         // Create new task
         await saveMeeting(data);
+        onActivityChange();
         toast.success("Meeting created successfully");
       }
 
