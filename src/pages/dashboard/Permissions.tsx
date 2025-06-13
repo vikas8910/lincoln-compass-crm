@@ -136,7 +136,7 @@ const Permissions = () => {
 
       // `elem.offsetTop` is measured relative to the scrolling container's top-left.
       const sectionTop = elem.offsetTop;
-      if (sectionTop <= scrollTop + 100) {
+      if (sectionTop <= scrollTop + 200) {
         newlyActive = category.id;
       } else {
         // Since categories are sorted by sortOrder, once we find the first
@@ -318,6 +318,7 @@ const Permissions = () => {
     });
     if (res.success) {
       toast.success("Permissions updated successfully");
+      navigate("/roles");
     }
   };
 
