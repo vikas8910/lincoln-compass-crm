@@ -108,7 +108,7 @@ const AppRoutes = () => {
         {authoritiesList.includes(PermissionsEnum.MANAGE_USERS) && (
           <>
             <Route
-              path="/sales-officer-roles"
+              path="/user-management"
               element={<ProtectedRoute element={<SalesOfficerRoles />} />}
             />
             <Route
