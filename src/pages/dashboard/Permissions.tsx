@@ -409,10 +409,10 @@ const Permissions = () => {
                         // If changing view to "Owned Records", auto-adjust edit/delete if they are "All Records"
                         else if (newViewScopeId === 1) {
                           if (currentPerm.editScopeId === 2) {
-                            updates.editScopeId = 3; // Change to "Can't"
+                            updates.editScopeId = 1; // Change to "Can't"
                           }
                           if (currentPerm.deleteScopeId === 2) {
-                            updates.deleteScopeId = 3; // Change to "Can't"
+                            updates.deleteScopeId = 1; // Change to "Can't"
                           }
                         }
 
