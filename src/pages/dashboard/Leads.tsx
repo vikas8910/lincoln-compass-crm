@@ -775,7 +775,7 @@ const Leads = () => {
           {/* <Button className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300">
             Bulk Email
           </Button> */}
-          {activityPermissions.canCreateTasks && (
+          {leadPermissions.canBulkAssignTasks && (
             <Button
               className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
               onClick={handleBulkTaskCreate} // Use the new handler
@@ -783,7 +783,7 @@ const Leads = () => {
               Add Task
             </Button>
           )}
-          {leadPermissions.canAssignLeads && (
+          {leadPermissions.canBulkAssignLeadsRecords && (
             <Button
               className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
               onClick={() => setIsBulkAssignDialogOpen(true)}
@@ -791,18 +791,20 @@ const Leads = () => {
               Assign To
             </Button>
           )}
-          <Button
-            className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
-            onClick={() => {
-              setIsMergeDialogOpen(true);
-              if (filteredMergeLeads?.length > 0) {
-                setPrimaryLeadId(filteredMergeLeads[0].id.toString());
-              }
-            }}
-            disabled={selectedLeadIds.size < 2}
-          >
-            Merge
-          </Button>
+          {leadPermissions.canMergeRecords && (
+            <Button
+              className="bg-white text-black py-1 px-4 border border-gray-300 hover:bg-gray-300"
+              onClick={() => {
+                setIsMergeDialogOpen(true);
+                if (filteredMergeLeads?.length > 0) {
+                  setPrimaryLeadId(filteredMergeLeads[0].id.toString());
+                }
+              }}
+              disabled={selectedLeadIds.size < 2}
+            >
+              Merge
+            </Button>
+          )}
           {authoritiesList.some((authority) =>
             authority.startsWith("leads:delete")
           ) && (

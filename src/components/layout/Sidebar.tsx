@@ -37,7 +37,7 @@ const MainSidebar = () => {
           {
             title: "User Management",
             icon: UserCog,
-            href: ["/sales-officer-roles"],
+            href: ["/user-management"],
           },
         ]
       : []),
