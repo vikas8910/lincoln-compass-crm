@@ -380,6 +380,13 @@ const Permissions = () => {
                       onCheckedChange={(checked) =>
                         updatePermission(categoryId, permission.id, {
                           canView: checked as boolean,
+                          canEdit: (checked as boolean)
+                            ? currentPerm.canEdit
+                            : false,
+                          canDelete: (checked as boolean)
+                            ? currentPerm.canDelete
+                            : false,
+                          isEnabled: checked as boolean,
                         })
                       }
                       className="mr-2"
