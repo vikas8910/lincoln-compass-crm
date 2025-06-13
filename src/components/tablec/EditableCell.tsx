@@ -77,6 +77,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Select validation schema
   const schema = customValidation || validationSchemas[validationType];
@@ -527,6 +528,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     if (error && date) {
       setError(null);
     }
+    setIsCalendarOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -754,7 +756,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
                   ))}
                 </RadioGroup>
               ) : type === "date" ? (
-                <Popover>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"

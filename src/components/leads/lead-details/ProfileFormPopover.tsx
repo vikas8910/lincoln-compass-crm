@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Popover,
   PopoverContent,
@@ -21,23 +20,7 @@ import { useLeadDetails } from "@/context/LeadsProvider";
 import { updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 import { toast } from "react-toastify";
-
-// Zod schema
-const profileSchema = z.object({
-  firstName: z
-    .string()
-    .min(1, "First name is required")
-    .regex(/^[a-zA-Z\s\-']+$/, "First name must contain only letters"),
-  lastName: z
-    .string()
-    .min(1, "Last name is required")
-    .regex(/^[a-zA-Z\s\-']+$/, "Last name must contain only letters"),
-  facebookUrl: z.string().nullable().optional().or(z.literal("")),
-  twitterUrl: z.string().nullable().optional().or(z.literal("")),
-  linkedInUrl: z.string().nullable().optional().or(z.literal("")),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+import { ProfileFormValues, profileSchema } from "@/schemas/lead";
 
 interface ProfileFormPopoverProps {
   children: React.ReactNode;

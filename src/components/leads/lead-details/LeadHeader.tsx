@@ -45,8 +45,10 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
 
   // Function to handle social media navigation
   const handleSocialClick = (input: string | undefined, platform: string) => {
-    const url = buildSocialMediaUrl(input, platform);
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (input) {
+      const url = buildSocialMediaUrl(input, platform);
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
