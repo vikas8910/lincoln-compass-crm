@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { commonValidationSchemas } from "@/schemas/common";
 import { EditableCellProps } from "@/types/lead";
+import { buildSocialMediaUrl } from "@/lib/utils";
 
 // Validation schemas
 export const validationSchemas = {
@@ -63,6 +64,10 @@ export const EditableCell: React.FC<EditableCellProps> = ({
   customComponentProps = {},
   customDisplayValue,
   sendCompleteObject = false,
+  displayAsLink = false,
+  onLinkClick,
+  linkType,
+  socialPlatform,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -541,6 +546,68 @@ export const EditableCell: React.FC<EditableCellProps> = ({
     onSave(newValues);
   };
 
+  const renderLinkContent = () => {
+    if (!displayAsLink || !value || getDisplayValue(value) === placeholder) {
+      return (
+        <span
+          className={`text-sm font-medium ${textColor} truncate flex-1 min-w-0 flex items-center gap-1`}
+          title={getDisplayValue(value)}
+        >
+          {getDisplayValue(value)}
+        </span>
+      );
+    }
+
+    const displayValue = getDisplayValue(value);
+    const handleLinkClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+
+      if (onLinkClick) {
+        onLinkClick(value as string);
+        return;
+      }
+
+      let href = "";
+      switch (linkType) {
+        case "email":
+          href = `mailto:${value}`;
+          break;
+        case "phone":
+          href = `tel:${value}`;
+          break;
+        case "social":
+          if (socialPlatform) {
+            const socialUrl = buildSocialMediaUrl(
+              value as string,
+              socialPlatform
+            );
+            if (socialUrl) {
+              href = socialUrl;
+            }
+          }
+          break;
+        case "url":
+        default:
+          href = value as string;
+          break;
+      }
+
+      if (href) {
+        window.open(href, "_blank", "noopener,noreferrer");
+      }
+    };
+
+    return (
+      <button
+        onClick={handleLinkClick}
+        className={`text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate flex-1 min-w-0 flex items-center gap-1 text-left`}
+        title={displayValue}
+      >
+        {displayValue}
+      </button>
+    );
+  };
+
   const selectedChips = getSelectedChips(value);
 
   return (
@@ -578,6 +645,8 @@ export const EditableCell: React.FC<EditableCellProps> = ({
             </span>
           )}
         </div>
+      ) : displayAsLink && value && getDisplayValue(value) !== placeholder ? (
+        renderLinkContent()
       ) : (
         <span
           className={`text-sm font-medium ${textColor} truncate flex-1 min-w-0 flex items-center gap-1`}

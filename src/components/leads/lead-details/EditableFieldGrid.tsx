@@ -249,6 +249,10 @@ export const EditableFieldGrid: React.FC<EditableFieldGridProps> = ({
               dateFormat={dateFormat}
               radioLayout={radioLayout}
               sendCompleteObject={sendCompleteObject}
+              displayAsLink={field.displayAsLink} // Add this line
+              onLinkClick={field.onLinkClick}
+              linkType={field.linkType}
+              socialPlatform={field.socialPlatform}
             />
           </div>
         );

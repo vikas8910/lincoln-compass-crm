@@ -90,9 +90,9 @@ export const LeadDetailsSidebar: React.FC<{
                   Hidden Details
                 </AccordionTrigger>
                 <AccordionContent className="px-4 py-4">
-                  <div className="flex flex-col gap-6">
-                    <div>
-                      <div className="bg-gray-200 px-3 py-2 rounded-md text-sm font-medium mb-3">
+                  <div className="flex flex-col gap-6 divide-y-2 divide-gray-300">
+                    <div className="py-2">
+                      <div className="bg-gray-200 px-3 py-2 rounded-md text-sm font-medium mb-3 inline-block">
                         Location
                       </div>
                       <EditableFieldGrid
@@ -103,10 +103,10 @@ export const LeadDetailsSidebar: React.FC<{
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="bg-gray-200 px-3 py-2 rounded-md text-sm font-medium mb-3">
-                        Social Profiles
-                      </span>
+                    <div className="py-2">
+                      <div className="bg-gray-200 px-3 py-2 rounded-md text-sm font-medium mb-3 inline-block">
+                        Social profiles
+                      </div>
                       <EditableFieldGrid
                         onSave={onSave}
                         LEAD_DETAILS_EDITABLE_FIELDS={

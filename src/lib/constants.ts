@@ -55,8 +55,20 @@ export const LEAD_OVERVIEW_FIELDS = (lead: Lead): any[] => {
       allowEmpty: true,
       sendCompleteObject: true,
     },
-    { key: "email", label: "Email", validationType: "email" },
-    { key: "mobile", label: "Mobile", validationType: "phone" },
+    {
+      key: "email",
+      label: "Email",
+      validationType: "email",
+      displayAsLink: true,
+      linkType: "email",
+    },
+    {
+      key: "mobile",
+      label: "Mobile",
+      validationType: "phone",
+      displayAsLink: true,
+      linkType: "phone",
+    },
     {
       key: "leadType",
       label: "Lead Type",
@@ -123,9 +135,30 @@ export const LEAD_OVERVIEW_FIELDS = (lead: Lead): any[] => {
 
 export const LEAD_DETAILS_EDITABLE_HIDDEN_FIELDS = (lead: Lead): any[] => {
   return [
-    { key: "facebookUrl", label: "Facebook", validationType: "text" },
-    { key: "twitterUrl", label: "Twitter", validationType: "text" },
-    { key: "linkedInUrl", label: "LinkedIn", validationType: "text" },
+    {
+      key: "facebookUrl",
+      label: "Facebook",
+      validationType: "text",
+      displayAsLink: true,
+      linkType: "social",
+      socialPlatform: "facebook",
+    },
+    {
+      key: "twitterUrl",
+      label: "Twitter",
+      validationType: "text",
+      displayAsLink: true,
+      linkType: "social",
+      socialPlatform: "twitter",
+    },
+    {
+      key: "linkedInUrl",
+      label: "LinkedIn",
+      validationType: "text",
+      displayAsLink: true,
+      linkType: "social",
+      socialPlatform: "linkedin",
+    },
   ];
 };
 
@@ -170,7 +203,13 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (
       sendCompleteObject: true,
     },
     { key: "accounts", label: "Accounts", validationType: "text" },
-    { key: "email", label: "Email", validationType: "email" },
+    {
+      key: "email",
+      label: "Email",
+      validationType: "email",
+      displayAsLink: true,
+      linkType: "email",
+    },
     {
       key: "leadType",
       label: "Lead Type",
@@ -191,7 +230,13 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (
     //   emptyOptionLabel: "Select Country Code",
     //   allowEmpty: true,
     // },
-    { key: "mobile", label: "Mobile", validationType: "phone" },
+    {
+      key: "mobile",
+      label: "Mobile",
+      validationType: "phone",
+      displayAsLink: true,
+      linkType: "phone",
+    },
     { key: "work", label: "Work", validationType: "text" },
 
     // Nationality (Parent field for nationality city)

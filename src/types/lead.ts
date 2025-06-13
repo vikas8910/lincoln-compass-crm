@@ -218,6 +218,10 @@ export interface EditableCellProps {
   customComponentProps?: Record<string, any>; // Additional props to pass to custom component
   customDisplayValue?: (value: any) => string; // Function to determine display value for custom component
   sendCompleteObject?: boolean;
+  displayAsLink?: boolean;
+  linkType?: "url" | "email" | "phone" | "social";
+  socialPlatform?: string;
+  onLinkClick?: (value: string) => void;
 }
 
 // Define tab types

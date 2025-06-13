@@ -1,9 +1,9 @@
 import { Rating } from "@/components/common/Rating";
-import { getAvatarColors } from "@/lib/utils";
+import { buildSocialMediaUrl, getAvatarColors } from "@/lib/utils";
 import { Lead } from "@/types/lead";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { MapPinIcon, Copy } from "lucide-react";
-import { FaFacebook, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { MapPinIcon, Copy, X } from "lucide-react";
+import { FaFacebook, FaLinkedin } from "react-icons/fa";
 import ProfileFormPopover from "./ProfileFormPopover";
 import AddressFormPopover from "./LeadAddressPopover";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
@@ -44,12 +44,9 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
   };
 
   // Function to handle social media navigation
-  const handleSocialClick = (url: string | undefined, platform: string) => {
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else {
-      console.log(`No ${platform} URL available`);
-    }
+  const handleSocialClick = (input: string | undefined, platform: string) => {
+    const url = buildSocialMediaUrl(input, platform);
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -87,7 +84,7 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                   <div
                     className={`rounded-full p-1 transition cursor-pointer ${
                       lead.twitterUrl
-                        ? "bg-sky-500 hover:bg-sky-600"
+                        ? "bg-white border border-gray-500"
                         : "bg-gray-400 cursor-not-allowed"
                     }`}
                     onClick={(e) => {
@@ -95,7 +92,11 @@ export const LeadHeader: React.FC<{ lead: Lead }> = ({ lead }) => {
                       handleSocialClick(lead.twitterUrl, "Twitter");
                     }}
                   >
-                    <FaTwitter className="h-4 w-4" />
+                    <X
+                      className={`h-4 w-4 ${
+                        lead.twitterUrl ? "text-black" : "text-gray-300"
+                      }`}
+                    />
                   </div>
                   <div
                     className={`rounded-full p-1 transition cursor-pointer ${

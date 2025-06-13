@@ -152,3 +152,40 @@ export const getAvatarColors = (letter: string) => {
 export const getNestedValue = (obj, path) => {
   return path.split(".").reduce((current, key) => current?.[key], obj);
 };
+
+export const buildSocialMediaUrl = (
+  input: string | undefined,
+  platform: string
+): string | null => {
+  if (!input) return null;
+
+  const trimmedInput = input.trim();
+
+  // If it's already a full URL, return it
+  if (
+    trimmedInput.startsWith("http://") ||
+    trimmedInput.startsWith("https://")
+  ) {
+    return trimmedInput;
+  }
+
+  // Remove @ symbol if present (common for usernames)
+  const username = trimmedInput.replace(/^@/, "");
+
+  // Build URL based on platform
+  switch (platform.toLowerCase()) {
+    case "facebook":
+      return `https://facebook.com/${username}`;
+    case "twitter":
+      return `https://twitter.com/${username}`;
+    case "linkedin":
+      // LinkedIn profiles can be /in/username or /company/companyname
+      // Default to personal profile format
+      if (username.startsWith("company/") || username.startsWith("in/")) {
+        return `https://linkedin.com/${username}`;
+      }
+      return `https://linkedin.com/in/${username}`;
+    default:
+      return null;
+  }
+};
