@@ -575,6 +575,7 @@ const Permissions = () => {
           </div>
         );
       case "CHECKBOX_WITH_MULTISELECT":
+        const errorKeyForMultiSelect = `${categoryId}-${permission.id}`;
         return (
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex items-start justify-between">
@@ -583,22 +584,19 @@ const Permissions = () => {
                   <Checkbox
                     checked={currentPerm.isEnabled || false}
                     onCheckedChange={(checked) => {
+                      updatePermission(categoryId, permission.id, {
+                        isEnabled: checked as boolean,
+                        applicableModules: [],
+                      });
                       if (
-                        checked &&
-                        uiConfig.multiselect_options &&
-                        uiConfig.multiselect_options.length > 0
+                        currentPerm.applicableModules?.length === 0 ||
+                        currentPerm.applicableModules === null
                       ) {
-                        // Auto-select first option when checkbox is checked
-                        updatePermission(categoryId, permission.id, {
-                          isEnabled: checked as boolean,
-                          applicableModules: [
-                            uiConfig.multiselect_options[0].value,
-                          ],
-                        });
-                      } else {
-                        updatePermission(categoryId, permission.id, {
-                          isEnabled: checked as boolean,
-                          applicableModules: [],
+                        setNumericErrors((prev) => {
+                          return {
+                            ...prev,
+                            [errorKeyForMultiSelect]: "",
+                          };
                         });
                       }
                     }}
@@ -634,9 +632,20 @@ const Permissions = () => {
                                 if (updatedModules.length === 0) {
                                   updatePermission(categoryId, permission.id, {
                                     applicableModules: updatedModules,
-                                    isEnabled: false,
                                   });
+                                  toast.error(
+                                    "Please select at least one option"
+                                  );
+                                  setNumericErrors((prev) => ({
+                                    ...prev,
+                                    [errorKeyForMultiSelect]: "",
+                                  }));
                                 } else {
+                                  setNumericErrors((prev) => {
+                                    const newErrors = { ...prev };
+                                    delete newErrors[errorKeyForMultiSelect];
+                                    return newErrors;
+                                  });
                                   updatePermission(categoryId, permission.id, {
                                     applicableModules: updatedModules,
                                   });
@@ -738,6 +747,11 @@ const Permissions = () => {
                                     permission.id,
                                     option.value
                                   );
+                                  setNumericErrors((prev) => {
+                                    const newErrors = { ...prev };
+                                    delete newErrors[errorKeyForMultiSelect];
+                                    return newErrors;
+                                  });
                                 }}
                                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b last:border-b-0"
                               >
