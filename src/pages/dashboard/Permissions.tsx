@@ -590,14 +590,26 @@ const Permissions = () => {
                         applicableModules: [],
                       });
                       if (
-                        currentPerm.applicableModules?.length === 0 ||
-                        currentPerm.applicableModules === null
+                        (currentPerm.applicableModules?.length === 0 ||
+                          currentPerm.applicableModules === null) &&
+                        checked
                       ) {
                         setNumericErrors((prev) => {
                           return {
                             ...prev,
                             [errorKeyForMultiSelect]: "",
                           };
+                        });
+                        toast.warning("Please select at least one module");
+                      }
+                      if (!checked) {
+                        updatePermission(categoryId, permission.id, {
+                          applicableModules: [],
+                        });
+                        setNumericErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors[errorKeyForMultiSelect];
+                          return newErrors;
                         });
                       }
                     }}
