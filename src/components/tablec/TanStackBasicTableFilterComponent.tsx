@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { type Table } from "@tanstack/react-table";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -34,6 +34,30 @@ export default function TanStackBasicTableFilterComponent<TData>({
     { value: "course", label: "Course" },
     { value: "leadType", label: "Lead Type" },
   ];
+
+  // Initialize state with current table filters when component mounts
+  useEffect(() => {
+    // Find the first active filter
+    const activeFilter = table.getAllColumns().find((column) => {
+      const filterValue = column.getFilterValue();
+      return filterValue !== undefined && filterValue !== "";
+    });
+
+    if (activeFilter) {
+      const columnId = activeFilter.id;
+      const currentFilterValue = activeFilter.getFilterValue() as string;
+
+      // Check if this column is in our filter options
+      const isValidFilterOption = filterOptions.some(
+        (option) => option.value === columnId
+      );
+
+      if (isValidFilterOption) {
+        setSelectedField(columnId);
+        setFilterValue(currentFilterValue || "");
+      }
+    }
+  }, [table]);
 
   const handleApply = () => {
     // Validate input
@@ -78,7 +102,12 @@ export default function TanStackBasicTableFilterComponent<TData>({
   };
 
   const handleFieldChange = (value: string) => {
+    // If changing field, check if there's an existing filter for the new field
+    const column = table.getColumn(value);
+    const existingFilterValue = column?.getFilterValue() as string;
+
     setSelectedField(value);
+    setFilterValue(existingFilterValue || "");
     setError("");
   };
 
