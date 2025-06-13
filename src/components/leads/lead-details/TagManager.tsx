@@ -157,6 +157,8 @@ const TagManager: React.FC = () => {
   };
 
   const handleCancel = () => {
+    setAssignedTags(lead?.tags);
+    setSelectedTagIds(lead?.tags?.map((tag) => tag.id));
     setSearchTerm("");
     setIsPopoverOpen(false);
   };
