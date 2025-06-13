@@ -330,6 +330,17 @@ const Permissions = () => {
     }
   };
 
+  const validateScopeSelection = (
+    viewScopeId: number,
+    targetScopeId: number
+  ): boolean => {
+    // If view is "Owned Records" (id: 1), then edit/delete cannot be "All Records" (id: 2)
+    if (viewScopeId === 1 && targetScopeId === 2) {
+      return false;
+    }
+    return true;
+  };
+
   const renderPermission = (categoryId: number, permission: Permission) => {
     const { uiComponent, uiConfig, currentPermissions } = permission;
     const currentPerm = currentPermissions?.[0] || {};
@@ -369,13 +380,6 @@ const Permissions = () => {
                       onCheckedChange={(checked) =>
                         updatePermission(categoryId, permission.id, {
                           canView: checked as boolean,
-                          canEdit: (checked as boolean)
-                            ? currentPerm.canEdit
-                            : false,
-                          canDelete: (checked as boolean)
-                            ? currentPerm.canDelete
-                            : false,
-                          isEnabled: checked as boolean,
                         })
                       }
                       className="mr-2"
@@ -385,11 +389,28 @@ const Permissions = () => {
                   {uiConfig.has_scope && uiConfig.scope_options && (
                     <Select
                       value={currentPerm.viewScopeId?.toString() || ""}
-                      onValueChange={(value) =>
-                        updatePermission(categoryId, permission.id, {
-                          viewScopeId: parseInt(value),
-                        })
-                      }
+                      onValueChange={(value) => {
+                        const newViewScopeId = parseInt(value);
+                        const updates: any = { viewScopeId: newViewScopeId };
+
+                        // If changing view to "Can't" (id: 3), uncheck main checkbox and set edit/delete to "Can't"
+                        if (newViewScopeId === 3) {
+                          updates.isEnabled = false;
+                          updates.editScopeId = 3;
+                          updates.deleteScopeId = 3;
+                        }
+                        // If changing view to "Owned Records", auto-adjust edit/delete if they are "All Records"
+                        else if (newViewScopeId === 1) {
+                          if (currentPerm.editScopeId === 2) {
+                            updates.editScopeId = 3; // Change to "Can't"
+                          }
+                          if (currentPerm.deleteScopeId === 2) {
+                            updates.deleteScopeId = 3; // Change to "Can't"
+                          }
+                        }
+
+                        updatePermission(categoryId, permission.id, updates);
+                      }}
                       disabled={!currentPerm.isEnabled}
                     >
                       <SelectTrigger className="text-sm">
@@ -425,11 +446,23 @@ const Permissions = () => {
                   {uiConfig.has_scope && uiConfig.scope_options && (
                     <Select
                       value={currentPerm.editScopeId?.toString() || ""}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
+                        const newEditScopeId = parseInt(value);
+                        const viewScopeId = currentPerm.viewScopeId || 3;
+
+                        if (
+                          !validateScopeSelection(viewScopeId, newEditScopeId)
+                        ) {
+                          toast.error(
+                            "Cannot select 'All Records' for Edit when View is set to 'Owned Records'"
+                          );
+                          return;
+                        }
+
                         updatePermission(categoryId, permission.id, {
-                          editScopeId: parseInt(value),
-                        })
-                      }
+                          editScopeId: newEditScopeId,
+                        });
+                      }}
                       disabled={!currentPerm.isEnabled}
                     >
                       <SelectTrigger className="text-sm">
@@ -440,6 +473,10 @@ const Permissions = () => {
                           <SelectItem
                             key={option.id}
                             value={option.id.toString()}
+                            disabled={
+                              // Disable "All Records" option if view is "Owned Records"
+                              currentPerm.viewScopeId === 1 && option.id === 2
+                            }
                           >
                             {option.name}
                           </SelectItem>
@@ -465,11 +502,23 @@ const Permissions = () => {
                   {uiConfig.has_scope && uiConfig.scope_options && (
                     <Select
                       value={currentPerm.deleteScopeId?.toString() || ""}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
+                        const newDeleteScopeId = parseInt(value);
+                        const viewScopeId = currentPerm.viewScopeId || 3;
+
+                        if (
+                          !validateScopeSelection(viewScopeId, newDeleteScopeId)
+                        ) {
+                          toast.error(
+                            "Cannot select 'All Records' for Delete when View is set to 'Owned Records'"
+                          );
+                          return;
+                        }
+
                         updatePermission(categoryId, permission.id, {
-                          deleteScopeId: parseInt(value),
-                        })
-                      }
+                          deleteScopeId: newDeleteScopeId,
+                        });
+                      }}
                       disabled={!currentPerm.isEnabled}
                     >
                       <SelectTrigger className="text-sm">
@@ -480,6 +529,10 @@ const Permissions = () => {
                           <SelectItem
                             key={option.id}
                             value={option.id.toString()}
+                            disabled={
+                              // Disable "All Records" option if view is "Owned Records"
+                              currentPerm.viewScopeId === 1 && option.id === 2
+                            }
                           >
                             {option.name}
                           </SelectItem>
