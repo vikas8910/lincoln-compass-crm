@@ -109,6 +109,9 @@ const Permissions = () => {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const sectionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [numericErrors, setNumericErrors] = useState<{ [key: string]: string }>(
+    {}
+  );
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -490,11 +493,26 @@ const Permissions = () => {
                 <label className="flex items-center mb-3">
                   <Checkbox
                     checked={currentPerm.isEnabled || false}
-                    onCheckedChange={(checked) =>
-                      updatePermission(categoryId, permission.id, {
-                        isEnabled: checked as boolean,
-                      })
-                    }
+                    onCheckedChange={(checked) => {
+                      if (
+                        checked &&
+                        uiConfig.multiselect_options &&
+                        uiConfig.multiselect_options.length > 0
+                      ) {
+                        // Auto-select first option when checkbox is checked
+                        updatePermission(categoryId, permission.id, {
+                          isEnabled: checked as boolean,
+                          applicableModules: [
+                            uiConfig.multiselect_options[0].value,
+                          ],
+                        });
+                      } else {
+                        updatePermission(categoryId, permission.id, {
+                          isEnabled: checked as boolean,
+                          applicableModules: [],
+                        });
+                      }
+                    }}
                     className="mr-3"
                   />
                   <span className="font-medium">{permission.name}</span>
@@ -516,9 +534,25 @@ const Permissions = () => {
                               )?.label
                             }
                             <button
-                              onClick={() =>
-                                toggleModule(categoryId, permission.id, module)
-                              }
+                              onClick={() => {
+                                const currentModules =
+                                  currentPerm.applicableModules || [];
+                                const updatedModules = currentModules.filter(
+                                  (m) => m !== module
+                                );
+
+                                // If no modules left, uncheck the main checkbox
+                                if (updatedModules.length === 0) {
+                                  updatePermission(categoryId, permission.id, {
+                                    applicableModules: updatedModules,
+                                    isEnabled: false,
+                                  });
+                                } else {
+                                  updatePermission(categoryId, permission.id, {
+                                    applicableModules: updatedModules,
+                                  });
+                                }
+                              }}
                               className="text-blue-600 hover:text-blue-800 ml-1"
                             >
                               ×
@@ -540,14 +574,12 @@ const Permissions = () => {
                                 ? "none"
                                 : "block";
 
-                              // Position dropdown to prevent off-screen issues
                               if (!isVisible) {
                                 const buttonRect =
                                   e.currentTarget.getBoundingClientRect();
                                 const viewportWidth = window.innerWidth;
-                                const dropdownWidth = 192; // w-48 = 192px
+                                const dropdownWidth = 192;
 
-                                // Check if dropdown would go off-screen on the right
                                 if (
                                   buttonRect.right + dropdownWidth >
                                   viewportWidth
@@ -599,12 +631,6 @@ const Permissions = () => {
                                     permission.id,
                                     option.value
                                   );
-                                  // const dropdownId = `dropdown-${categoryId}-${permission.id}`;
-                                  // const dropdown =
-                                  //   document.getElementById(dropdownId);
-                                  // if (dropdown) {
-                                  //   dropdown.style.display = "none";
-                                  // }
                                 }}
                                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b last:border-b-0"
                               >
@@ -632,6 +658,7 @@ const Permissions = () => {
         );
 
       case "CHECKBOX_WITH_NUMERIC":
+        const errorKey = `${categoryId}-${permission.id}`;
         return (
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex items-center justify-between">
@@ -649,28 +676,52 @@ const Permissions = () => {
               </label>
 
               {currentPerm.isEnabled && uiConfig.numeric_config && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm">
-                    {uiConfig.numeric_config.label}
-                  </span>
-                  <Input
-                    type="number"
-                    min={uiConfig.numeric_config.min}
-                    max={uiConfig.numeric_config.max}
-                    value={
-                      currentPerm.numericValue ||
-                      uiConfig.numeric_config.default
-                    }
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        numericValue: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-20"
-                  />
-                  <span className="text-sm text-gray-500">
-                    {uiConfig.numeric_config.suffix}
-                  </span>
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">
+                      {uiConfig.numeric_config.label}
+                    </span>
+                    <Input
+                      type="number"
+                      min={uiConfig.numeric_config.min}
+                      max={uiConfig.numeric_config.max}
+                      value={
+                        currentPerm.numericValue ||
+                        uiConfig.numeric_config.default
+                      }
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        const maxValue = uiConfig.numeric_config?.max || 0;
+
+                        if (value > maxValue) {
+                          setNumericErrors((prev) => ({
+                            ...prev,
+                            [errorKey]: `Value cannot exceed ${maxValue}`,
+                          }));
+                        } else {
+                          setNumericErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors[errorKey];
+                            return newErrors;
+                          });
+                          updatePermission(categoryId, permission.id, {
+                            numericValue: value,
+                          });
+                        }
+                      }}
+                      className={`w-20 ${
+                        numericErrors[errorKey] ? "border-red-500" : ""
+                      }`}
+                    />
+                    <span className="text-sm text-gray-500">
+                      {uiConfig.numeric_config.suffix}
+                    </span>
+                  </div>
+                  {numericErrors[errorKey] && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {numericErrors[errorKey]}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -683,11 +734,24 @@ const Permissions = () => {
               <label className="flex items-center">
                 <Checkbox
                   checked={currentPerm.isEnabled || false}
-                  onCheckedChange={(checked) =>
-                    updatePermission(categoryId, permission.id, {
-                      isEnabled: checked as boolean,
-                    })
-                  }
+                  onCheckedChange={(checked) => {
+                    if (
+                      checked &&
+                      uiConfig.select_options &&
+                      uiConfig.select_options.length > 0
+                    ) {
+                      // Auto-select first option when checkbox is checked
+                      updatePermission(categoryId, permission.id, {
+                        isEnabled: checked as boolean,
+                        applicableModules: [uiConfig.select_options[0].value],
+                      });
+                    } else {
+                      updatePermission(categoryId, permission.id, {
+                        isEnabled: checked as boolean,
+                        applicableModules: [],
+                      });
+                    }
+                  }}
                   className="mr-3"
                 />
                 <span className="font-medium">{permission.name}</span>
