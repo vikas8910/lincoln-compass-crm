@@ -1,14 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,18 +26,18 @@ interface Option {
   description?: string;
 }
 
-interface LeadFormDialogProps {
+interface CreateLeadOffcanvasProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: createLeadFormValues) => void;
   courseOptions: Option[];
   sourceOptions: Option[];
   leadTypeOptions: Option[];
-  countryCodeOptions: string[]; // New prop for country codes
-  initialData?: createLeadFormValues; // For editing existing leads
+  countryCodeOptions: string[];
+  initialData?: createLeadFormValues;
 }
 
-const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
+const CreateLeadForm: React.FC<CreateLeadOffcanvasProps> = ({
   isOpen,
   onClose,
   onSubmit,
@@ -67,7 +59,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
       mobile: "",
       backupMobileNumber: "",
       externalId: "",
-      countryCode: "", // New field
+      countryCode: "",
     },
     mode: "onChange",
   });
@@ -87,7 +79,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
         mobile: "",
         backupMobileNumber: "",
         externalId: "",
-        countryCode: "", // New field
+        countryCode: "",
       });
     }
   }, [initialData, isOpen, form]);
@@ -121,20 +113,13 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[705px] max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle>Add New Lead</DialogTitle>
-          <DialogDescription>
-            Enter the details of the new Lead
-          </DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4 py-4"
-          >
+    <div className="h-full flex flex-col">
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="flex-1 flex flex-col"
+        >
+          <div className="flex-1 overflow-y-auto pb-6 space-y-4">
             {/* Text Inputs */}
             <FormField
               control={form.control}
@@ -298,7 +283,7 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
               )}
             />
 
-            {/* Country Code Dropdown - NEW */}
+            {/* Country Code Dropdown */}
             <FormField
               control={form.control}
               name="countryCode"
@@ -396,28 +381,35 @@ const CreateLeadDialog: React.FC<LeadFormDialogProps> = ({
                 </FormItem>
               )}
             />
+          </div>
 
-            <div className="flex items-center justify-between w-full">
-              <Button>Check For Duplicates</Button>
-              <div>
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    !form.formState.isValid && form.formState.isSubmitted
-                  }
-                >
-                  Add Lead
-                </Button>
-              </div>
+          {/* Fixed footer with buttons */}
+          <div className="border-t-2 bg-white px-6 py-4 space-y-3 flex items-center justify-between sticky bottom-0">
+            <Button type="button" variant="outline">
+              Check For Duplicates
+            </Button>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!form.formState.isValid && form.formState.isSubmitted}
+                className="flex-1"
+              >
+                Add Lead
+              </Button>
             </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };
 
-export default CreateLeadDialog;
+export default CreateLeadForm;

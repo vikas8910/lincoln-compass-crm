@@ -48,6 +48,7 @@ import BulkAssignDialog from "@/components/leads/BulkAssignDialog";
 import BulkDeleteDialog from "@/components/leads/BulkDeleteDialog";
 import { toast } from "react-toastify";
 import { useActivitiesPermissions } from "@/hooks/useActivitiesPermissions";
+import CreateLeadForm from "@/components/leads/CreateLeadDialog";
 
 const Leads = () => {
   // Get everything from the LeadsProvider context
@@ -876,6 +877,25 @@ const Leads = () => {
         </div>
       </Offcanvas>
 
+      <Offcanvas
+        isOpen={isCreateLeadDialogOpen}
+        onClose={() => setIsCreateLeadDialogOpen(false)}
+        title="Add Lead"
+        className="w-1/2"
+      >
+        {isCreateLeadDialogOpen && (
+          <CreateLeadForm
+            isOpen={isCreateLeadDialogOpen}
+            onClose={() => setIsCreateLeadDialogOpen(false)}
+            onSubmit={handleAddLead}
+            courseOptions={courseOptions}
+            sourceOptions={sourceOptions}
+            leadTypeOptions={leadTypeOptions}
+            countryCodeOptions={["+91", "+971", "+1", "+44"]}
+          />
+        )}
+      </Offcanvas>
+
       <ConfirmationDialog
         isOpen={isDeleteUserDialogOpen}
         onClose={() => {
@@ -886,16 +906,6 @@ const Leads = () => {
         description="Are you sure you want to delete this lead ?"
         confirmLabel="Delete"
         destructive
-      />
-
-      <CreateLeadDialog
-        isOpen={isCreateLeadDialogOpen}
-        onClose={() => setIsCreateLeadDialogOpen(false)}
-        onSubmit={handleAddLead}
-        courseOptions={courseOptions}
-        sourceOptions={sourceOptions}
-        leadTypeOptions={leadTypeOptions}
-        countryCodeOptions={["+91", "+971", "+1", "+44"]}
       />
 
       <NoteForm
