@@ -9,6 +9,9 @@ interface LeadPermissionCheck {
   canAssignLeads: boolean;
   canCreateLeads: boolean;
   canSearchLeads: boolean;
+  canBulkAssignLeadsRecords: boolean;
+  canMergeRecords: boolean;
+  canBulkAssignTasks: boolean;
 }
 
 export const useLeadPermissions = (): LeadPermissionCheck => {
@@ -40,6 +43,13 @@ export const useLeadPermissions = (): LeadPermissionCheck => {
       assign: authoritiesList.includes(PermissionsEnum.ASSIGN_LEADS),
       create: authoritiesList.includes(PermissionsEnum.LEADS_CREATE),
       search: authoritiesList.includes(PermissionsEnum.SEARCH_LEADS),
+      bulkAssignLeadsRecords: authoritiesList.includes(
+        PermissionsEnum.BULK_ASSIGN_LEADS
+      ),
+      mergeRecords: authoritiesList.includes(PermissionsEnum.MERGE_LEADS),
+      bulkAssignTasks: authoritiesList.includes(
+        PermissionsEnum.BULK_ASSIGN_TASKS
+      ),
     };
   }, [authoritiesList]);
 
@@ -73,5 +83,8 @@ export const useLeadPermissions = (): LeadPermissionCheck => {
     canAssignLeads: permissions.assign,
     canCreateLeads: permissions.create,
     canSearchLeads: permissions.search,
+    canBulkAssignLeadsRecords: permissions.bulkAssignLeadsRecords,
+    canMergeRecords: permissions.mergeRecords,
+    canBulkAssignTasks: permissions.bulkAssignTasks,
   };
 };
