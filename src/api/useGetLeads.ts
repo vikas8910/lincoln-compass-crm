@@ -98,7 +98,7 @@ const getAllUsersFn = async ({
     limit: res.data.page.size,
     page: res.data.page.number,
     total: res.data.page.totalElements,
-    total_filtered: 11,
+    total_filtered: res.data.page.totalElements,
     appliedFilters: res.data.appliedFilters || {}, // Add applied filters from API response
   };
 
