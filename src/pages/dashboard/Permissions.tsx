@@ -1093,6 +1093,12 @@ const Permissions = () => {
                 </div>
               ))}
           </div>
+          <Button
+            onClick={() => navigate("/roles")}
+            className="fixed bottom-5 right-52 bg-gray-600 text-white"
+          >
+            Cancel
+          </Button>
 
           <Button
             onClick={handleSaveChanges}
