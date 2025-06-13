@@ -91,6 +91,28 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
   const [collaboratorOptions, setCollaboratorOptions] = useState([]);
 
   const relatedToOptions = allUsersData?.data;
+  const getDefaultToDate = (fromDate: Date) => {
+    const toDate = new Date(fromDate);
+    toDate.setMinutes(toDate.getMinutes() + 30);
+    return toDate;
+  };
+  const form = useForm<MeetingFormData>({
+    resolver: zodResolver(meetingFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      timeZone: "",
+      from: new Date(),
+      to: getDefaultToDate(new Date()),
+      outcome: "",
+      relatedLeadIds: lead?.id ? [lead.id] : [],
+      attendees: [],
+      allDay: false,
+      videoConferencing: "zoom",
+    },
+    mode: "onChange",
+  });
+  const watchFrom = form.watch("from");
 
   useEffect(() => {
     const fetchCollaborators = async () => {
@@ -135,23 +157,16 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     }
     return [];
   };
+  useEffect(() => {
+    if (watchFrom) {
+      const currentTo = form.getValues("to");
+      const newTo = getDefaultToDate(new Date(watchFrom));
 
-  const form = useForm<MeetingFormData>({
-    resolver: zodResolver(meetingFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      timeZone: "",
-      from: new Date(),
-      to: new Date(),
-      outcome: "",
-      relatedLeadIds: lead?.id ? [lead.id] : [],
-      attendees: [],
-      allDay: false,
-      videoConferencing: "zoom",
-    },
-    mode: "onChange",
-  });
+      // Only update if user hasn't manually changed the 'to' field
+      // You can add additional logic here to check if 'to' was manually modified
+      form.setValue("to", newTo);
+    }
+  }, [watchFrom, form]);
 
   const findRelatedToById = (relatedToIds) => {
     if (!Array.isArray(relatedToIds)) return [];
@@ -209,7 +224,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
           description: initialData.description || "",
           timeZone: initialData.timeZone || "",
           from: initialData.from || new Date(),
-          to: initialData.to || new Date(),
+          to: initialData.to || getDefaultToDate(new Date()),
           outcome: initialData.outcome || "",
           relatedLeadIds: relatedToObjects.map((obj) => obj.id), // Store as array of IDs
           attendees: collaboratorObjects.map((obj) => obj.id), // Store as array of IDs
