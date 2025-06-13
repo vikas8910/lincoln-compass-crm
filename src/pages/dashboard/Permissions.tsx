@@ -109,6 +109,9 @@ const Permissions = () => {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const sectionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [numericErrors, setNumericErrors] = useState<{ [key: string]: string }>(
+    {}
+  );
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -146,6 +149,28 @@ const Permissions = () => {
       setActiveCategory(newlyActive);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+
+      // Close all dropdowns if clicking outside
+      if (
+        !target.closest('[id^="dropdown-"]') &&
+        !target.closest('button[onclick*="dropdown-"]')
+      ) {
+        const dropdowns = document.querySelectorAll('[id^="dropdown-"]');
+        dropdowns.forEach((dropdown) => {
+          (dropdown as HTMLElement).style.display = "none";
+        });
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchPermissionsData = async () => {
@@ -327,6 +352,17 @@ const Permissions = () => {
     }
   };
 
+  const validateScopeSelection = (
+    viewScopeId: number,
+    targetScopeId: number
+  ): boolean => {
+    // If view is "Owned Records" (id: 1), then edit/delete cannot be "All Records" (id: 2)
+    if (viewScopeId === 1 && targetScopeId === 2) {
+      return false;
+    }
+    return true;
+  };
+
   const renderPermission = (categoryId: number, permission: Permission) => {
     const { uiComponent, uiConfig, currentPermissions } = permission;
     const currentPerm = currentPermissions?.[0] || {};
@@ -366,6 +402,13 @@ const Permissions = () => {
                       onCheckedChange={(checked) =>
                         updatePermission(categoryId, permission.id, {
                           canView: checked as boolean,
+                          canEdit: (checked as boolean)
+                            ? currentPerm.canEdit
+                            : false,
+                          canDelete: (checked as boolean)
+                            ? currentPerm.canDelete
+                            : false,
+                          isEnabled: checked as boolean,
                         })
                       }
                       className="mr-2"
@@ -375,11 +418,28 @@ const Permissions = () => {
                   {uiConfig.has_scope && uiConfig.scope_options && (
                     <Select
                       value={currentPerm.viewScopeId?.toString() || ""}
-                      onValueChange={(value) =>
-                        updatePermission(categoryId, permission.id, {
-                          viewScopeId: parseInt(value),
-                        })
-                      }
+                      onValueChange={(value) => {
+                        const newViewScopeId = parseInt(value);
+                        const updates: any = { viewScopeId: newViewScopeId };
+
+                        // If changing view to "Can't" (id: 3), uncheck main checkbox and set edit/delete to "Can't"
+                        if (newViewScopeId === 3) {
+                          updates.isEnabled = false;
+                          updates.editScopeId = 3;
+                          updates.deleteScopeId = 3;
+                        }
+                        // If changing view to "Owned Records", auto-adjust edit/delete if they are "All Records"
+                        else if (newViewScopeId === 1) {
+                          if (currentPerm.editScopeId === 2) {
+                            updates.editScopeId = 1; // Change to "Can't"
+                          }
+                          if (currentPerm.deleteScopeId === 2) {
+                            updates.deleteScopeId = 1; // Change to "Can't"
+                          }
+                        }
+
+                        updatePermission(categoryId, permission.id, updates);
+                      }}
                       disabled={!currentPerm.isEnabled}
                     >
                       <SelectTrigger className="text-sm">
@@ -415,11 +475,23 @@ const Permissions = () => {
                   {uiConfig.has_scope && uiConfig.scope_options && (
                     <Select
                       value={currentPerm.editScopeId?.toString() || ""}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
+                        const newEditScopeId = parseInt(value);
+                        const viewScopeId = currentPerm.viewScopeId || 3;
+
+                        if (
+                          !validateScopeSelection(viewScopeId, newEditScopeId)
+                        ) {
+                          toast.error(
+                            "Cannot select 'All Records' for Edit when View is set to 'Owned Records'"
+                          );
+                          return;
+                        }
+
                         updatePermission(categoryId, permission.id, {
-                          editScopeId: parseInt(value),
-                        })
-                      }
+                          editScopeId: newEditScopeId,
+                        });
+                      }}
                       disabled={!currentPerm.isEnabled}
                     >
                       <SelectTrigger className="text-sm">
@@ -430,6 +502,10 @@ const Permissions = () => {
                           <SelectItem
                             key={option.id}
                             value={option.id.toString()}
+                            disabled={
+                              // Disable "All Records" option if view is "Owned Records"
+                              currentPerm.viewScopeId === 1 && option.id === 2
+                            }
                           >
                             {option.name}
                           </SelectItem>
@@ -455,11 +531,23 @@ const Permissions = () => {
                   {uiConfig.has_scope && uiConfig.scope_options && (
                     <Select
                       value={currentPerm.deleteScopeId?.toString() || ""}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
+                        const newDeleteScopeId = parseInt(value);
+                        const viewScopeId = currentPerm.viewScopeId || 3;
+
+                        if (
+                          !validateScopeSelection(viewScopeId, newDeleteScopeId)
+                        ) {
+                          toast.error(
+                            "Cannot select 'All Records' for Delete when View is set to 'Owned Records'"
+                          );
+                          return;
+                        }
+
                         updatePermission(categoryId, permission.id, {
-                          deleteScopeId: parseInt(value),
-                        })
-                      }
+                          deleteScopeId: newDeleteScopeId,
+                        });
+                      }}
                       disabled={!currentPerm.isEnabled}
                     >
                       <SelectTrigger className="text-sm">
@@ -470,6 +558,10 @@ const Permissions = () => {
                           <SelectItem
                             key={option.id}
                             value={option.id.toString()}
+                            disabled={
+                              // Disable "All Records" option if view is "Owned Records"
+                              currentPerm.viewScopeId === 1 && option.id === 2
+                            }
                           >
                             {option.name}
                           </SelectItem>
@@ -483,6 +575,7 @@ const Permissions = () => {
           </div>
         );
       case "CHECKBOX_WITH_MULTISELECT":
+        const errorKeyForMultiSelect = `${categoryId}-${permission.id}`;
         return (
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex items-start justify-between">
@@ -490,11 +583,23 @@ const Permissions = () => {
                 <label className="flex items-center mb-3">
                   <Checkbox
                     checked={currentPerm.isEnabled || false}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked) => {
                       updatePermission(categoryId, permission.id, {
                         isEnabled: checked as boolean,
-                      })
-                    }
+                        applicableModules: [],
+                      });
+                      if (
+                        currentPerm.applicableModules?.length === 0 ||
+                        currentPerm.applicableModules === null
+                      ) {
+                        setNumericErrors((prev) => {
+                          return {
+                            ...prev,
+                            [errorKeyForMultiSelect]: "",
+                          };
+                        });
+                      }
+                    }}
                     className="mr-3"
                   />
                   <span className="font-medium">{permission.name}</span>
@@ -516,9 +621,54 @@ const Permissions = () => {
                               )?.label
                             }
                             <button
-                              onClick={() =>
-                                toggleModule(categoryId, permission.id, module)
-                              }
+                              onClick={() => {
+                                const currentModules =
+                                  currentPerm.applicableModules || [];
+                                const updatedModules = currentModules.filter(
+                                  (m) => m !== module
+                                );
+
+                                // If no modules left, uncheck the main checkbox
+                                if (updatedModules.length === 0) {
+                                  updatePermission(categoryId, permission.id, {
+                                    applicableModules: updatedModules,
+                                  });
+                                  toast.error(
+                                    "Please select at least one option"
+                                  );
+                                  setNumericErrors((prev) => ({
+                                    ...prev,
+                                    [errorKeyForMultiSelect]: "",
+                                  }));
+                                } else {
+                                  setNumericErrors((prev) => {
+                                    const newErrors = { ...prev };
+                                    delete newErrors[errorKeyForMultiSelect];
+                                    return newErrors;
+                                  });
+                                  updatePermission(categoryId, permission.id, {
+                                    applicableModules: updatedModules,
+                                  });
+                                }
+
+                                // Check if dropdown should be closed (no more options available)
+                                const remainingOptions =
+                                  uiConfig.multiselect_options?.filter(
+                                    (opt) => !updatedModules.includes(opt.value)
+                                  );
+
+                                if (
+                                  remainingOptions &&
+                                  remainingOptions.length === 0
+                                ) {
+                                  const dropdownId = `dropdown-${categoryId}-${permission.id}`;
+                                  const dropdown =
+                                    document.getElementById(dropdownId);
+                                  if (dropdown) {
+                                    dropdown.style.display = "none";
+                                  }
+                                }
+                              }}
                               className="text-blue-600 hover:text-blue-800 ml-1"
                             >
                               ×
@@ -540,14 +690,12 @@ const Permissions = () => {
                                 ? "none"
                                 : "block";
 
-                              // Position dropdown to prevent off-screen issues
                               if (!isVisible) {
                                 const buttonRect =
                                   e.currentTarget.getBoundingClientRect();
                                 const viewportWidth = window.innerWidth;
-                                const dropdownWidth = 192; // w-48 = 192px
+                                const dropdownWidth = 192;
 
-                                // Check if dropdown would go off-screen on the right
                                 if (
                                   buttonRect.right + dropdownWidth >
                                   viewportWidth
@@ -599,12 +747,11 @@ const Permissions = () => {
                                     permission.id,
                                     option.value
                                   );
-                                  // const dropdownId = `dropdown-${categoryId}-${permission.id}`;
-                                  // const dropdown =
-                                  //   document.getElementById(dropdownId);
-                                  // if (dropdown) {
-                                  //   dropdown.style.display = "none";
-                                  // }
+                                  setNumericErrors((prev) => {
+                                    const newErrors = { ...prev };
+                                    delete newErrors[errorKeyForMultiSelect];
+                                    return newErrors;
+                                  });
                                 }}
                                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b last:border-b-0"
                               >
@@ -632,6 +779,7 @@ const Permissions = () => {
         );
 
       case "CHECKBOX_WITH_NUMERIC":
+        const errorKey = `${categoryId}-${permission.id}`;
         return (
           <div className="border rounded-lg p-4 mb-4" key={permission.id}>
             <div className="flex items-center justify-between">
@@ -649,28 +797,60 @@ const Permissions = () => {
               </label>
 
               {currentPerm.isEnabled && uiConfig.numeric_config && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm">
-                    {uiConfig.numeric_config.label}
-                  </span>
-                  <Input
-                    type="number"
-                    min={uiConfig.numeric_config.min}
-                    max={uiConfig.numeric_config.max}
-                    value={
-                      currentPerm.numericValue ||
-                      uiConfig.numeric_config.default
-                    }
-                    onChange={(e) =>
-                      updatePermission(categoryId, permission.id, {
-                        numericValue: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-20"
-                  />
-                  <span className="text-sm text-gray-500">
-                    {uiConfig.numeric_config.suffix}
-                  </span>
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">
+                      {uiConfig.numeric_config.label}
+                    </span>
+                    <Input
+                      type="number"
+                      value={currentPerm.numericValue}
+                      onChange={(e) => {
+                        const value = parseInt(
+                          e.target.value.replace(/^0+/, "")
+                        );
+                        const maxValue = uiConfig.numeric_config?.max || 0;
+
+                        if (value > maxValue) {
+                          setNumericErrors((prev) => ({
+                            ...prev,
+                            [errorKey]: `Value cannot exceed ${maxValue}`,
+                          }));
+                          updatePermission(categoryId, permission.id, {
+                            numericValue: value,
+                          });
+                        } else if (value <= 0 || isNaN(value)) {
+                          setNumericErrors((prev) => ({
+                            ...prev,
+                            [errorKey]: `Value must be greater than 0`,
+                          }));
+                          updatePermission(categoryId, permission.id, {
+                            numericValue: value,
+                          });
+                        } else {
+                          setNumericErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors[errorKey];
+                            return newErrors;
+                          });
+                          updatePermission(categoryId, permission.id, {
+                            numericValue: value,
+                          });
+                        }
+                      }}
+                      className={`w-20 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+                        numericErrors[errorKey] ? "border-red-500" : ""
+                      }`}
+                    />
+                    <span className="text-sm text-gray-500 py-2">
+                      {uiConfig.numeric_config.suffix}
+                    </span>
+                  </div>
+                  {numericErrors[errorKey] && (
+                    <div className="text-red-500 text-xs mt-1">
+                      {numericErrors[errorKey]}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -683,11 +863,24 @@ const Permissions = () => {
               <label className="flex items-center">
                 <Checkbox
                   checked={currentPerm.isEnabled || false}
-                  onCheckedChange={(checked) =>
-                    updatePermission(categoryId, permission.id, {
-                      isEnabled: checked as boolean,
-                    })
-                  }
+                  onCheckedChange={(checked) => {
+                    if (
+                      checked &&
+                      uiConfig.select_options &&
+                      uiConfig.select_options.length > 0
+                    ) {
+                      // Auto-select first option when checkbox is checked
+                      updatePermission(categoryId, permission.id, {
+                        isEnabled: checked as boolean,
+                        applicableModules: [uiConfig.select_options[0].value],
+                      });
+                    } else {
+                      updatePermission(categoryId, permission.id, {
+                        isEnabled: checked as boolean,
+                        applicableModules: [],
+                      });
+                    }
+                  }}
                   className="mr-3"
                 />
                 <span className="font-medium">{permission.name}</span>
@@ -890,7 +1083,8 @@ const Permissions = () => {
 
           <Button
             onClick={handleSaveChanges}
-            className="fixed bottom-5 right-5 bg-blue-600 text-white"
+            className="fixed bottom-5 right-20 bg-blue-600 text-white"
+            disabled={Object.keys(numericErrors).length > 0}
           >
             Save Changes
           </Button>
