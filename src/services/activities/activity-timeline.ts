@@ -49,3 +49,14 @@ export const addTaskOutcome = async (
     throw error;
   }
 };
+
+export const getCountOfActivities = async (leadId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/v1/leads/${leadId}/activity-counts`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

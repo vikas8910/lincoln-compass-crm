@@ -19,6 +19,7 @@ import { Undo2Icon } from "lucide-react";
 import { useState, useMemo } from "react";
 import { FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { ActivityTabProps } from "./Notes";
 
 // Define tab types
 type TabType = "all" | "upcoming" | "completed" | "overdue";
@@ -29,7 +30,7 @@ interface Tab {
   count?: number;
 }
 
-export const Tasks = () => {
+export const Tasks: React.FC<ActivityTabProps> = ({ onActivityChange }) => {
   const { lead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -248,6 +249,7 @@ export const Tasks = () => {
       } else {
         // Create new task
         await createTask(data);
+        onActivityChange();
         toast.success("Task created successfully");
       }
 

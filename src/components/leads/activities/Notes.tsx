@@ -31,7 +31,11 @@ export interface NoteData {
   active: boolean;
 }
 
-export const Notes = () => {
+export interface ActivityTabProps {
+  onActivityChange: () => void;
+}
+
+export const Notes: React.FC<ActivityTabProps> = ({ onActivityChange }) => {
   const { lead } = useLeadDetails();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<NoteData | null>(null);
@@ -106,6 +110,7 @@ export const Notes = () => {
           leadId: lead.id,
         });
         setNotes([data, ...notes]);
+        onActivityChange();
         toast.success("Note added successfully");
       } catch (error) {
         toast.error("Failed to add note");
