@@ -42,7 +42,9 @@ const LeadStaging = () => {
   // State for dialog
   const [showLostReasonDialog, setShowLostReasonDialog] = useState(false);
   const [selectedStage, setSelectedStage] = useState(null);
-  const [selectedLostReason, setSelectedLostReason] = useState(lead.lostReason);
+  const [selectedLostReason, setSelectedLostReason] = useState<
+    string | null | undefined
+  >();
 
   useEffect(() => {
     setSelectedLostReason(lead?.lostReason);

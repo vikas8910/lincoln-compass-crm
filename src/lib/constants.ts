@@ -25,6 +25,7 @@ export const lostReasonOptions = [
   { value: "not-interested", label: "Not interested" },
   { value: "budget", label: "Budget" },
   { value: "unable-to-reach", label: "Unable to reach" },
+  { value: "lost-to-competitor", label: "Lost to competitor" },
 ];
 
 // Configuration
@@ -413,7 +414,16 @@ export const LEAD_DETAILS_EDITABLE_FIELDS = (
         const stage = stageOptions?.find(
           (option) => String(option.id) === value
         );
-        return stage ? stage.type : "Select Lead Stage";
+
+        if (!stage) return "Select Lead Stage";
+
+        if (stage.type === "leadStage") {
+          return "Lead Stage";
+        } else if (stage.type === "prospectOutcome") {
+          return "Prospect Outcome";
+        }
+
+        return stage.type;
       },
       placeholder: "Select Stage",
       textColor: "text-black",
