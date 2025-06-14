@@ -18,6 +18,15 @@ export const INITIAL_PAGINATION: PaginationState = {
 
 export const DEBOUNCE_DELAY = 1000;
 
+// Lost reason options
+export const lostReasonOptions = [
+  { value: "junk-lead", label: "Junk Lead" },
+  { value: "not-able-to-reach", label: "Not able to reach" },
+  { value: "not-interested", label: "Not interested" },
+  { value: "budget", label: "Budget" },
+  { value: "unable-to-reach", label: "Unable to reach" },
+];
+
 // Configuration
 export const EDITABLE_FIELDS: EditableField[] = [
   { key: "firstName", label: "First Name" },

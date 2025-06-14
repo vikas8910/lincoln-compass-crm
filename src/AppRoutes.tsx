@@ -22,7 +22,6 @@ const LoadingSpinner = () => (
 
 const AppRoutes = () => {
   const { authoritiesList, isLoading } = useAuthoritiesList();
-  console.log("Authorities List:", authoritiesList);
 
   const isLoggedIn = (): boolean => {
     return localStorage.getItem("accessToken") !== null;

@@ -256,7 +256,6 @@ export const Tasks: React.FC<ActivityTabProps> = ({ onActivityChange }) => {
       refetch();
       handleModalClose(); // Close modal after successful operation
     } catch (error) {
-      console.log("Error => ", error);
       toast.error(
         isEditMode ? "Failed to update task" : "Failed to create task"
       );

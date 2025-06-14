@@ -152,6 +152,7 @@ export interface StageOption {
   name: string;
   type: "leadStage" | "prospectOutcome";
   sequenceOrder: number;
+  lostReason?: string;
 }
 
 export interface LeadStagingFormData {

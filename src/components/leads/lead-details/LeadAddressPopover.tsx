@@ -28,7 +28,6 @@ export default function AddressFormPopover({
   children,
 }: AddressFormPopoverProps) {
   const { lead, setLead } = useLeadDetails();
-  console.log("Lead details updated => ", lead);
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<AddressFormData>({
     address: lead?.leadAddress,

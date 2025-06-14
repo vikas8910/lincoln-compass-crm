@@ -776,7 +776,8 @@ export const EditableCell: React.FC<EditableCellProps> = ({
                       mode="single"
                       selected={selectedDate}
                       onSelect={handleDateChange}
-                      initialFocus
+                      className="rounded-md border shadow-sm"
+                      captionLayout="dropdown"
                     />
                   </PopoverContent>
                 </Popover>

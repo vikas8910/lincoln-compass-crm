@@ -363,7 +363,6 @@ const LeadsList = ({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {leads.map((lead: any, index: number) => {
-        console.log("Lead => >", lead);
         const firstLetter = lead.name?.[0]?.toUpperCase() || "?"; // Assuming lead has firstName
         const { bg, text } = getAvatarColors(firstLetter);
         const color = lead.color || "blue"; // Assuming color comes from lead
@@ -678,8 +677,6 @@ const ActivityTimeline = () => {
           });
       });
     }
-
-    console.log("markCompleteButton", markCompleteButton);
   }, [activities]);
   return (
     <div

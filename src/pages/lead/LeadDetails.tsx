@@ -18,6 +18,7 @@ import { useLeadDetails } from "@/context/LeadsProvider";
 import { useUser } from "@/context/UserProvider";
 import { saveMeeting } from "@/services/activities/meetings";
 import { createTask } from "@/services/activities/task";
+import { updateLeadFullDetails } from "@/services/lead/lead";
 import { useEffect, useState } from "react";
 import { FaCalendar, FaEnvelope } from "react-icons/fa";
 import { MdChecklist } from "react-icons/md";
@@ -26,8 +27,15 @@ import { toast } from "react-toastify";
 
 const LeadDetails: React.FC = () => {
   const { leadId } = useParams<{ leadId: string }>();
-  const { lead, isLoading, activeTab, setActiveTab, fetchLead, handleSave } =
-    useLeadDetails();
+  const {
+    lead,
+    isLoading,
+    activeTab,
+    setActiveTab,
+    fetchLead,
+    handleSave,
+    setLead,
+  } = useLeadDetails();
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [isMeetingFormOpen, setIsMeetingFormOpen] = useState(false);
   const { user } = useUser();
@@ -39,9 +47,18 @@ const LeadDetails: React.FC = () => {
   }, [leadId]); // Remove fetchLead from dependencies since it's memoized
 
   // Handle save operations with leadId
-  const onSave = async (key: string, value: string) => {
+  const onSave = async (key: string, value: any) => {
     if (!leadId) return;
-    await handleSave(leadId, key, value);
+    if (key === "leadStage") {
+      const { lostReason, ...stage } = value;
+      await updateLeadFullDetails(lead.id, {
+        leadStage: stage,
+        lostReason: lostReason,
+      });
+      setLead({ ...lead, leadStage: stage, lostReason: lostReason });
+    } else {
+      await handleSave(leadId, key, value);
+    }
   };
 
   const handleTaskFormClose = () => {
@@ -58,7 +75,6 @@ const LeadDetails: React.FC = () => {
       toast.success("Task created successfully");
       setIsTaskFormOpen(false);
     } catch (error) {
-      console.log("Error => ", error);
       toast.error("Failed to create task");
     }
   };
@@ -70,7 +86,6 @@ const LeadDetails: React.FC = () => {
       toast.success("Meeting created successfully");
       setIsMeetingFormOpen(false);
     } catch (error) {
-      console.log("Error => ", error);
       toast.error("Failed to create Meeting");
     }
   };

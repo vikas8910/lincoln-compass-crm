@@ -11,17 +11,43 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StageOption } from "@/types/lead";
 import { updateLeadFullDetails } from "@/services/lead/lead";
 import { useLeadPermissions } from "@/hooks/useLeadPermissions";
 import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
+import { lostReasonOptions } from "@/lib/constants";
 
 const LeadStaging = () => {
   const { lead, setLead, stageOptions } = useLeadDetails();
   const { assignedTo } = useLeadDetails();
   const leadPermissions = useLeadPermissions();
+
+  // State for dialog
+  const [showLostReasonDialog, setShowLostReasonDialog] = useState(false);
+  const [selectedStage, setSelectedStage] = useState(null);
+  const [selectedLostReason, setSelectedLostReason] = useState(lead.lostReason);
+
+  useEffect(() => {
+    setSelectedLostReason(lead?.lostReason);
+  }, [lead?.lostReason]);
+
   // Helper function to find stage by sequenceOrder
   const findStageBySequence = (sequenceOrder: number) => {
     return stageOptions.find((stage) => stage.sequenceOrder === sequenceOrder);
@@ -32,15 +58,45 @@ const LeadStaging = () => {
     return stage?.sequenceOrder || 0;
   };
 
-  const handleFormSave = async (stage: StageOption) => {
+  const handleFormSave = async (stage: StageOption, skipDialog?: boolean) => {
     try {
-      await updateLeadFullDetails(lead.id, "leadStage", stage);
-      setLead({ ...lead, leadStage: stage });
+      if (
+        (stage.name === "Junk/Lost" || stage.name === "Lost") &&
+        !stage.lostReason &&
+        !skipDialog
+      ) {
+        // Open dialog to optionally get lost reason
+        setSelectedStage(stage);
+        setShowLostReasonDialog(true);
+        return;
+      }
+
+      await updateLeadFullDetails(lead.id, {
+        leadStage: stage,
+        lostReason: stage.lostReason,
+      });
+      setLead({ ...lead, leadStage: stage, lostReason: stage.lostReason });
       toast.success("Lead stage updated successfully");
+
+      // Close dialog if it was open
+      if (showLostReasonDialog) {
+        setShowLostReasonDialog(false);
+        setSelectedStage(null);
+        setSelectedLostReason("");
+      }
     } catch (e) {
-      console.log("Error => ", e);
       toast.error("Failed to update Lead stage");
     }
+  };
+
+  const handleDialogSave = () => {
+    handleFormSave({ ...selectedStage, lostReason: selectedLostReason }, true);
+  };
+
+  const handleDialogCancel = () => {
+    setShowLostReasonDialog(false);
+    setSelectedStage(null);
+    setSelectedLostReason("");
   };
 
   const getChipDisplayText = (stage: any) => {
@@ -316,49 +372,91 @@ const LeadStaging = () => {
   };
 
   return (
-    <div className="flex items-end gap-12 border border-t-slate-300 border-l-0 border-r-0 border-b-0 pt-4">
-      {/* Left side - Form Component */}
-      {leadPermissions.canEditLead(assignedTo) && (
-        <div>
-          <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
-            Lifecycle Stage
-          </h1>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 px-0 py-2 border-none text-blue-500"
-              >
-                Lead Stages
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-4">
-              <LeadStagingForm
-                initialStatusId={lead?.leadStage?.id}
-                onSave={handleFormSave}
-                stageOptions={stageOptions}
-                className="flex-shrink-0 pt-8"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
+    <>
+      <div className="flex items-end gap-12 border border-t-slate-300 border-l-0 border-r-0 border-b-0 pt-4">
+        {/* Left side - Form Component */}
+        {leadPermissions.canEditLead(assignedTo) && (
+          <div>
+            <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
+              Lifecycle Stage
+            </h1>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 px-0 py-2 border-none text-blue-500"
+                >
+                  Lead Stages
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4">
+                <LeadStagingForm
+                  initialStatusId={lead?.leadStage?.id}
+                  onSave={handleFormSave}
+                  stageOptions={stageOptions}
+                  className="flex-shrink-0 pt-8"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
-      {/* Right side - Stage visualization */}
-      <div className="flex-1 overflow-hidden">
-        <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
-          Status
-        </h1>
-        <div className="flex flex-1 w-full items-center overflow-x-auto scrollbar-hide -space-x-1">
-          {getDisplayStages().map((stage, index) => (
-            <div key={index} data-lov-id={stage.id} className="w-full">
-              {renderStageChip(stage, index)}
-            </div>
-          ))}
+        {/* Right side - Stage visualization */}
+        <div className="flex-1 overflow-hidden">
+          <h1 className="text-sm font-semibold text-gray-600 mb-2 w-full">
+            Status
+          </h1>
+          <div className="flex flex-1 w-full items-center overflow-x-auto scrollbar-hide -space-x-1">
+            {getDisplayStages().map((stage, index) => (
+              <div key={index} data-lov-id={stage.id} className="w-full">
+                {renderStageChip(stage, index)}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Lost Reason Dialog */}
+      <Dialog
+        open={showLostReasonDialog}
+        onOpenChange={setShowLostReasonDialog}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add more details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Lost reason
+              </label>
+              <Select
+                value={selectedLostReason}
+                onValueChange={setSelectedLostReason}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Click to select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lostReasonOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.label}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={handleDialogCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleDialogSave}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

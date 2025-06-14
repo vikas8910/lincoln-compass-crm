@@ -9,21 +9,18 @@ import {
 } from "@/components/ui/select";
 import { X } from "lucide-react";
 import { PopoverClose } from "@radix-ui/react-popover";
-
-interface StageOption {
-  id: number; // Changed: Updated to number type
-  name: string;
-  type: "leadStage" | "prospectOutcome";
-}
+import { useLeadDetails } from "@/context/LeadsProvider";
+import { lostReasonOptions } from "@/lib/constants";
+import { StageOption } from "@/types/lead";
 
 interface LeadStagingFormData {
   lifecycleStage: string;
-  statusId: number | ""; // Changed: Updated to number type (can be empty string initially)
+  statusId: number | "";
   lostReason?: string;
 }
 
 interface LeadStagingFormProps {
-  initialStatusId?: number; // Changed: Updated to number type
+  initialStatusId?: number;
   onSave: (data: StageOption) => void;
   stageOptions: StageOption[];
   className?: string;
@@ -35,6 +32,7 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
   stageOptions,
   className = "",
 }) => {
+  const { lead } = useLeadDetails();
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<LeadStagingFormData>({
     lifecycleStage: "",
@@ -48,34 +46,38 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
     lostReason: "",
   });
 
-  const lostReasonOptions = [
-    "Not interested",
-    "Budget",
-    "Unable to reach",
-    "Timing not right",
-    "Competitor chosen",
-    "Other",
-  ];
+  // Helper function to find lost reason value by label
+  const findLostReasonValueByLabel = (label: string) => {
+    const foundReason = lostReasonOptions.find(
+      (reason) => reason.label === label
+    );
+    return foundReason ? foundReason.label : "";
+  };
 
   // Initialize with statusId or default to 1 (New)
   useEffect(() => {
-    const currentStatusId = initialStatusId || 1; // Changed: Use number instead of string
+    const currentStatusId = initialStatusId || 1;
     const currentStage = stageOptions?.find(
       (stage) => stage.id === currentStatusId
     );
 
     if (currentStage) {
+      // Convert lead.lostReason (label) to value for the form
+      const lostReasonValue = lead?.lostReason
+        ? findLostReasonValueByLabel(lead.lostReason)
+        : "";
+
       const initialData = {
         lifecycleStage:
           currentStage.type === "leadStage" ? "Lead Stage" : "Prospect Outcome",
         statusId: currentStatusId,
-        lostReason: "",
+        lostReason: lostReasonValue,
       };
 
       setFormData(initialData);
       setSavedData(initialData);
     }
-  }, [initialStatusId, stageOptions]);
+  }, [initialStatusId, stageOptions, lead?.lostReason]);
 
   const getStatusOptions = () => {
     if (formData.lifecycleStage === "Lead Stage") {
@@ -95,7 +97,7 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
   };
 
   const handleStatusChange = (value: string) => {
-    const statusId = parseInt(value); // Changed: Parse string to number
+    const statusId = parseInt(value);
     const selectedStage = stageOptions?.find((stage) => stage.id === statusId);
     setFormData((prev) => ({
       ...prev,
@@ -119,7 +121,13 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
     const stageById = stageOptions.find(
       (item) => item.id === formData.statusId
     );
-    onSave(stageById);
+    onSave({
+      ...stageById,
+      lostReason:
+        stageById?.name === "Junk/Lost" || stageById?.name === "Lost"
+          ? formData?.lostReason
+          : "",
+    });
     setIsOpen(false);
   };
 
@@ -160,7 +168,7 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
             Status
           </label>
           <Select
-            value={formData.statusId ? String(formData.statusId) : ""} // Changed: Convert number to string for Select component
+            value={formData.statusId ? String(formData.statusId) : ""}
             onValueChange={handleStatusChange}
           >
             <SelectTrigger>
@@ -191,15 +199,15 @@ export const LeadStagingForm: React.FC<LeadStagingFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               {lostReasonOptions?.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+                <SelectItem key={option.value} value={option.label}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {formData.lostReason && (
             <div className="mt-2 flex items-center gap-2 px-2 py-1 bg-gray-100 rounded text-sm">
-              {formData.lostReason}
+              {formData?.lostReason}
               <button
                 onClick={() => handleLostReasonChange("")}
                 className="text-gray-500 hover:text-gray-700"

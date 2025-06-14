@@ -257,9 +257,6 @@ const Leads = () => {
       .filter((lead) => lead.id.toString() !== primaryLeadId)
       .map((lead) => lead.id.toString());
 
-    console.log("primaryLeadIds => ", primaryLeadIds[0]);
-    console.log("secondaryLeadIds => ", secondaryLeadIds);
-
     try {
       await bulkLeadMerge({
         targetLeadId: parseInt(primaryLeadIds[0]),

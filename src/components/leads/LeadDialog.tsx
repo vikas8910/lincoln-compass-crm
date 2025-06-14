@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -35,7 +34,17 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone number is required"),
   company: z.string().min(1, "Company is required"),
-  status: z.enum(["New", "In Contact", "Follow up", "Set Meeting", "Negotiation", "Enrolled", "Junk/Lost", "On Campus", "Customer"]),
+  status: z.enum([
+    "New",
+    "In Contact",
+    "Follow up",
+    "Set Meeting",
+    "Negotiation",
+    "Enrolled",
+    "Junk/Lost",
+    "On Campus",
+    "Customer",
+  ]),
   source: z.string().min(1, "Source is required"),
   assignedTo: z.string().min(1, "Assigned to is required"),
   date: z.string(),
@@ -67,18 +76,15 @@ const LeadDialog = ({ lead, open, onClose, onSave }: LeadDialogProps) => {
   });
 
   useEffect(() => {
-    console.log("LeadDialog useEffect - lead:", lead);
-    
     if (!open) return;
-    
+
     if (lead) {
-      console.log("Setting form values from lead:", lead);
       setIsNew(false);
-      
+
       // Ensure source and assignedTo are not empty strings
       const source = lead.source || "None";
       const assignedTo = lead.assignedTo || "Unassigned";
-      
+
       form.reset({
         id: lead.id,
         name: lead.name,
@@ -91,7 +97,6 @@ const LeadDialog = ({ lead, open, onClose, onSave }: LeadDialogProps) => {
         date: lead.date,
       });
     } else {
-      console.log("Resetting form for new lead");
       setIsNew(true);
       form.reset({
         id: "",
@@ -108,13 +113,11 @@ const LeadDialog = ({ lead, open, onClose, onSave }: LeadDialogProps) => {
   }, [lead, open, form]);
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log("Form submission data:", data);
-    
     // Generate ID for new leads
     if (isNew) {
       data.id = Math.random().toString(36).substring(2, 11);
     }
-    
+
     onSave(data as Lead);
   };
 
@@ -237,8 +240,12 @@ const LeadDialog = ({ lead, open, onClose, onSave }: LeadDialogProps) => {
                       <SelectItem value="Referral">Referral</SelectItem>
                       <SelectItem value="Trade Show">Trade Show</SelectItem>
                       <SelectItem value="Cold Call">Cold Call</SelectItem>
-                      <SelectItem value="Email Campaign">Email Campaign</SelectItem>
-                      <SelectItem value="Organic Search">Organic Search</SelectItem>
+                      <SelectItem value="Email Campaign">
+                        Email Campaign
+                      </SelectItem>
+                      <SelectItem value="Organic Search">
+                        Organic Search
+                      </SelectItem>
                       <SelectItem value="Social Media">Social Media</SelectItem>
                     </SelectContent>
                   </Select>
@@ -266,10 +273,18 @@ const LeadDialog = ({ lead, open, onClose, onSave }: LeadDialogProps) => {
                       <SelectItem value="Unassigned">Unassigned</SelectItem>
                       <SelectItem value="Jane Smith">Jane Smith</SelectItem>
                       <SelectItem value="John Smith">John Smith</SelectItem>
-                      <SelectItem value="Robert Johnson">Robert Johnson</SelectItem>
-                      <SelectItem value="Emily Williams">Emily Williams</SelectItem>
-                      <SelectItem value="Michael Brown">Michael Brown</SelectItem>
-                      <SelectItem value="Subramanian Iyer">Subramanian Iyer</SelectItem>
+                      <SelectItem value="Robert Johnson">
+                        Robert Johnson
+                      </SelectItem>
+                      <SelectItem value="Emily Williams">
+                        Emily Williams
+                      </SelectItem>
+                      <SelectItem value="Michael Brown">
+                        Michael Brown
+                      </SelectItem>
+                      <SelectItem value="Subramanian Iyer">
+                        Subramanian Iyer
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

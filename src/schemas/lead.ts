@@ -42,6 +42,7 @@ export type createLeadFormValues = z.infer<typeof leadSchema>;
 const createSocialUrlSchema = (platform) =>
   z
     .string()
+    .nullable()
     .optional()
     .refine(
       (val) => {

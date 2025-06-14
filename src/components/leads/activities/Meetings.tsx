@@ -245,7 +245,6 @@ export const Meetings: React.FC<ActivityTabProps> = ({ onActivityChange }) => {
       refetch();
       handleModalClose(); // Close modal after successful operation
     } catch (error) {
-      console.log("Error => ", error);
       toast.error(
         isEditMode ? "Failed to update Meeting" : "Failed to create Meeting"
       );
