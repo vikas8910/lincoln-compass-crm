@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Edit2Icon, Tag } from "lucide-react";
 import {
   Popover,
@@ -43,6 +43,10 @@ const TagManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+
+  // Track original tag IDs to detect changes
+  const [originalTagIds, setOriginalTagIds] = useState<number[]>([]);
+
   const leadPermissions = useLeadPermissions();
   const { assignedTo } = useLeadDetails();
 
@@ -56,6 +60,19 @@ const TagManager: React.FC = () => {
     orange: "bg-orange-100 text-orange-800 border-orange-200",
     gray: "bg-gray-100 text-gray-800 border-gray-200",
   };
+
+  // Check if changes have been made
+  const hasChanges = useMemo(() => {
+    if (originalTagIds.length !== selectedTagIds.length) {
+      return true;
+    }
+
+    // Check if all original tag IDs are still selected
+    const sortedOriginal = [...originalTagIds].sort((a, b) => a - b);
+    const sortedSelected = [...selectedTagIds].sort((a, b) => a - b);
+
+    return !sortedOriginal.every((id, index) => id === sortedSelected[index]);
+  }, [originalTagIds, selectedTagIds]);
 
   const assignTagsToLead = async (tagIds: number[]): Promise<void> => {
     const tagList = allTags.filter((tag) => tagIds.includes(tag.id));
@@ -72,6 +89,10 @@ const TagManager: React.FC = () => {
       };
 
       setLead(updatedLead);
+
+      // Update original tag IDs after successful save
+      setOriginalTagIds([...tagIds]);
+
       toast.success("Tags assigned successfully");
     } catch {
       toast.error("Failed to assign tags to lead");
@@ -91,10 +112,12 @@ const TagManager: React.FC = () => {
 
   // Fetch all tags on component mount
   useEffect(() => {
-    const loadTags = async () => {
+    const loadTags = () => {
       try {
-        setAssignedTags(lead?.tags);
-        setSelectedTagIds(lead?.tags?.map((tag) => tag.id));
+        setAssignedTags(lead?.tags || []);
+        const leadTagIds = lead?.tags?.map((tag) => tag.id) || [];
+        setSelectedTagIds(leadTagIds);
+        setOriginalTagIds(leadTagIds); // Set original state
       } catch (error) {
         console.error("Error fetching tags:", error);
       } finally {
@@ -103,7 +126,7 @@ const TagManager: React.FC = () => {
     };
 
     loadTags();
-  }, []);
+  }, [lead?.tags, setSelectedTagIds]);
 
   const handleTagToggle = (tagId: number) => {
     setSelectedTagIds((prev) =>
@@ -128,6 +151,7 @@ const TagManager: React.FC = () => {
       setSearchTerm("");
     } catch (error) {
       console.error("Error creating tag:", error);
+      toast.error("Failed to create tag");
     } finally {
       setIsCreatingTag(false);
     }
@@ -144,6 +168,12 @@ const TagManager: React.FC = () => {
     !allTags.some((tag) => tag.name.toLowerCase() === searchTerm.toLowerCase());
 
   const handleSave = async () => {
+    // Early return if no changes
+    if (!hasChanges) {
+      setIsPopoverOpen(false);
+      return;
+    }
+
     try {
       setLoading(true);
       await assignTagsToLead(selectedTagIds);
@@ -157,10 +187,21 @@ const TagManager: React.FC = () => {
   };
 
   const handleCancel = () => {
-    setAssignedTags(lead?.tags);
-    setSelectedTagIds(lead?.tags?.map((tag) => tag.id));
+    // Reset to original state
+    setSelectedTagIds([...originalTagIds]);
+    setAssignedTags(lead?.tags || []);
     setSearchTerm("");
     setIsPopoverOpen(false);
+  };
+
+  const handlePopoverOpenChange = (open: boolean) => {
+    if (open) {
+      // When opening, ensure we have the latest original state
+      const currentTagIds = lead?.tags?.map((tag) => tag.id) || [];
+      setOriginalTagIds(currentTagIds);
+      setSelectedTagIds(currentTagIds);
+    }
+    setIsPopoverOpen(leadPermissions.canEditLead(assignedTo) && open);
   };
 
   const getTagColorClass = (colorName: string) => {
@@ -176,17 +217,10 @@ const TagManager: React.FC = () => {
     );
   }
 
-  const handlePopoverOpen = (open: boolean) => {
-    setIsPopoverOpen(leadPermissions.canEditLead(assignedTo) && open);
-  };
-
   return (
     <div className="flex items-center space-x-2">
       {/* Entire tag section as popover trigger */}
-      <Popover
-        open={isPopoverOpen}
-        onOpenChange={(open) => handlePopoverOpen(open)}
-      >
+      <Popover open={isPopoverOpen} onOpenChange={handlePopoverOpenChange}>
         <PopoverTrigger asChild>
           <div
             className={`flex items-center space-x-2 group justify-between w-full py-3 rounded-md hover:bg-gray-300 ${
@@ -306,8 +340,12 @@ const TagManager: React.FC = () => {
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={loading}
-                className="bg-slate-700 hover:bg-slate-800"
+                disabled={loading || !hasChanges}
+                className={`${
+                  hasChanges
+                    ? "bg-slate-700 hover:bg-slate-800"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
               >
                 {loading ? "Saving..." : "Save"}
               </Button>
